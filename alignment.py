@@ -5,7 +5,7 @@ import pickle
 import sys
 sys.path.append('../analisi_planari')
 import plotly.graph_objects as go
-
+from multiprocessing import Pool,cpu_count
 import configparser
 import os
 from planar_analysis_lib import calc_res,fit_1_d
@@ -27,116 +27,18 @@ if data_folder=="TER":
         sys.exit(1)
 
 def build_tracks_pd( cluster_pd_1D):
-    """
-
-    :param subrun_tgt:
-    :return:
-    """
-    run_l = []
-    subrun_l = []
-    count_l = []
-    x_fit = []
-    y_fit = []
-    planar_di = {
-        "res_planar_0_x": [],
-        "res_planar_1_x": [],
-        "res_planar_2_x": [],
-        "res_planar_3_x": [],
-        "res_planar_0_y": [],
-        "res_planar_1_y": [],
-        "res_planar_2_y": [],
-        "res_planar_3_y": []
-
-    }
-    cl_id_l=[]
-
-    for run in tqdm(cluster_pd_1D["run"].unique(), desc= "Run", leave =None):
-        cluster_pd_1D_c0 = cluster_pd_1D[cluster_pd_1D.run == run]
-        for subrun in tqdm(cluster_pd_1D_c0["subrun"].unique(), desc="Subrun", leave=None):
-            data_pd_cut_1 = cluster_pd_1D_c0[cluster_pd_1D_c0.subrun == subrun]
-            for count in data_pd_cut_1["count"].unique():
-                df_c2 = data_pd_cut_1[data_pd_cut_1["count"] == count] # df_c2 is shorter
-
-                # Build track X
-                if len(df_c2[df_c2.cl_pos_x_cm>0].planar.unique())>2: ## I want at least 3 point in that view
-                    fit_x, cl_ids, res_dict = fit_tracks_view(df_c2[df_c2.cl_pos_x_cm>0], "x")
-                    run_l.append(run)
-                    subrun_l.append(subrun)
-                    count_l.append(count)
-                    x_fit.append(fit_x)
-                    y_fit.append(np.nan)
-                    for planar in range(0,4):
-                        if planar in res_dict.keys():
-                            planar_di[f"res_planar_{planar}_x"].append(res_dict[planar])
-                            planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                        else:
-                            planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                            planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                    cl_id_l.append(cl_ids)
-                # Build track Y
-                if len(df_c2[df_c2.cl_pos_y_cm>0].planar.unique())>2: ## I want at least 3 point in that view
-                    fit_y, cl_ids,res_dict = fit_tracks_view(df_c2[df_c2.cl_pos_y_cm>0], "y")
-                    run_l.append(run)
-                    subrun_l.append(subrun)
-                    count_l.append(count)
-                    x_fit.append(np.nan)
-                    y_fit.append(fit_y)
-                    for planar in range(0, 4):
-                        if planar in res_dict.keys():
-                            planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                            planar_di[f"res_planar_{planar}_y"].append(res_dict[planar])
-                        else:
-                            planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                            planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                    cl_id_l.append(cl_ids)
-
-
-    dict_4_pd = {
-        "run": run_l,
-        "subrun": subrun_l,
-        "count": count_l,
-        "x_fit": x_fit,
-        "y_fit": y_fit,
-        "res_planar_0_x": planar_di["res_planar_0_x"],
-        "res_planar_1_x": planar_di["res_planar_1_x"],
-        "res_planar_2_x": planar_di["res_planar_2_x"],
-        "res_planar_3_x": planar_di["res_planar_3_x"],
-        "res_planar_0_y": planar_di["res_planar_0_y"],
-        "res_planar_1_y": planar_di["res_planar_1_y"],
-        "res_planar_2_y": planar_di["res_planar_2_y"],
-        "res_planar_3_y": planar_di["res_planar_3_y"],
-        "cl_ids":cl_id_l
-    }
-    return ( pd.DataFrame(dict_4_pd) )
-
-def fit_tracks_view( df, view):
-    """
-    Builds tracks on 1 view
-    :param df:
-    :return:
-    """
-    pd_fit_l = [] ## list of rows to fit
-    ids = []
-    for planar in df.planar.unique():
-        df_p=df[df.planar==planar] ## select planar
-        to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
-
-        if len (to_fit)>1: ## If we are 2 cluster with the exact same charge...
-            pd_fit_l.append(to_fit.iloc[0])
-            ids.append(to_fit.iloc[0].cl_id.values[0])
-
-        else:
-            pd_fit_l.append(to_fit)
-            ids.append((planar,to_fit.cl_id.values[0]))
-
-    pd_fit=pd.concat(pd_fit_l)
-
-    fit = fit_1_d(pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
-    res_dict={}
-    for planar in df.planar.unique():
-        pd_fit_pl=pd_fit[pd_fit.planar==planar]
-        res_dict[planar]=calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
-    return fit, ids, res_dict
+    tracking_return_list = []
+    tracker = tracking_1d(0, data_folder)
+    for run in tqdm(cluster_pd_1D.run.unique(), desc="Run", leave=None):
+        tracker.cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.run==run]
+        subrun_list = (tracker.read_subruns())
+        with Pool(processes=cpu_count()) as pool:
+            with tqdm(total=len(subrun_list), desc="Subrun", leave=None) as pbar:
+                for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, subrun_list)):
+                    tracking_return_list.append(x)
+                    pbar.update()
+        tracker.tracks_pd = pd.concat(tracking_return_list)
+    return tracker.tracks_pd
 
 
 def build_displacement_pd(track_pd):
