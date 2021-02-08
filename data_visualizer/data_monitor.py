@@ -444,7 +444,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
                 elif plot_opt == "Distr charge clusters":
                     range_b=500
                     nbins=500
-                    cluster_pd_2D_cut = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.cl_charge]
+                    cluster_pd_2D_cut = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.cl_charge < 500]
                     fit=fill_hist_and_norm_and_fit_landau(cluster_pd_2D_cut,1,nbins,range_b)
                     fig = go.Figure()
                     fig.add_trace(go.Histogram(x=cluster_pd_2D_cut.cl_charge, opacity=0.75,xbins=dict(size=range_b/nbins, start=0),name="Charge histogram"))
