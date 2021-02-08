@@ -4,7 +4,6 @@ from tqdm import tqdm
 import pickle
 import sys
 sys.path.append('../analisi_planari')
-from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 import configparser
@@ -204,7 +203,6 @@ def apply_correction(cluster_pd, corr):
     return cluster_pd
 
 def display_results(corr_tracks, track_pd):
-    big_fig = make_subplots(rows=4, cols=2)
     fig_list = []
     for planar in (0, 1, 2, 3):
         for view in ("x", "y"):
@@ -220,8 +218,8 @@ def display_results(corr_tracks, track_pd):
             fig.update_layout(barmode='overlay')
             fig.update_traces(opacity=0.50)
             fig_list.append(fig)
-            big_fig.add_trace(fig)
-    big_fig.show()
+    for fig in fig_list:
+        fig.show()
 if __name__ == "__main__":
     corr,old = align_runs((29,),1)
     display_results(corr, old)
