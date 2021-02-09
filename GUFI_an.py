@@ -16,7 +16,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True):
+    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False):
         self.data_folder=data_folder
         self.calib_folder=calib_folder
         self.mapping_file=mapping_file
@@ -24,6 +24,8 @@ class runner:
         self.run_number=run
         self.silent=Silent
         self.purge=purge
+        self.alignment=alignment
+        
     ################# Decode part #################
     def decode_on_file(self,input_):
         self.decoder.write_root(input_)
@@ -430,7 +432,7 @@ class runner:
         """
         tracking_return_list=[]
         tracker=pl_lib.tracking_1d(self.run_number, self.data_folder)
-        tracker.load_cluster_1D()
+        tracker.load_cluster_1D(self.alignment)
         subrun_list=(tracker.read_subruns())
         if not self.silent:
             print ("Tracking")
@@ -444,7 +446,7 @@ class runner:
         else:
             print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
-        tracker.save_tracks_pd()
+        tracker.save_tracks_pd(self.alignment)
 
 
     def tracks_run_fill(self, subrun_tgt):
@@ -456,7 +458,7 @@ class runner:
         """
         tracking_return_list = []
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder)
-        tracker.load_cluster_1D()
+        tracker.load_cluster_1D(self.alignment)
         if not self.silent:
             print(f"Tracking filling up to subrun {subrun_tgt}")
 
@@ -495,7 +497,7 @@ class runner:
 
         tracking_return_list = []
         tracker=pl_lib.tracking_1d(self.run_number, self.data_folder)
-        tracker.load_cluster_1D()
+        tracker.load_cluster_1D(self.alignment)
         subrun_list=(tracker.read_subruns())
 
         if subrun in subrun_list:
@@ -503,7 +505,7 @@ class runner:
         else:
             print(f"Can't find subrun {subrun} to track, is the file cluster file in place? try to run with -c")
             return (1)
-        tracker.save_tracks_pd(subrun)
+        tracker.save_tracks_pd(self.alignment, subrun)
 
 ### selection 1D part ###
 
@@ -585,13 +587,12 @@ class runner:
 
         subrun_list = (tracker.read_subruns(True))
 
-
         if subrun in subrun_list:
             tracker.tracks_pd = tracker.build_select_cl_pd(subrun)
         else:
             print(f"Can't find subrun {subrun} to track, is the file cluster file in place? try to run with -c")
             return (1)
-        tracker.save_tracks_pd(subrun)
+        tracker.save_sel_cl_pd(subrun)
 
 
     def save_config(self,args):
@@ -689,6 +690,10 @@ def main(run, **kwargs):
         options["Silent"]=args.Silent
     if args.ir:
         options["purge"]=False
+    if args.alignment:
+        options["alignment"]=True
+    else:
+        options["alignment"]=False
     if len (op_list)>0:
         main_runner=runner(data_folder,run,calib_folder,mapping_file,**options)
     else:
@@ -773,6 +778,7 @@ if __name__=="__main__":
     parser.add_argument('-ir','--ir', help='Inhibit the removal of process files ',action="store_true")
     parser.add_argument('-tw','--time_window', help='Specify the signal time window for clusterization', type=int, nargs=2)
     parser.add_argument('-sf','--subrun_fill', help='Runs to fill up to the subrun', type=int, default=-1)
+    parser.add_argument('-ali','--alignment', help='Use the alignment', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))

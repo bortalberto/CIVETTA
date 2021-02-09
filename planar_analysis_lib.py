@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 import sys
 import configparser
+import pickle
 config=configparser.ConfigParser()
 config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
@@ -890,17 +891,43 @@ class tracking_1d:
         self.data_folder = data_folder
         self.residual_tol=0.2
 
-    def load_cluster_1D(self):
+    def load_cluster_1D(self, alignment=False):
         """
         Load the cluster 2-D file
         :return:
         """
         cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-        cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
-        cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
-        cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+        if not alignment:
+            cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
+            cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
+            cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+        else:
+            corr_matrix=self.search_corr_matrix()
+            cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
+            cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
+            cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+            for planar in (0, 1, 2, 3):
+                for view in ("x", "y"):
+                    cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] - corr_matrix[planar][view]
         self.cluster_pd_1D=cluster_pd_1D
+        if alignment:
+            self.save_aligned_clusters()
 
+
+    def save_aligned_clusters(self, subrun="All"):
+        """
+        Per salvare il i clusters corretti
+        :param subrun:
+        :return:
+        """
+        #TODO sistemare per poterlo runnurare su singolo run
+        self.cluster_pd_1D.to_pickle("{}/raw_root/{}/cluster_pd_1D_align.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+
+    def search_corr_matrix(self):
+        if os.path.isfile(self.data_folder+"/alignment/"+f"{self.run_number}"):
+            return pickle.load(open (self.data_folder+"/alignment/"+f"{self.run_number}", 'rb'))
+        else:
+            return None
     def fit_tracks_view(self, df, view):
         """
         Builds tracks on 1 view
@@ -1015,21 +1042,30 @@ class tracking_1d:
         }
         return ( pd.DataFrame(dict_4_pd) )
 
-    def save_tracks_pd(self, subrun="ALL"):
-        if subrun == "ALL":
-            self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+    def save_tracks_pd(self,alignment, subrun="ALL"):
+        if not alignment:
+            name="tracks_pd_1D"
         else:
-            self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_sub_{}_1D.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+            name="tracks_pd_1D_align"
+        if subrun == "ALL":
+            self.tracks_pd.to_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
+        else:
+            self.tracks_pd.to_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,name, subrun), compression="gzip")
 
     def load_tracks_pd(self):
-        self.tracks_pd  = pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.tracks_pd  = pd.read_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
 
-    def append_tracks_pd(self):
-        path = "{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number)
+    def append_tracks_pd(self, alignment):
+        if not alignment:
+            name="tracks_pd_1D"
+        else:
+            name="tracks_pd_1D_align"
+
+        path = "{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number,name)
         if os.path.isfile(path):
             tracks_dataframe_old = pd.read_pickle(path, compression="gzip")
             self.tracks_pd = pd.concat((self.tracks_pd, tracks_dataframe_old))
-        self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.tracks_pd.to_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
 
 
     def read_subruns(self, from_track=False):
