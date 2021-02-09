@@ -1,22 +1,39 @@
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
+def isnotebook():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+if isnotebook():
+    from tqdm.notebook import tqdm
+else:
+    from tqdm import tqdm
+
 import pickle
 import sys
 sys.path.append('../analisi_planari')
+import os
+
 import plotly.graph_objects as go
 from multiprocessing import Pool,cpu_count
 import configparser
-import os
 from planar_analysis_lib import calc_res,fit_1_d
 from planar_analysis_lib import tracking_1d
 config=configparser.ConfigParser()
-config.read(os.path.join(sys.path[0], "config.ini"))
+config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
     data_folder = config["GLOBAL"].get("data_folder")
 
 except KeyError as E:
-    print (f"{E}Missing or partial configration file, restore it.")
+    print (f"{E} Missing or partial configration file, restore it.")
     sys.exit(1)
 
 if data_folder=="TER":
@@ -116,7 +133,7 @@ def display_results(corr_tracks, track_pd):
             fig.add_trace(go.Histogram(x=corr_tracks[f"res_planar_{planar}_{view}"], nbinsx=1000, xbins=dict(  # bins used for histogram
                 start=-0.2,
                 end=0.2),
-                                       name="Post allineamneto"))
+                name="Post allineamneto"))
             fig.update_layout(barmode='overlay')
             fig.update_traces(opacity=0.50)
             fig_list.append(fig)

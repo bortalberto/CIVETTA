@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 import sys
 import configparser
 config=configparser.ConfigParser()
-config.read(os.path.join(sys.path[0], "config.ini"))
+config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
     data_folder=config["GLOBAL"].get("data_folder")
     mapping_file=config["GLOBAL"].get("mapping_file")
@@ -17,14 +17,12 @@ try:
 
 except KeyError as E:
     print (f"{E}Missing or partial configration file, restore it.")
-    sys.exit(1)
 
 if data_folder=="TER":
     try:
         data_folder=os.environ["TER_data"]
     except KeyError as E:
         print(f"{E} is not defined in your system variables")
-        sys.exit(1)
 
 class decoder:
     """
