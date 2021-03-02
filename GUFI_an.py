@@ -9,7 +9,6 @@ import configparser
 import sys
 import argparse
 import pandas as pd
-import pickle
 import json
 
 class runner:
@@ -409,7 +408,6 @@ class runner:
         :return:
         """
 
-        tracking_return_list = []
         tracker=pl_lib.tracking_2d(self.run_number, self.data_folder)
         tracker.load_cluster_2D()
         subrun_list=(tracker.read_subruns())
@@ -431,7 +429,7 @@ class runner:
         :return:
         """
         tracking_return_list=[]
-        tracker=pl_lib.tracking_1d(self.run_number, self.data_folder)
+        tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D(self.alignment)
         subrun_list=(tracker.read_subruns())
         if not self.silent:
@@ -442,7 +440,7 @@ class runner:
                     for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, subrun_list)):
                         tracking_return_list.append(x)
                         pbar.update()
-            tracker.tracks_pd=pd.concat(tracking_return_list)
+            tracker.tracks_pd = pd.concat(tracking_return_list)
         else:
             print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
@@ -457,8 +455,8 @@ class runner:
         :return:
         """
         tracking_return_list = []
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder)
-        tracker.load_cluster_1D(self.alignment)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker.load_cluster_1D()
         if not self.silent:
             print(f"Tracking filling up to subrun {subrun_tgt}")
 
@@ -495,8 +493,7 @@ class runner:
         :return:
         """
 
-        tracking_return_list = []
-        tracker=pl_lib.tracking_1d(self.run_number, self.data_folder)
+        tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D(self.alignment)
         subrun_list=(tracker.read_subruns())
 
@@ -518,7 +515,7 @@ class runner:
         """
         tracking_return_list = []
 
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D()
 
         subrun_list = (tracker.read_subruns(True))
@@ -544,7 +541,7 @@ class runner:
         :return:
         """
         tracking_return_list = []
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D()
 
         if not self.silent:
@@ -582,7 +579,7 @@ class runner:
         :return:
         """
 
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D()
 
         subrun_list = (tracker.read_subruns(True))
