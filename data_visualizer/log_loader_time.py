@@ -1,10 +1,5 @@
 import glob2
-from multiprocessing import Pool
-import os
-import time
-import numpy as np
-import ROOT as R
-import subprocess
+
 import time
 import sys
 from calendar import timegm

@@ -98,7 +98,7 @@ app.layout = html.Div(children=[
            {"label":"Charge vs time","value":"Charge vs time"},
            {"label": "Signal/noise ratio vs time", "value": "Signal ratio"},
            {"label": "N° Clusers vs time", "value": "Clusers vs time"},
-
+           {"label": "Noise vs time", "value": "Noise"},
            {"label":"X strips","value":"X strips"},
            {"label":"Y strips","value":"Y strips"},
            {"label":"Signal heatmap (2D clusters)","value":"Signal heatmap"},
@@ -215,7 +215,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
     fig_list=[]
     ### Plot da fare sugli HIT
     signal_lower_limit, signal_upper_limit=load_config_signal_limits(sel_run)
-    if plot_opt in ("Charge vs time", "X strips", "Y strips","Signal ratio"):
+    if plot_opt in ("Charge vs time", "X strips", "Y strips","Signal ratio","Noise"):
         data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
         data_pd_pre_0=data_pd[(data_pd.l1ts_min_tcoarse<1600) & (data_pd.l1ts_min_tcoarse>1300) & (data_pd.charge_SH>0)]
         if window_opt=="Signal":
@@ -318,6 +318,44 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
                     if max(y_data)<1:
                         fig.update_yaxes(range=[0, 1])
 
+                elif plot_opt=="Noise":
+                    ## Estract time informmation
+                    time = {}
+                    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
+                    time_dict=time_reader.elab_on_run_dict(sel_run)
+                    start, end = time_dict
+                    time[int(sel_run)] = calculater_middle_time(start, end)
+                    ## Add time information to PD
+                    data_pd_cut_2.insert(0, "time_r", 0)
+                    data_pd_cut_2["time_r"] = data_pd_cut_2.apply(lambda row: time[(int(row.runNo))][str(int(row.subRunNo))], axis=1)
+                    data_pd_cut_2['time_r'] = pd.to_datetime(data_pd_cut_2['time_r'], unit='s')
+
+                    ## Create noise count PD
+                    nois_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse > signal_upper_limit) | (data_pd_cut_2.l1ts_min_tcoarse < signal_lower_limit) & (data_pd_cut_2.planar == planar))]
+                    noise_pd = nois_cut.groupby(nois_cut.subRunNo).agg({"charge_SH": "count", "time_r": "last","subRunNo":"last"}, )
+                    noise_pd=noise_pd.rename(columns={"charge_SH": "noise_tot"})
+                    trig_dict=extract_num_triggers_run(data_folder+"/raw_dat/", sel_run)
+                    noise_win_width=(1567-signal_upper_limit + signal_lower_limit-1299)*6.25*10**(-9)
+                    noise_pd["noise_rate"]=noise_pd.apply(calc_rate_per_sub,args=(trig_dict,noise_win_width), axis=1)
+                    # noise_pd = noise_pd.groupby(nois_cut.time_r.dt.hour).agg({"noise_rate": "mean", "time_r": "last","subRunNo":"last"}, )
+                    noise_pd["time_r"] = (noise_pd["time_r"] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+                    noise_pd = noise_pd.groupby(noise_pd.subRunNo.divide(5).round().multiply(5)).agg({"subRunNo" : "mean", "time_r" : "mean",  "noise_rate" : "mean"})
+                    noise_pd["time_r"] = pd.to_datetime(noise_pd["time_r"], unit='s')
+                    fig = px.scatter(
+                            noise_pd,
+                            x="time_r",
+                            y="noise_rate",
+                            hover_data=["subRunNo"]
+                    )
+
+                    fig.update_layout(
+                        yaxis_title="Noise planar [Hz]",
+                        xaxis_title="Time",
+                        height=800
+                    )
+
+                    if max(noise_pd.noise_rate)<5000000:
+                        fig.update_yaxes(range=[0, 5000000])
 
                 else:
                     data_pd_cut_3=data_pd_cut_2[data_pd_cut_2.strip_y>0]
@@ -341,6 +379,8 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
                 fig.update_layout(template=no_data_template)
                 
             fig_list.append(fig)
+
+
         trig_tot=0
         for sub in data_pd_pre_2.subRunNo.unique():
             trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
@@ -404,7 +444,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
                 elif plot_opt == "Distr charge clusters":
                     range_b=500
                     nbins=500
-                    cluster_pd_2D_cut = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.cl_charge]
+                    cluster_pd_2D_cut = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.cl_charge < 500]
                     fit=fill_hist_and_norm_and_fit_landau(cluster_pd_2D_cut,1,nbins,range_b)
                     fig = go.Figure()
                     fig.add_trace(go.Histogram(x=cluster_pd_2D_cut.cl_charge, opacity=0.75,xbins=dict(size=range_b/nbins, start=0),name="Charge histogram"))
@@ -545,6 +585,12 @@ def extract_num_triggers_run(data_raw_folder, run_number):
         return_dict[subrun[0]]=int(extract_num_triggers_subrun(filename))
     return return_dict
 
+def calc_rate_per_sub(row, trig_dict, width):
+    sub = row.subRunNo
+    if trig_dict[str(sub)] > 0:
+        return row["noise_tot"] / (trig_dict[str(sub)]*width)
+    else:
+        return np.NAN
 if __name__ == '__main__':
     debug = True
     app.run_server(debug=True)

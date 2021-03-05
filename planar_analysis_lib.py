@@ -7,8 +7,9 @@ import pandas as pd
 from sklearn.cluster import KMeans
 import sys
 import configparser
+import pickle
 config=configparser.ConfigParser()
-config.read(os.path.join(sys.path[0], "config.ini"))
+config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
     data_folder=config["GLOBAL"].get("data_folder")
     mapping_file=config["GLOBAL"].get("mapping_file")
@@ -17,14 +18,12 @@ try:
 
 except KeyError as E:
     print (f"{E}Missing or partial configration file, restore it.")
-    sys.exit(1)
 
 if data_folder=="TER":
     try:
         data_folder=os.environ["TER_data"]
     except KeyError as E:
         print(f"{E} is not defined in your system variables")
-        sys.exit(1)
 
 class decoder:
     """
@@ -882,15 +881,18 @@ class tracking_1d:
     """
     Simple tracking 1D 4 data selection
     """
-    def __init__(self,run_number,data_folder):
+    def __init__(self, run_number, data_folder, alignment):
         """
         It needs the cluster 2_D pickle file to run
+        :param alignment:
         :param run_number:
         :param data_folder:
         """
         self.run_number = run_number
         self.data_folder = data_folder
-        self.residual_tol=0.2
+        self.residual_tol = 0.2
+        self.alignment=alignment
+        self.PUT = False ## Planar under test
 
     def load_cluster_1D(self):
         """
@@ -898,10 +900,37 @@ class tracking_1d:
         :return:
         """
         cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-        cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
-        cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
-        cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+        if not self.alignment:
+            cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
+            cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
+            cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+        else:
+            corr_matrix=self.search_corr_matrix()
+            cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
+            cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
+            cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+            for planar in (0, 1, 2, 3):
+                for view in ("x", "y"):
+                    cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] - corr_matrix[planar][view]
         self.cluster_pd_1D=cluster_pd_1D
+        if self.alignment:
+            self.save_aligned_clusters()
+
+
+    def save_aligned_clusters(self, subrun="All"):
+        """
+        Per salvare il i clusters corretti
+        :param subrun:
+        :return:
+        """
+        #TODO sistemare per poterlo runnurare su singolo run
+        self.cluster_pd_1D.to_pickle("{}/raw_root/{}/cluster_pd_1D_align.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+
+    def search_corr_matrix(self):
+        if os.path.isfile(self.data_folder+"/alignment/"+f"{self.run_number}"):
+            return pickle.load(open (self.data_folder+"/alignment/"+f"{self.run_number}", 'rb'))
+        else:
+            return None
 
     def fit_tracks_view(self, df, view):
         """
@@ -912,24 +941,45 @@ class tracking_1d:
         pd_fit_l = [] ## list of rows to fit
         ids = []
         for planar in df.planar.unique():
+            if self.PUT is False or (self.PUT != planar):
+                df_p=df[df.planar==planar] ## select planar
+                to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
+
+                if len (to_fit)>1: ## If we have 2 cluster with the exact same charge...
+                    pd_fit_l.append(to_fit.iloc[0])
+                    ids.append(to_fit.iloc[0].cl_id.values[0])
+
+                else:
+                    pd_fit_l.append(to_fit)
+                    ids.append((planar,to_fit.cl_id.values[0]))
+            else:
+                pass
+        pd_fit=pd.concat(pd_fit_l)
+        fit = fit_1_d(pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
+
+        res_dict={}
+
+
+        pd_fit_l = [] ## list of rows to fit lo rigenero per usarlo per il calcolo del residuo
+        ids = []
+        for planar in df.planar.unique():
             df_p=df[df.planar==planar] ## select planar
             to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
 
-            if len (to_fit)>1: ## If we are 2 cluster with the exact same charge...
+            if len (to_fit)>1: ## If we have 2 cluster with the exact same charge...
                 pd_fit_l.append(to_fit.iloc[0])
                 ids.append(to_fit.iloc[0].cl_id.values[0])
 
             else:
                 pd_fit_l.append(to_fit)
                 ids.append((planar,to_fit.cl_id.values[0]))
-
         pd_fit=pd.concat(pd_fit_l)
 
-        fit = fit_1_d(pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
-        res_dict={}
         for planar in df.planar.unique():
             pd_fit_pl=pd_fit[pd_fit.planar==planar]
+            calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
             res_dict[planar]=calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
+
         return fit, ids, res_dict
 
     def build_tracks_pd(self, subrun_tgt):
@@ -952,7 +1002,6 @@ class tracking_1d:
             "res_planar_1_y": [],
             "res_planar_2_y": [],
             "res_planar_3_y": []
-
         }
         cl_id_l=[]
 
@@ -966,37 +1015,43 @@ class tracking_1d:
                     df_c2 = data_pd_cut_1[data_pd_cut_1["count"] == count] # df_c2 is shorter
 
                     # Build track X
-                    if len(df_c2[df_c2.cl_pos_x_cm>0].planar.unique())>2: ## I want at least 3 point in that view
-                        fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2[df_c2.cl_pos_x_cm>0], "x")
-                        run_l.append(run)
-                        subrun_l.append(subrun)
-                        count_l.append(count)
-                        x_fit.append(fit_x)
-                        y_fit.append(np.nan)
-                        for planar in range(0,4):
-                            if planar in res_dict.keys():
-                                planar_di[f"res_planar_{planar}_x"].append(res_dict[planar])
-                                planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                            else:
-                                planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                                planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                        cl_id_l.append(cl_ids)
+                    df_c2_x=df_c2[df_c2.cl_pos_x_cm>0]
+                    if len(df_c2_x.planar.unique())>2: ## I want at least 3 point in that view
+                        if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT ].planar.unique())>2):
+                            fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2_x, "x")
+                            run_l.append(run)
+                            subrun_l.append(subrun)
+                            count_l.append(count)
+                            x_fit.append(fit_x)
+                            y_fit.append(np.nan)
+                            for planar in range(0,4):
+                                if planar in res_dict.keys():
+                                    planar_di[f"res_planar_{planar}_x"].append(res_dict[planar])
+                                    planar_di[f"res_planar_{planar}_y"].append(np.nan)
+                                else:
+                                    planar_di[f"res_planar_{planar}_x"].append(np.nan)
+                                    planar_di[f"res_planar_{planar}_y"].append(np.nan)
+                            cl_id_l.append(cl_ids)
+
+
                     # Build track Y
-                    if len(df_c2[df_c2.cl_pos_y_cm>0].planar.unique())>2: ## I want at least 3 point in that view
-                        fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2[df_c2.cl_pos_y_cm>0], "y")
-                        run_l.append(run)
-                        subrun_l.append(subrun)
-                        count_l.append(count)
-                        x_fit.append(np.nan)
-                        y_fit.append(fit_y)
-                        for planar in range(0, 4):
-                            if planar in res_dict.keys():
-                                planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                                planar_di[f"res_planar_{planar}_y"].append(res_dict[planar])
-                            else:
-                                planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                                planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                        cl_id_l.append(cl_ids)
+                    df_c2_y=df_c2[df_c2.cl_pos_y_cm>0]
+                    if len(df_c2_y.planar.unique())>2: ## I want at least  3 point in that view
+                        if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT ].planar.unique())>2):
+                            fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2_y, "y")
+                            run_l.append(run)
+                            subrun_l.append(subrun)
+                            count_l.append(count)
+                            x_fit.append(np.nan)
+                            y_fit.append(fit_y)
+                            for planar in range(0, 4):
+                                if planar in res_dict.keys():
+                                    planar_di[f"res_planar_{planar}_x"].append(np.nan)
+                                    planar_di[f"res_planar_{planar}_y"].append(res_dict[planar])
+                                else:
+                                    planar_di[f"res_planar_{planar}_x"].append(np.nan)
+                                    planar_di[f"res_planar_{planar}_y"].append(np.nan)
+                            cl_id_l.append(cl_ids)
 
 
         dict_4_pd = {
@@ -1018,20 +1073,37 @@ class tracking_1d:
         return ( pd.DataFrame(dict_4_pd) )
 
     def save_tracks_pd(self, subrun="ALL"):
-        if subrun == "ALL":
-            self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        if not self.alignment:
+            name="tracks_pd_1D"
         else:
-            self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_sub_{}_1D.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+            name="tracks_pd_1D_align"
+        if subrun == "ALL":
+            self.tracks_pd.to_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
+        else:
+            self.tracks_pd.to_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,name, subrun), compression="gzip")
 
-    def load_tracks_pd(self):
-        self.tracks_pd  = pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+    def load_tracks_pd(self, subrun="ALL"):
+        if not self.alignment:
+            name="tracks_pd_1D"
+        else:
+            name="tracks_pd_1D_align"
+
+        if subrun == "ALL":
+            self.tracks_pd = pd.read_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number,name), compression="gzip")
+        else:
+            self.tracks_pd = pd.read_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,name, subrun), compression="gzip")
 
     def append_tracks_pd(self):
-        path = "{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number)
+        if not self.alignment:
+            name="tracks_pd_1D"
+        else:
+            name="tracks_pd_1D_align"
+
+        path = "{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number,name)
         if os.path.isfile(path):
             tracks_dataframe_old = pd.read_pickle(path, compression="gzip")
             self.tracks_pd = pd.concat((self.tracks_pd, tracks_dataframe_old))
-        self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.tracks_pd.to_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
 
 
     def read_subruns(self, from_track=False):

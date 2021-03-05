@@ -1,16 +1,10 @@
 import ROOT as R
-import root_numpy
 import glob2
 import numpy as np
-import root_pandas
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from tqdm import tqdm_notebook
-from sklearn.cluster import KMeans
-from math import log10
-from scipy.stats import moyal
-from scipy.optimize import curve_fit
+
 import pickle
 
 
