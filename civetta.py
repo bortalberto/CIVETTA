@@ -430,7 +430,7 @@ class runner:
         """
         tracking_return_list=[]
         tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
-        tracker.load_cluster_1D(self.alignment)
+        tracker.load_cluster_1D()
         subrun_list=(tracker.read_subruns())
         if not self.silent:
             print ("Tracking")
@@ -444,7 +444,7 @@ class runner:
         else:
             print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
-        tracker.save_tracks_pd(self.alignment)
+        tracker.save_tracks_pd()
 
 
     def tracks_run_fill(self, subrun_tgt):
@@ -494,7 +494,7 @@ class runner:
         """
 
         tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
-        tracker.load_cluster_1D(self.alignment)
+        tracker.load_cluster_1D()
         subrun_list=(tracker.read_subruns())
 
         if subrun in subrun_list:
@@ -502,7 +502,7 @@ class runner:
         else:
             print(f"Can't find subrun {subrun} to track, is the file cluster file in place? try to run with -c")
             return (1)
-        tracker.save_tracks_pd(self.alignment, subrun)
+        tracker.save_tracks_pd(subrun)
 
 ### selection 1D part ###
 
