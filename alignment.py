@@ -113,47 +113,47 @@ def align_runs(run_list, iterations=1):
         pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
     return corr_tracks, track_pd
 
-# def align_runs_neural(run_list, iterations=1):
-#     """
-#     Aligns the run in the list, each one will have the same correction array
-#     :param run_list:
-#     :return:
-#     """
-#     c_pd_list = []
-#     t_pd_list = []
-#     for run_number in run_list:
-#         # loads all the data in the macrorun
-#         c_pd_list.append(pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
-#         t_pd_list.append(pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
-#     cluster_pd = pd.concat(c_pd_list)
-#     track_pd = pd.concat(t_pd_list)
-#
-#     # Add infos about the cluster position (to be fixed when adding angle)
-#     cluster_pd["cl_pos_x_cm"] = cluster_pd.cl_pos_x * 0.0650
-#     cluster_pd["cl_pos_y_cm"] = cluster_pd.cl_pos_y * 0.0650
-#     cluster_pd["cl_pos_z_cm"] = cluster_pd.planar * 10
-#
-#     # Initialize the dict for correction and displacement
-#     displ=build_displacement_pd(track_pd)
-#     correction = {
-#         0: {"x": 0, "y": 0},
-#         1: {"x": 0, "y": 0},
-#         2: {"x": 0, "y": 0},
-#         3: {"x": 0, "y": 0}
-#
-#     }
-#
-#     # Performs N rounds of alignment
-#     for j in tqdm(range(0, iterations), desc="Iterations"):
-#         for planar in tqdm((0, 1), desc= "Planar"):
-#             for view in ("x", "y"):
-#                 cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] - displ[f"displ_planar_{planar}_{view}"]
-#                 correction[planar][view] += displ[f"displ_planar_{planar}_{view}"]
-#             corr_tracks = build_tracks_pd(cluster_pd)
-#             displ = build_displacement_pd(corr_tracks)
-#     for run in run_list:
-#         pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
-#     return corr_tracks, track_pd
+def align_runs_neural(run_list, iterations=1):
+    """
+    Aligns the run in the list, each one will have the same correction array
+    :param run_list:
+    :return:
+    """
+    c_pd_list = []
+    t_pd_list = []
+    for run_number in run_list:
+        # loads all the data in the macrorun
+        c_pd_list.append(pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
+        t_pd_list.append(pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
+    cluster_pd = pd.concat(c_pd_list)
+    track_pd = pd.concat(t_pd_list)
+
+    # Add infos about the cluster position (to be fixed when adding angle)
+    cluster_pd["cl_pos_x_cm"] = cluster_pd.cl_pos_x * 0.0650
+    cluster_pd["cl_pos_y_cm"] = cluster_pd.cl_pos_y * 0.0650
+    cluster_pd["cl_pos_z_cm"] = cluster_pd.planar * 10
+
+    # Initialize the dict for correction and displacement
+    displ=build_displacement_pd(track_pd)
+    correction = {
+        0: {"x": 0, "y": 0},
+        1: {"x": 0, "y": 0},
+        2: {"x": 0, "y": 0},
+        3: {"x": 0, "y": 0}
+
+    }
+
+    # Performs N rounds of alignment
+    for j in tqdm(range(0, iterations), desc="Iterations"):
+        for planar in tqdm((0, 1), desc= "Planar"):
+            for view in ("x", "y"):
+                cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] - displ[f"displ_planar_{planar}_{view}"]
+                correction[planar][view] += displ[f"displ_planar_{planar}_{view}"]
+            corr_tracks = build_tracks_pd(cluster_pd)
+            displ = build_displacement_pd(corr_tracks)
+    for run in run_list:
+        pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
+    return corr_tracks, track_pd
 
 
 def apply_correction(cluster_pd, corr):
