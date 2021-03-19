@@ -96,11 +96,11 @@ app.layout = html.Div(children=[
        id='plot_opt',
        options=[
            {"label":"Charge vs time","value":"Charge vs time"},
-           {"label": "Signal/noise ratio vs time", "value": "Signal ratio"},
-           {"label": "N° Clusers vs time", "value": "Clusers vs time"},
-           {"label": "Noise vs time", "value": "Noise"},
+           {"label":"Signal/noise ratio vs time", "value": "Signal ratio"},
+           {"label":"Noise vs time", "value": "Noise"},
            {"label":"X strips","value":"X strips"},
            {"label":"Y strips","value":"Y strips"},
+           {"label": "N° Clusers vs time", "value": "Clusters vs time"},
            {"label":"Signal heatmap (2D clusters)","value":"Signal heatmap"},
            {"label":"Distr charge clusters (2D clusters)","value":"Distr charge clusters"}
                ],
@@ -139,6 +139,15 @@ app.layout = html.Div(children=[
        value='0'
         ),
     ], style={'width': '5%', 'display': 'none'},id='sel_dub_div'),
+
+    html.Div([
+        html.H6("Cluster selection"),
+        dcc.Dropdown(
+            id='sel_binning',
+            options=[{"label": 0.5, "value": 0.5}, {"label": 1, "value": 1}, {"label": 2, "value": 2}, {"label": 4, "value": 4}],
+            value=1
+        ),
+    ], style={'width': '10%', 'display': 'none'}, id='sel_binning_div'),
 
     html.Div([
         html.H6("Sel binning (strips)"),
@@ -235,146 +244,28 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
             data_pd_pre_2=data_pd_pre_1
 
         for planar in range (0,4):
-
-
             data_pd_cut_2=data_pd_pre_2[ (data_pd_pre_2.planar == planar) ]
 
             if len (data_pd_cut_2) > 0:
 
                 if plot_opt=="Charge vs time":
-                        fig = px.density_heatmap(data_pd_cut_2, x="l1ts_min_tcoarse", y="charge_SH",
-                                                 title="Charge vs time",
-                                                 marginal_x="histogram",
-                                                 marginal_y="histogram",
-                                                 color_continuous_scale=colorscale,
-                                                 nbinsx=int(data_pd_cut_2.l1ts_min_tcoarse.max()-(data_pd_cut_2.l1ts_min_tcoarse.min())),
-                                                 nbinsy=120 )
-                        fig.update_layout(
-                            xaxis_title="Trigger time stamp - hit TCoarse ",
-                            yaxis_title="Charge [fC]",
-                            height=800
-                        )
-                        fig.update_xaxes(range=[1300, 1600])
-                        fig.update_yaxes(range=[0, 60])
-
+                    fig = charge_vs_time_plot(data_pd_cut_2)
 
                 elif plot_opt=="X strips":
-                    data_pd_cut_3=data_pd_cut_2[data_pd_cut_2.strip_x>0]
-                    fig = px.density_heatmap(data_pd_cut_3, x="strip_x", y="charge_SH",
-                                             title="Charge vs strip X",
-                                             marginal_x="histogram",
-                                             color_continuous_scale=colorscale,
-                                             hover_data={'channel':True, # remove species from hover data
-                                                         'strip_x':True, # customize hover for column of y attribute
-                                                         'gemroc':True # add other column, default formatting
-                                                            },
-                                             nbinsx=128,
-                                             range_x=[0,128],
-                                             nbinsy=120,
-                                             range_y=[0,60])
-                    fig.update_layout(
-                        yaxis_title="Charge [fC] ",
-                        xaxis_title="X strip",
-                        height=800
-                    )
+                    fig = strips_plot(data_pd_cut_2,"x")
 
+                elif plot_opt=="Y strips":
+                    fig = strips_plot(data_pd_cut_2,"y")
 
                 elif plot_opt=="Signal ratio":
-                    ## Estract time informmation
-                    time = {}
-                    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
-                    time_dict=time_reader.elab_on_run_dict(sel_run)
-                    start, end = time_dict
-                    time[int(sel_run)] = calculater_middle_time(start, end)
-                    ## Add time information to PD
-                    data_pd_cut_2.insert(0, "time_r", 0)
-                    data_pd_cut_2["time_r"] = data_pd_cut_2.apply(lambda row: time[(int(row.runNo))][str(int(row.subRunNo))], axis=1)
-                    data_pd_cut_2['time_r'] = pd.to_datetime(data_pd_cut_2['time_r'], unit='s')
-                    signal_list = []
-
-                    ## Create signal and noise count PD
-                    sin_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse < signal_upper_limit) & (data_pd_cut_2.l1ts_min_tcoarse > signal_lower_limit) & (data_pd_cut_2.planar == planar) & (data_pd_cut_2.charge_SH > 5))]
-                    nois_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse > signal_upper_limit) | (data_pd_cut_2.l1ts_min_tcoarse < signal_lower_limit) & (data_pd_cut_2.planar == planar))]
-
-                    sin = sin_cut.groupby(sin_cut.time_r.dt.hour).agg({"charge_SH": "count", "time_r": "last"})
-                    nois = nois_cut.groupby(nois_cut.time_r.dt.hour).agg({"charge_SH": "count", "time_r": "last"})
-
-                    signal_list.append(nois.rename(columns={"charge_SH": "noise_planar_{}".format(planar)}))
-                    signal_list.append(sin.rename(columns={"charge_SH": "signal_planar_{}".format(planar)}))
-                    result = pd.concat(signal_list, axis=1)
-                    result = result.loc[:, ~result.columns.duplicated()]
-                    x_data=[x for x in result.time_r]
-                    y_data=[y for y in result[f"signal_planar_{planar}"]/result[f"noise_planar_{planar}"]]
-                    fig = px.scatter(
-                            x=x_data,
-                            y=y_data
-                        )
-
-                    fig.update_layout(
-                        yaxis_title="Signal/noise  ratio",
-                        xaxis_title="Time",
-                        height=800
-                    )
-                    if max(y_data)<1:
-                        fig.update_yaxes(range=[0, 1])
+                    fig = signal_ratio_plot(data_pd_cut_2,sel_run,planar)
 
                 elif plot_opt=="Noise":
-                    ## Estract time informmation
-                    time = {}
-                    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
-                    time_dict=time_reader.elab_on_run_dict(sel_run)
-                    start, end = time_dict
-                    time[int(sel_run)] = calculater_middle_time(start, end)
-                    ## Add time information to PD
-                    data_pd_cut_2.insert(0, "time_r", 0)
-                    data_pd_cut_2["time_r"] = data_pd_cut_2.apply(lambda row: time[(int(row.runNo))][str(int(row.subRunNo))], axis=1)
-                    data_pd_cut_2['time_r'] = pd.to_datetime(data_pd_cut_2['time_r'], unit='s')
+                    fig = noise_hits_plot(data_pd_cut_2, sel_run, planar)
+                else:  # Catcher
+                    fig = go.Figure()
 
-                    ## Create noise count PD
-                    nois_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse > signal_upper_limit) | (data_pd_cut_2.l1ts_min_tcoarse < signal_lower_limit) & (data_pd_cut_2.planar == planar))]
-                    noise_pd = nois_cut.groupby(nois_cut.subRunNo).agg({"charge_SH": "count", "time_r": "last","subRunNo":"last"}, )
-                    noise_pd=noise_pd.rename(columns={"charge_SH": "noise_tot"})
-                    trig_dict=extract_num_triggers_run(data_folder+"/raw_dat/", sel_run)
-                    noise_win_width=(1567-signal_upper_limit + signal_lower_limit-1299)*6.25*10**(-9)
-                    noise_pd["noise_rate"]=noise_pd.apply(calc_rate_per_sub,args=(trig_dict,noise_win_width), axis=1)
-                    # noise_pd = noise_pd.groupby(nois_cut.time_r.dt.hour).agg({"noise_rate": "mean", "time_r": "last","subRunNo":"last"}, )
-                    noise_pd["time_r"] = (noise_pd["time_r"] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
-                    noise_pd = noise_pd.groupby(noise_pd.subRunNo.divide(5).round().multiply(5)).agg({"subRunNo" : "mean", "time_r" : "mean",  "noise_rate" : "mean"})
-                    noise_pd["time_r"] = pd.to_datetime(noise_pd["time_r"], unit='s')
-                    fig = px.scatter(
-                            noise_pd,
-                            x="time_r",
-                            y="noise_rate",
-                            hover_data=["subRunNo"]
-                    )
-
-                    fig.update_layout(
-                        yaxis_title="Noise planar [Hz]",
-                        xaxis_title="Time",
-                        height=800
-                    )
-
-                    if max(noise_pd.noise_rate)<5000000:
-                        fig.update_yaxes(range=[0, 5000000])
-
-                else:
-                    data_pd_cut_3=data_pd_cut_2[data_pd_cut_2.strip_y>0]
-                    fig = px.density_heatmap(data_pd_cut_3, x="strip_y", y="charge_SH",
-                                             marginal_x="histogram",
-                                             title="Charge vs strip Y",
-                                             color_continuous_scale=colorscale,
-                                             hover_data=["strip_y", "tiger", "gemroc"],
-                                             nbinsx=128,
-                                             range_x=[0,128],
-                                             nbinsy=120,
-                                             range_y=[0,60])
-                    fig.update_layout(
-                        yaxis_title="Charge [fC] ",
-                        xaxis_title="Y strip",
-                        height=800
-                    )
             else:
-
                 fig=go.Figure()
                 fig.update_layout(template=no_data_template)
                 
@@ -387,8 +278,8 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         trigger_string=f"Displayng {trig_tot} triggers"
         fig_list.append(trigger_string)
 
-    ## Plot da fare sui clusters
-    if plot_opt in ("Signal heatmap" , "Distr charge clusters", "Clusers vs time"):
+    ## Plot da fare sui clusters 2D
+    if plot_opt in ("Signal heatmap" , "Distr charge clusters", "Clusters vs time"):
         total_clusters = 0
         cluster_pd_2D = pd.read_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
         for planar in range(0, 4):
@@ -407,77 +298,27 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
             if len(cluster_pd_2D_pre_2)>0:
                 total_clusters+=len(cluster_pd_2D_pre_2)
                 if plot_opt == "Signal heatmap":
-                    fig = px.density_heatmap(x=cluster_pd_2D_pre_2.cl_pos_x, y=cluster_pd_2D_pre_2.cl_pos_y, marginal_x="histogram", marginal_y="histogram", nbinsx=int(128/sel_binning), nbinsy=int(128/sel_binning))
-                    fig.update_layout(
-                        yaxis_title="Y strips ",
-                        xaxis_title="X strips",
-                        height = 800
-                    )
+                    fig = signal_heatmap_plot(cluster_pd_2D_pre_2)
 
-                if plot_opt == "Clusers vs time":
-                    time = {}
-                    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
-                    time_dict=time_reader.elab_on_run_dict(sel_run)
-                    start, end = time_dict
-                    time[int(sel_run)] = calculater_middle_time(start, end)
-                    ## Add time information to PD
-                    cluster_pd_2D_pre_2.insert(0, "time_r", 0)
-                    cluster_pd_2D_pre_2["time_r"] = cluster_pd_2D_pre_2.apply(lambda row: time[(int(row.run))][str(int(row.subrun))], axis=1)
-                    cluster_pd_2D_pre_2['time_r'] = pd.to_datetime(cluster_pd_2D_pre_2['time_r'], unit='s')
-                    clusters_list=[]
-                    trigger_list=[]
-                    time_list=[]
-                    trig_dict=extract_num_triggers_run(data_folder+"/raw_dat/", sel_run)
-                    for subrun in cluster_pd_2D_pre_2.subrun.unique():
-                        trigger_list.append(trig_dict[str(int(subrun))])
-                        cl_pd=cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.subrun==subrun]
-                        clusters_list.append(cl_pd.cl_pos_x.count())
-                        time_list.append(cl_pd.time_r.min())
-                    fig = px.scatter(x=time_list, y=np.divide(clusters_list,trigger_list),  marginal_y="histogram")
-                    fig.update_layout(
-                        yaxis_title="Clusters / trigger",
-                        xaxis_title="Time",
-                        height = 800
-                    )
+                elif plot_opt == "Clusters vs time":
+                    fig = clusters_vs_tim_plot(cluster_pd_2D_pre_2, sel_run)
 
 
                 elif plot_opt == "Distr charge clusters":
-                    range_b=500
-                    nbins=500
-                    cluster_pd_2D_cut = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.cl_charge < 500]
-                    fit=fill_hist_and_norm_and_fit_landau(cluster_pd_2D_cut,1,nbins,range_b)
+                    fig = distr_charge_plot_2D(cluster_pd_2D_pre_2)
+
+                else: # Catcher
                     fig = go.Figure()
-                    fig.add_trace(go.Histogram(x=cluster_pd_2D_cut.cl_charge, opacity=0.75,xbins=dict(size=range_b/nbins, start=0),name="Charge histogram"))
-                    fig.update_layout(
-                            yaxis_title = "Count",
-                            xaxis_title = "Cluster charge [fC]",
-                            height = 800
-                    )
-                    x_list=np.arange(0,range_b,range_b/nbins)
-                    y_list=[calculate_y_landau(fit,x) for x in x_list ]
-                    fig.add_trace(go.Scatter(x=x_list, y=y_list , name="Landau fit"))
-                    textfont = dict(
-                        family = "sans serif",
-                        size = 18,
-                        color = "LightSeaGreen"
-                    )
-                    fig.add_annotation(x=0.75,xref="paper",y=0.95,yref="paper",
-                                       text=f"""AVG Charge: {cluster_pd_2D_cut.cl_charge.mean():.2f} +/- {
-                                        np.std(cluster_pd_2D_cut.cl_charge)  /
-                                        (cluster_pd_2D_cut.cl_charge.count())**(1/2):.2f}""",showarrow=False, font=textfont)
-                    fig.add_annotation(x=0.75,xref="paper",y=0.90,yref="paper",
-                                       text=f"MPV CHarge: {fit[1]:.2f} +/- {fit[4]:.2f}",showarrow=False, font=textfont)
-                    fig.add_annotation(x=0.75,xref="paper",y=0.85,yref="paper",
-                                       text=f"""AVG size(x+y): {cluster_pd_2D_cut.cl_size_tot.mean():.2f} +/- {
-                                       np.std(cluster_pd_2D_cut.cl_size_tot)  /
-                                        (cluster_pd_2D_cut.cl_size_tot.count())**(1/2):.2f}""",showarrow=False, font=textfont)
+
+                fig_list.append(fig)
 
             else:
                 fig = go.Figure()
                 fig.update_layout(template=no_data_template)
-            fig_list.append(fig)
-        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+                fig_list.append(fig)
 
+        # Aggiungi indicazione sul numero di trigger
+        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
         if sel_options == "Last 10":
             subruns_list = data_pd.subRunNo.unique()
             subruns_list.sort()
@@ -487,10 +328,11 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         else:
             data_pd_pre_2 = data_pd
         trig_tot=0
-        print (data_pd_pre_2.keys())
         for sub in data_pd_pre_2.subRunNo.unique():
             trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
         fig_list.append(f"{total_clusters} clusters in {trig_tot} triggers")
+        
+    # Plot da fare su risultato selezione tracciamento
     return fig_list
 
 
@@ -591,6 +433,197 @@ def calc_rate_per_sub(row, trig_dict, width):
         return row["noise_tot"] / (trig_dict[str(sub)]*width)
     else:
         return np.NAN
+
+
+## Plot functions
+def charge_vs_time_plot(data_pd_cut_2):
+    fig = px.density_heatmap(data_pd_cut_2, x="l1ts_min_tcoarse", y="charge_SH",
+                             title="Charge vs time",
+                             marginal_x="histogram",
+                             marginal_y="histogram",
+                             color_continuous_scale=colorscale,
+                             nbinsx=int(data_pd_cut_2.l1ts_min_tcoarse.max() - (data_pd_cut_2.l1ts_min_tcoarse.min())),
+                             nbinsy=120)
+    fig.update_layout(
+        xaxis_title="Trigger time stamp - hit TCoarse ",
+        yaxis_title="Charge [fC]",
+        height=800
+    )
+    fig.update_xaxes(range=[1300, 1600])
+    fig.update_yaxes(range=[0, 60])
+    return fig
+
+def strips_plot(data_pd_cut_2, view):
+    data_pd_cut_3 = data_pd_cut_2[data_pd_cut_2[f"strip_{view}"] > 0]
+    fig = px.density_heatmap(data_pd_cut_3, x=f"strip_{view}", y="charge_SH",
+                             title=f"Charge vs strip {view}",
+                             marginal_x="histogram",
+                             color_continuous_scale=colorscale,
+                             hover_data={'channel': True,  # remove species from hover data
+                                         f'strip_{view}': True,  # customize hover for column of y attribute
+                                         'gemroc' : True  # add other column, default formatting
+                                         },
+                             nbinsx=128,
+                             range_x=[0, 128],
+                             nbinsy=120,
+                             range_y=[0, 60])
+    fig.update_layout(
+        yaxis_title="Charge [fC] ",
+        xaxis_title=f"{view} strip",
+        height=800
+    )
+    return fig
+
+def signal_ratio_plot(data_pd_cut_2, sel_run, planar):
+    ## Estract time informmation
+    time = {}
+    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
+    time_dict=time_reader.elab_on_run_dict(sel_run)
+    start, end = time_dict
+    time[int(sel_run)] = calculater_middle_time(start, end)
+    ## Add time information to PD
+    data_pd_cut_2.insert(0, "time_r", 0)
+    data_pd_cut_2["time_r"] = data_pd_cut_2.apply(lambda row: time[(int(row.runNo))][str(int(row.subRunNo))], axis=1)
+    data_pd_cut_2['time_r'] = pd.to_datetime(data_pd_cut_2['time_r'], unit='s')
+    signal_list = []
+
+    ## Create signal and noise count PD
+    sin_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse < signal_upper_limit) & (data_pd_cut_2.l1ts_min_tcoarse > signal_lower_limit) & (data_pd_cut_2.planar == planar) & (data_pd_cut_2.charge_SH > 5))]
+    nois_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse > signal_upper_limit) | (data_pd_cut_2.l1ts_min_tcoarse < signal_lower_limit) & (data_pd_cut_2.planar == planar))]
+
+    sin = sin_cut.groupby(sin_cut.time_r.dt.hour).agg({"charge_SH": "count", "time_r": "last"})
+    nois = nois_cut.groupby(nois_cut.time_r.dt.hour).agg({"charge_SH": "count", "time_r": "last"})
+
+    signal_list.append(nois.rename(columns={"charge_SH": "noise_planar_{}".format(planar)}))
+    signal_list.append(sin.rename(columns={"charge_SH": "signal_planar_{}".format(planar)}))
+    result = pd.concat(signal_list, axis=1)
+    result = result.loc[:, ~result.columns.duplicated()]
+    x_data=[x for x in result.time_r]
+    y_data=[y for y in result[f"signal_planar_{planar}"]/result[f"noise_planar_{planar}"]]
+    fig = px.scatter(
+            x=x_data,
+            y=y_data
+        )
+
+    fig.update_layout(
+        yaxis_title="Signal/noise  ratio",
+        xaxis_title="Time",
+        height=800
+    )
+    if max(y_data)<1:
+        fig.update_yaxes(range=[0, 1])
+    return fig
+
+
+def noise_hits_plot(data_pd_cut_2, sel_run, planar):
+    ## Estract time informmation
+    time = {}
+    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
+    time_dict = time_reader.elab_on_run_dict(sel_run)
+    start, end = time_dict
+    time[int(sel_run)] = calculater_middle_time(start, end)
+    ## Add time information to PD
+    data_pd_cut_2.insert(0, "time_r", 0)
+    data_pd_cut_2["time_r"] = data_pd_cut_2.apply(lambda row: time[(int(row.runNo))][str(int(row.subRunNo))], axis=1)
+    data_pd_cut_2['time_r'] = pd.to_datetime(data_pd_cut_2['time_r'], unit='s')
+
+    ## Create noise count PD
+    nois_cut = data_pd_cut_2[((data_pd_cut_2.l1ts_min_tcoarse > signal_upper_limit) | (data_pd_cut_2.l1ts_min_tcoarse < signal_lower_limit) & (data_pd_cut_2.planar == planar))]
+    noise_pd = nois_cut.groupby(nois_cut.subRunNo).agg({"charge_SH": "count", "time_r": "last", "subRunNo": "last"}, )
+    noise_pd = noise_pd.rename(columns={"charge_SH": "noise_tot"})
+    trig_dict = extract_num_triggers_run(data_folder + "/raw_dat/", sel_run)
+    noise_win_width = (1567 - signal_upper_limit + signal_lower_limit - 1299) * 6.25 * 10 ** (-9)
+    noise_pd["noise_rate"] = noise_pd.apply(calc_rate_per_sub, args=(trig_dict, noise_win_width), axis=1)
+    # noise_pd = noise_pd.groupby(nois_cut.time_r.dt.hour).agg({"noise_rate": "mean", "time_r": "last","subRunNo":"last"}, )
+    noise_pd["time_r"] = (noise_pd["time_r"] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+    noise_pd = noise_pd.groupby(noise_pd.subRunNo.divide(5).round().multiply(5)).agg({"subRunNo": "mean", "time_r": "mean", "noise_rate": "mean"})
+    noise_pd["time_r"] = pd.to_datetime(noise_pd["time_r"], unit='s')
+    fig = px.scatter(
+        noise_pd,
+        x="time_r",
+        y="noise_rate",
+        hover_data=["subRunNo"]
+    )
+
+    fig.update_layout(
+        yaxis_title="Noise planar [Hz]",
+        xaxis_title="Time",
+        height=800
+    )
+
+    if max(noise_pd.noise_rate) < 5000000:
+        fig.update_yaxes(range=[0, 5000000])
+    return fig
+
+## Cluster plots
+
+def signal_heatmap_plot(cluster_pd_2D_pre_2):
+    fig = px.density_heatmap(x=cluster_pd_2D_pre_2.cl_pos_x, y=cluster_pd_2D_pre_2.cl_pos_y, marginal_x="histogram", marginal_y="histogram", nbinsx=int(128 / sel_binning), nbinsy=int(128 / sel_binning))
+    fig.update_layout(
+        yaxis_title="Y strips ",
+        xaxis_title="X strips",
+        height=800
+    )
+    return fig
+
+def clusters_vs_tim_plot(cluster_pd_2D_pre_2, sel_run):
+    time = {}
+    time_reader = log_loader_time.reader(data_folder + "/raw_dat/", data_folder + "/time/")
+    time_dict = time_reader.elab_on_run_dict(sel_run)
+    start, end = time_dict
+    time[int(sel_run)] = calculater_middle_time(start, end)
+    ## Add time information to PD
+    cluster_pd_2D_pre_2.insert(0, "time_r", 0)
+    cluster_pd_2D_pre_2["time_r"] = cluster_pd_2D_pre_2.apply(lambda row: time[(int(row.run))][str(int(row.subrun))], axis=1)
+    cluster_pd_2D_pre_2['time_r'] = pd.to_datetime(cluster_pd_2D_pre_2['time_r'], unit='s')
+    clusters_list = []
+    trigger_list = []
+    time_list = []
+    trig_dict = extract_num_triggers_run(data_folder + "/raw_dat/", sel_run)
+    for subrun in cluster_pd_2D_pre_2.subrun.unique():
+        trigger_list.append(trig_dict[str(int(subrun))])
+        cl_pd = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.subrun == subrun]
+        clusters_list.append(cl_pd.cl_pos_x.count())
+        time_list.append(cl_pd.time_r.min())
+    fig = px.scatter(x=time_list, y=np.divide(clusters_list, trigger_list), marginal_y="histogram")
+    fig.update_layout(
+        yaxis_title="Clusters / trigger",
+        xaxis_title="Time",
+        height=800
+    )
+    return fig
+def distr_charge_plot_2D(cluster_pd_2D_pre_2):
+    range_b = 500
+    nbins = 500
+    cluster_pd_2D_cut = cluster_pd_2D_pre_2[cluster_pd_2D_pre_2.cl_charge < 500]
+    fit = fill_hist_and_norm_and_fit_landau(cluster_pd_2D_cut, 1, nbins, range_b)
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=cluster_pd_2D_cut.cl_charge, opacity=0.75, xbins=dict(size=range_b / nbins, start=0), name="Charge histogram"))
+    fig.update_layout(
+        yaxis_title="Count",
+        xaxis_title="Cluster charge [fC]",
+        height=800
+    )
+    x_list = np.arange(0, range_b, range_b / nbins)
+    y_list = [calculate_y_landau(fit, x) for x in x_list]
+    fig.add_trace(go.Scatter(x=x_list, y=y_list, name="Landau fit"))
+    textfont = dict(
+        family="sans serif",
+        size=18,
+        color="LightSeaGreen"
+    )
+    fig.add_annotation(x=0.75, xref="paper", y=0.95, yref="paper",
+                       text=f"""AVG Charge: {cluster_pd_2D_cut.cl_charge.mean():.2f} +/- {
+                       np.std(cluster_pd_2D_cut.cl_charge) /
+                       (cluster_pd_2D_cut.cl_charge.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+    fig.add_annotation(x=0.75, xref="paper", y=0.90, yref="paper",
+                       text=f"MPV CHarge: {fit[1]:.2f} +/- {fit[4]:.2f}", showarrow=False, font=textfont)
+    fig.add_annotation(x=0.75, xref="paper", y=0.85, yref="paper",
+                       text=f"""AVG size(x+y): {cluster_pd_2D_cut.cl_size_tot.mean():.2f} +/- {
+                       np.std(cluster_pd_2D_cut.cl_size_tot) /
+                       (cluster_pd_2D_cut.cl_size_tot.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+
+    return fig
 if __name__ == '__main__':
     debug = True
     app.run_server(debug=True)
