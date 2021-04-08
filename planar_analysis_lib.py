@@ -439,7 +439,6 @@ class calib:
         efine = []
         count = []
         count_ori = []
-        count_new = []
         timestamp = []
         l1ts_min_tcoarse = []
         lasttigerframenum = []
@@ -468,7 +467,6 @@ class calib:
                 efine.append(int(getattr(in_f.tree, "efine")))
                 count.append(int(getattr(in_f.tree, "count_new")))
                 count_ori.append(int(getattr(in_f.tree, "count_ori")))
-                count_new.append(int(getattr(in_f.tree, "count_new")))
                 timestamp.append(int(getattr(in_f.tree, "timestamp")))
                 l1ts_min_tcoarse.append(int(getattr(in_f.tree, "l1ts_min_tcoarse")))
                 lasttigerframenum.append(int(getattr(in_f.tree, "lasttigerframenum")))
@@ -502,7 +500,6 @@ class calib:
         out_pd["efine"] = efine
         out_pd["count"] = count
         out_pd["count_ori"] = count_ori
-        out_pd["count_new"] = count_new
         out_pd["timestamp"] = timestamp
         out_pd["l1ts_min_tcoarse"] = l1ts_min_tcoarse
         out_pd["lasttigerframenum"] = lasttigerframenum
