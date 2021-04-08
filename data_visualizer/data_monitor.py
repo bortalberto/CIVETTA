@@ -140,14 +140,6 @@ app.layout = html.Div(children=[
         ),
     ], style={'width': '5%', 'display': 'none'},id='sel_dub_div'),
 
-    html.Div([
-        html.H6("Cluster selection"),
-        dcc.Dropdown(
-            id='sel_binning',
-            options=[{"label": 0.5, "value": 0.5}, {"label": 1, "value": 1}, {"label": 2, "value": 2}, {"label": 4, "value": 4}],
-            value=1
-        ),
-    ], style={'width': '10%', 'display': 'none'}, id='sel_binning_div'),
 
     html.Div([
         html.H6("Sel binning (strips)"),
@@ -217,9 +209,8 @@ app.layout = html.Div(children=[
     State('window_opt', 'value'),
     State('sel_options', 'value'),
     State('sel_subrun', 'value'),
-    State('sel_binning', 'value'),)
-
-
+    State('sel_binning', 'value'),
+)
 def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun, sel_binning):
     fig_list=[]
     ### Plot da fare sugli HIT
