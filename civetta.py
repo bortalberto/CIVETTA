@@ -545,7 +545,7 @@ class runner:
         tracker.load_cluster_1D()
 
         if not self.silent:
-            print(f"Tracking filling up to subrun {subrun_tgt}")
+            print(f"Selecting clusters near tracks subrun {subrun_tgt}")
 
         path = self.data_folder + f"/raw_root/{self.run_number}/sel_cluster_pd_1D.pickle.gzip"
         if os.path.isfile(path):
@@ -568,7 +568,7 @@ class runner:
             tracker.cluster_pd_1D_selected = pd.concat(tracking_return_list)
             tracker.append_sel_cl_pd()
         else:
-            print("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
+            print("No subrun to select, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
 
     def select_subrun(self, subrun):
@@ -642,8 +642,8 @@ def main(run, **kwargs):
         print ("#############################################################")
         print (f"Run : {run}")
         print (f"Data_folder : {data_folder}")
-        print (f"Calib_folder : {mapping_file}")
-        print (f"mapping_file : {calib_folder}")
+        print (f"Calib_folder : {calib_folder}")
+        print (f"mapping_file : {mapping_file}")
         print (f"Subrun : {subrun_tgt}")
         print (f"Operations:")
         if args.decode:
@@ -652,6 +652,8 @@ def main(run, **kwargs):
             print ("        -Analyze")
         if args.clusterize:
             print ("        -Clusterize")
+        if args.alignment:
+            print("---- Using Alignment ----")
         if args.tracking:
             print ("        -Tracking")
         if args.selection:
