@@ -44,9 +44,9 @@ if data_folder=="TER":
         print(f"{E} is not defined in your system variables")
         sys.exit(1)
 
-def build_tracks_pd( cluster_pd_1D):
+def build_tracks_pd( cluster_pd_1D, planar):
     tracking_return_list = []
-    tracker = tracking_1d(0, data_folder, False)
+    tracker = tracking_1d(0, data_folder, planar)
     for run in tqdm(cluster_pd_1D.run.unique(), desc="Run", leave=None):
         tracker.cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.run==run]
         subrun_list = (tracker.read_subruns())
@@ -107,7 +107,7 @@ def align_runs(run_list, iterations=1):
             for view in ("x", "y"):
                 cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] - displ[f"displ_planar_{planar}_{view}"]
                 correction[planar][view] += displ[f"displ_planar_{planar}_{view}"]
-            corr_tracks = build_tracks_pd(cluster_pd)
+            corr_tracks = build_tracks_pd(cluster_pd, planar)
             displ = build_displacement_pd(corr_tracks)
     for run in run_list:
         pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
