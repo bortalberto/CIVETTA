@@ -379,6 +379,18 @@ class calib:
         :return:
         """
         try:
+            mapping_pd=pd.read_pickle(self.mapping_file)
+            self.mapping_pd=mapping_pd
+        except Exception as E:
+            print (f"Can't load the mapping file, exception: {E}. Verify that the file ({self.mapping_file})exists and it's readable")
+            sys.exit(1)
+
+    def load_mapping_root(self):
+        """
+        Loads the mapping file
+        :return:
+        """
+        try:
             import root_pandas
             mapping_pd=root_pandas.read_root(self.mapping_file)
             self.mapping_pd=mapping_pd
@@ -415,7 +427,6 @@ class calib:
                 0 : np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c1_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
                 1 : np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c2_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
                        }
-
 
 
 
