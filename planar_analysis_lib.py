@@ -964,8 +964,9 @@ class tracking_1d:
                 to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
 
                 if len (to_fit)>1: ## If we have 2 cluster with the exact same charge...
-                    pd_fit_l.append(to_fit.iloc[0])
-                    ids.append(to_fit.iloc[0].cl_id.values[0])
+                    pd_fit_l.append(to_fit.iloc[[0]])
+                    ids.append((planar, to_fit.iloc[[0]].cl_id.values[0]))
+
 
                 else:
                     pd_fit_l.append(to_fit)
@@ -985,8 +986,8 @@ class tracking_1d:
             to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
 
             if len (to_fit)>1: ## If we have 2 cluster with the exact same charge...
-                pd_fit_l.append(to_fit.iloc[0])
-                ids.append(to_fit.iloc[0].cl_id.values[0])
+                pd_fit_l.append(to_fit.iloc[[0]])
+                ids.append((planar, to_fit.iloc[[0]].cl_id.values[0]))
 
             else:
                 pd_fit_l.append(to_fit)
@@ -996,7 +997,7 @@ class tracking_1d:
         for planar in df.planar.unique():
             pd_fit_pl=pd_fit[pd_fit.planar==planar]
             calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
-            res_dict[planar]=calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
+            res_dict[planar] = calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
 
         return fit, ids, res_dict
 
@@ -1022,7 +1023,7 @@ class tracking_1d:
             "res_planar_3_y": []
         }
         cl_id_l=[]
-
+        n_points=[]
         for run in (self.cluster_pd_1D["run"].unique()):
             cluster_pd_1D_c0 = self.cluster_pd_1D[self.cluster_pd_1D.run == run]
             if subrun_tgt != None:
@@ -1050,6 +1051,7 @@ class tracking_1d:
                                     planar_di[f"res_planar_{planar}_x"].append(np.nan)
                                     planar_di[f"res_planar_{planar}_y"].append(np.nan)
                             cl_id_l.append(cl_ids)
+                            n_points.append(len(df_c2_x.planar.unique()))
 
 
                     # Build track Y
@@ -1070,6 +1072,8 @@ class tracking_1d:
                                     planar_di[f"res_planar_{planar}_x"].append(np.nan)
                                     planar_di[f"res_planar_{planar}_y"].append(np.nan)
                             cl_id_l.append(cl_ids)
+                            n_points.append(len(df_c2_x.planar.unique()))
+
 
 
         dict_4_pd = {
