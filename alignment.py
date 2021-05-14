@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import keras
+
 def isnotebook():
     try:
         shell = get_ipython().__class__.__name__
@@ -28,6 +28,7 @@ from multiprocessing import Pool,cpu_count
 import configparser
 from planar_analysis_lib import calc_res,fit_1_d
 from planar_analysis_lib import tracking_1d
+import matplotlib.pyplot as plt
 config=configparser.ConfigParser()
 config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
@@ -46,7 +47,8 @@ if data_folder=="TER":
 
 def build_tracks_pd( cluster_pd_1D, planar):
     tracking_return_list = []
-    tracker = tracking_1d(0, data_folder, planar)
+    tracker = tracking_1d(0, data_folder, False)
+    tracker.PUT = planar
     for run in tqdm(cluster_pd_1D.run.unique(), desc="Run", leave=None):
         tracker.cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.run==run]
         subrun_list = (tracker.read_subruns())
@@ -59,7 +61,7 @@ def build_tracks_pd( cluster_pd_1D, planar):
     return tracker.tracks_pd
 
 
-def build_displacement_pd(track_pd):
+def build_displacement_pd(track_pd, bin_max=False):
     """
     Calculate the planar displacement
     :param track_pd:
@@ -68,10 +70,18 @@ def build_displacement_pd(track_pd):
     return_dict = {}
     for planar in [0, 1, 2, 3]:
         for view in ["x", "y"]:
-            return_dict[f"displ_planar_{planar}_{view}"] = np.mean(track_pd[f"res_planar_{planar}_{view}"])
+            if not bin_max:
+                return_dict[f"displ_planar_{planar}_{view}"] = np.mean(track_pd[f"res_planar_{planar}_{view}"])
+            else:
+                y, x, _ = plt.hist(track_pd[f"res_planar_{planar}_{view}"], bins=400)
+                x_max = (x[y.argmax()])
+                return_dict[f"displ_planar_{planar}_{view}"] = x_max
+
+
+
     return return_dict
 
-def align_runs(run_list, iterations=1):
+def align_runs(run_list, iterations=1, inclusive_fit=True, debug = False, init_correction = None, bin_max=False, zero_fixed=False):
     """
     Aligns the run in the list, each one will have the same correction array
     :param run_list:
@@ -90,9 +100,9 @@ def align_runs(run_list, iterations=1):
     cluster_pd["cl_pos_x_cm"] = cluster_pd.cl_pos_x * 0.0650
     cluster_pd["cl_pos_y_cm"] = cluster_pd.cl_pos_y * 0.0650
     cluster_pd["cl_pos_z_cm"] = cluster_pd.planar * 10
-
+    corr_history=[]
     # Initialize the dict for correction and displacement
-    displ=build_displacement_pd(track_pd)
+    displ=build_displacement_pd(track_pd, bin_max=bin_max)
     correction = {
         0: {"x": 0, "y": 0},
         1: {"x": 0, "y": 0},
@@ -100,18 +110,38 @@ def align_runs(run_list, iterations=1):
         3: {"x": 0, "y": 0}
 
     }
+    if zero_fixed:
+        planar_list=(1,2,3)
+    else:
+        planar_list=(0,1,2,3)
+
+    if init_correction:
+        for planar in planar_list:
+            for view in ("x", "y"):
+                displ[f"displ_planar_{planar}_{view}"] = init_correction[planar][view]
+
 
     # Performs N rounds of alignment
+
     for j in tqdm(range(0, iterations), desc="Iterations"):
-        for planar in tqdm((0, 1, 2, 3), desc= "Planar"):
+        for planar in tqdm(planar_list, desc= "Planar"):
             for view in ("x", "y"):
+                corr_history.append(displ)
                 cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] - displ[f"displ_planar_{planar}_{view}"]
                 correction[planar][view] += displ[f"displ_planar_{planar}_{view}"]
-            corr_tracks = build_tracks_pd(cluster_pd, planar)
-            displ = build_displacement_pd(corr_tracks)
+            if inclusive_fit:
+                planar_exclusive = False
+            else:
+                planar_exclusive = planar
+
+            corr_tracks = build_tracks_pd(cluster_pd, planar_exclusive)
+            if debug:
+                for view in ("x", "y"):
+                    print(f"Res on pl {planar}, view {view}, it {j}: {np.mean(corr_tracks[f'res_planar_{planar}_{view}'])}")
+            displ = build_displacement_pd(corr_tracks, bin_max=bin_max)
     for run in run_list:
         pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
-    return corr_tracks, track_pd
+    return corr_tracks, track_pd, corr_history
 
 # def align_runs_neural(run_list, iterations=1):
 #     """
