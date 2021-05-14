@@ -462,9 +462,9 @@ class calib:
         FEB_label = []
         charge_SH = []
         out_pd=pd.DataFrame()
-
+        hit_id=[]
         for entryNum in range(0, in_f.tree.GetEntries()):
-
+                hit_id.append(entryNum)
                 in_f.tree.GetEntry(entryNum)
                 runNo.append(int(getattr(in_f.tree, "runNo")))
                 subRunNo.append(int(subrun))
@@ -501,6 +501,7 @@ class calib:
 
         out_pd["runNo"] = runNo
         out_pd["subRunNo"] = subRunNo
+        out_pd["hit_id"] = hit_id
         out_pd["gemroc"] = gemroc
         out_pd["channel"] = channel
         out_pd["tac"] = tac
