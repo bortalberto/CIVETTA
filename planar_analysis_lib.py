@@ -696,7 +696,7 @@ class clusterize:
                                     dict_4_pd["cl_pos_x"].append(np.nan)
                                 dict_4_pd["cl_charge"].append(cluster[1])
                                 dict_4_pd["cl_size"].append(cluster[2])
-                                dict_4_pd["cl_id"].append(n)
+                                dict_4_pd["cl_id"].append(int(n))
 
         return (pd.DataFrame(dict_4_pd))
 
@@ -846,20 +846,20 @@ class tracking_2d:
                                 planar_di[f"res_planar_{planar}_x"].append(calc_res(data_pd_cut_3.cl_pos_x_cm, fit_x, data_pd_cut_3.cl_pos_z_cm))
                                 planar_di[f"res_planar_{planar}_y"].append(calc_res(data_pd_cut_3.cl_pos_y_cm, fit_y, data_pd_cut_3.cl_pos_z_cm))
         dict_4_pd = {
-            "run": run_l,
-            "subrun": subrun_l,
-            "count": count_l,
-            "x_fit": x_fit,
-            "y_fit": y_fit,
-            "res_planar_0_x": planar_di["res_planar_0_x"],
-            "res_planar_1_x": planar_di["res_planar_1_x"],
-            "res_planar_2_x": planar_di["res_planar_2_x"],
-            "res_planar_3_x": planar_di["res_planar_3_x"],
-            "res_planar_0_y": planar_di["res_planar_0_y"],
-            "res_planar_1_y": planar_di["res_planar_1_y"],
-            "res_planar_2_y": planar_di["res_planar_2_y"],
-            "res_planar_3_y": planar_di["res_planar_3_y"]
-        }
+                "run": run_l,
+                "subrun": subrun_l,
+                "count": count_l,
+                "x_fit": x_fit,
+                "y_fit": y_fit,
+                "res_planar_0_x": planar_di["res_planar_0_x"],
+                "res_planar_1_x": planar_di["res_planar_1_x"],
+                "res_planar_2_x": planar_di["res_planar_2_x"],
+                "res_planar_3_x": planar_di["res_planar_3_x"],
+                "res_planar_0_y": planar_di["res_planar_0_y"],
+                "res_planar_1_y": planar_di["res_planar_1_y"],
+                "res_planar_2_y": planar_di["res_planar_2_y"],
+                "res_planar_3_y": planar_di["res_planar_3_y"]
+            }
         return ( pd.DataFrame(dict_4_pd) )
 
     def save_tracks_pd(self, subrun="ALL"):
@@ -921,7 +921,16 @@ class tracking_1d:
             for planar in (0, 1, 2, 3):
                 for view in ("x", "y"):
                     cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] - corr_matrix[planar][view]
+        cluster_pd_1D = cluster_pd_1D.astype( ## Verifica che i campi che devono essere interi lo siano
+            {"run"    : int,
+             "subrun" : int,
+             "count"  : int,
+             "planar" : int,
+             "cl_size": int,
+             "cl_id"  : int}
+        )
         self.cluster_pd_1D=cluster_pd_1D
+
         if self.alignment:
             self.save_aligned_clusters()
 
@@ -1024,7 +1033,7 @@ class tracking_1d:
                     df_c2 = data_pd_cut_1[data_pd_cut_1["count"] == count] # df_c2 is shorter
 
                     # Build track X
-                    df_c2_x=df_c2[df_c2.cl_pos_x_cm>0]
+                    df_c2_x=df_c2[df_c2.cl_pos_x_cm.notna()]
                     if len(df_c2_x.planar.unique())>2: ## I want at least 3 point in that view
                         if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT ].planar.unique())>2):
                             fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2_x, "x")
@@ -1044,7 +1053,7 @@ class tracking_1d:
 
 
                     # Build track Y
-                    df_c2_y=df_c2[df_c2.cl_pos_y_cm>0]
+                    df_c2_y=df_c2[df_c2.cl_pos_y_cm.notna()]
                     if len(df_c2_y.planar.unique())>2: ## I want at least  3 point in that view
                         if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT ].planar.unique())>2):
                             fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2_y, "y")
