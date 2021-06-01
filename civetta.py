@@ -27,7 +27,7 @@ class runner:
         self.root = root
     ################# Decode part #################
     def decode_on_file(self,input_):
-        self.decoder.decode_file(input_)
+        self.decoder.decode_file(input_, self.root)
         filename=input_[0]
         # os.rename(filename.split(".")[0]+".root",self.data_folder+"/raw_root/{}/".format(self.run_number)+filename.split("/")[-1].split(".")[0]+".root")
 
@@ -162,7 +162,7 @@ class runner:
 
         return (subrun_list,file_list)
     def calib_run(self):
-        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, data_folder=self.data_folder, mapping_file=self.mapping_file)
+        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root)
         analizer.load_mapping()
         subrun_list, file_list = self.get_dec_list()
 
@@ -202,7 +202,7 @@ class runner:
         else:
             done_subruns = []
 
-        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, data_folder=self.data_folder, mapping_file=self.mapping_file)
+        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root)
         analizer.load_mapping()
 
         subrun_list, file_list = self.get_dec_list()
@@ -233,7 +233,7 @@ class runner:
 
 
     def calib_subrun(self,subrun_tgt):
-        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, data_folder=self.data_folder, mapping_file=self.mapping_file)
+        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root)
         analizer.load_mapping()
 
         subrun_list, file_list = self.get_dec_list()
@@ -722,6 +722,8 @@ def main(run, **kwargs):
         options["alignment"]=True
     else:
         options["alignment"]=False
+    if args.root_decode:
+        options["root"]=True
     if len (op_list)>0:
         main_runner=runner(data_folder,run,calib_folder,mapping_file,**options)
     else:
@@ -807,6 +809,7 @@ if __name__=="__main__":
     parser.add_argument('-tw','--time_window', help='Specify the signal time window for clusterization', type=int, nargs=2)
     parser.add_argument('-sf','--subrun_fill', help='Runs to fill up to the subrun', type=int, default=-1)
     parser.add_argument('-ali','--alignment', help='Use the alignment', action="store_true")
+    parser.add_argument('-root','--root_decode', help='Decode in root', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
