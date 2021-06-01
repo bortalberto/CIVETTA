@@ -745,9 +745,9 @@ class clusterize:
                     cluster_pd_cut_2 = cluster_pd_cut_1[cluster_pd_cut_1["count"] == count]
                     for planar in cluster_pd_cut_2["planar"].unique():
                         cluster_pd_cut_3 = cluster_pd_cut_2[cluster_pd_cut_2.planar == planar]
-                        if len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x > 0]) > 0 and len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y > 0]) > 0:
-                            index_x = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x > 0].idxmax(axis=0).cl_charge
-                            index_y = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y > 0].idxmax(axis=0).cl_charge
+                        if len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x.notna()]) > 0 and len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y.notna()]) > 0:
+                            index_x = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x.notna()].cl_charge.idxmax(axis=0)
+                            index_y = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y.notna()].cl_charge.idxmax(axis=0)
                             dict_4_pd["run"].append(run)
                             dict_4_pd["subrun"].append(subrun)
                             dict_4_pd["count"].append(count)
