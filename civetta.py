@@ -15,19 +15,19 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False):
-        self.data_folder=data_folder
-        self.calib_folder=calib_folder
-        self.mapping_file=mapping_file
-        self.cpu_to_use=cpu_to_use
-        self.run_number=run
-        self.silent=Silent
-        self.purge=purge
-        self.alignment=alignment
-        
+    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False):
+        self.data_folder = data_folder
+        self.calib_folder = calib_folder
+        self.mapping_file = mapping_file
+        self.cpu_to_use = cpu_to_use
+        self.run_number = run
+        self.silent = Silent
+        self.purge = purge
+        self.alignment = alignment
+        self.root = root
     ################# Decode part #################
     def decode_on_file(self,input_):
-        self.decoder.write_root(input_)
+        self.decoder.decode_file(input_)
         filename=input_[0]
         # os.rename(filename.split(".")[0]+".root",self.data_folder+"/raw_root/{}/".format(self.run_number)+filename.split("/")[-1].split(".")[0]+".root")
 
@@ -111,13 +111,30 @@ class runner:
         """
         subrun_list = []
         file_list = []
-        for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_root/{}/SubRUN_*_GEMROC_*_TM.root".format(self.run_number), with_matches=True):
-            subrun_list.append(subrun)
-            file_list.append(filename)
-        if not self.silent:
-            print ("Merging files")
-        for subrun in tqdm(set(subrun_list), disable=self.silent):
-           os.system("hadd -f {0}/raw_root/{1}/Sub_RUN_dec_{2}.root {0}/raw_root/{1}/SubRUN_{2}_GEMROC_*_TM.root  >/dev/null 2>&1".format(self.data_folder,self.run_number,subrun))
+        pd_list=[]
+        if self.root:
+            for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_root/{}/SubRUN_*_GEMROC_*_TM.root".format(self.run_number), with_matches=True):
+                subrun_list.append(subrun)
+                file_list.append(filename)
+            if not self.silent:
+                print ("Merging files")
+            for subrun in tqdm(set(subrun_list), disable=self.silent):
+               os.system("hadd -f {0}/raw_root/{1}/Sub_RUN_dec_{2}.root {0}/raw_root/{1}/SubRUN_{2}_GEMROC_*_TM.root  >/dev/null 2>&1".format(self.data_folder,self.run_number,subrun))
+        else:
+            for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_root/{}/SubRUN_*_GEMROC_*_TM.pickle.gzip".format(self.run_number), with_matches=True):
+                subrun_list.append(subrun)
+                file_list.append(filename)
+            if not self.silent:
+                print ("Merging files")
+
+            for subrun in tqdm(set(subrun_list), disable=self.silent):
+                pd_list = []
+                for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
+                    pd_list.append(pd.read_pickle(filename, compression="gzip"))
+                    subrun_pd=pd.concat(pd_list)
+                    subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
+
+
         if self.purge:
             if not self.silent:
                 print ("Removing garbage files")
@@ -125,14 +142,30 @@ class runner:
                 os.remove(filen)
 
     ################# Ana part #################
+    def get_dec_list(self):
+        """
+        Generates the dec list accordingly to the root option
+        :return:
+        """
+
+        subrun_list = []
+        file_list = []
+        if self.root:
+            for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.root".format(self.run_number), with_matches=True):
+                subrun_list.append(subrun[0])  # subrun is a tuple
+                file_list.append(filename)
+
+        else:
+            for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.pickle.gzip".format(self.run_number), with_matches=True):
+                subrun_list.append(subrun[0])  # subrun is a tuple
+                file_list.append(filename)
+
+        return (subrun_list,file_list)
     def calib_run(self):
         analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, data_folder=self.data_folder, mapping_file=self.mapping_file)
         analizer.load_mapping()
-        subrun_list = []
-        file_list = []
-        for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.root".format(self.run_number), with_matches=True):
-            subrun_list.append(subrun[0])  # subrun is a tuple
-            file_list.append(filename)
+        subrun_list, file_list = self.get_dec_list()
+
         if len(subrun_list) > 0:
             with Pool(processes=self.cpu_to_use) as pool:
                 with tqdm(total=len(subrun_list), disable=self.silent) as pbar:
@@ -171,11 +204,9 @@ class runner:
 
         analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, data_folder=self.data_folder, mapping_file=self.mapping_file)
         analizer.load_mapping()
-        subrun_list = []
-        file_list = []
-        for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.root".format(self.run_number), with_matches=True):
-            subrun_list.append(int(subrun[0]))  # subrun is a tuple
-            file_list.append(filename)
+
+        subrun_list, file_list = self.get_dec_list()
+
 
         subruns_to_do = (set(subrun_list) - set(done_subruns))
         subrun_list = [x for x in subruns_to_do if x <= subrun_tgt]
@@ -204,11 +235,9 @@ class runner:
     def calib_subrun(self,subrun_tgt):
         analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, data_folder=self.data_folder, mapping_file=self.mapping_file)
         analizer.load_mapping()
-        subrun_list = []
-        file_list = []
-        for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.root".format(self.run_number), with_matches=True):
-            subrun_list.append(int(subrun[0]))  # subrun is a tuple
-            file_list.append(filename)
+
+        subrun_list, file_list = self.get_dec_list()
+
         if subrun_tgt not in subrun_list:
             print(f"Can't find the decoded files in {self.data_folder}raw_root/{self.run_number}, try lo launch -d too")
         for sub in subrun_list:

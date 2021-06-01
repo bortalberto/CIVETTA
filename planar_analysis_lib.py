@@ -38,7 +38,7 @@ class decoder:
     def __del__(self):
         pass
 
-    def write_root(self, input_):
+    def decode_file(self, input_, root=False):
         """
         Write a root file from a data file
         :param path:
@@ -350,12 +350,17 @@ class decoder:
                     firstPacket = False
         if len(pd_list)>0:
             final_pd=pd.concat(pd_list)
-            import root_pandas
-            filename=path.replace(".dat", ".root")
-            filename=filename.replace("raw_dat", "raw_root")
-            filename=filename.replace("/RUN_", "/")
-            root_pandas.to_root(final_pd,filename,"tree")
-
+            if root:
+                import root_pandas
+                filename=path.replace(".dat", ".root")
+                filename=filename.replace("raw_dat", "raw_root")
+                filename=filename.replace("/RUN_", "/")
+                root_pandas.to_root(final_pd,filename,"tree")
+            else:
+                filename=path.replace(".dat", ".pickle.gzip")
+                filename=filename.replace("raw_dat", "raw_root")
+                filename=filename.replace("/RUN_", "/")
+                final_pd.to_pickle(filename, compression="gzip")
 
 
 
