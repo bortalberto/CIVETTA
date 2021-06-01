@@ -623,14 +623,19 @@ class clusterize:
         ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
         return ret_centers
 
-    def clusterize_view(self, hit_pos, hit_charge):
+    def clusterize_view(self, data_pd, view):
         """
         Recursively search for the number of cluster which minimize the distance. Tolerates holes in the cluster
         :param hit_pos:
         :param hit_charge:
         :return:
         """
+        hit_pos = data_pd[f"strip_{view}"].to_numpy()
+        hit_charge = data_pd.charge_SH.to_numpy()
+        hit_id = data_pd.hit_id.to_numpy()
+
         k = 1   # Initialize with 1 cluster
+
         while True:
             ret_clusters = []
             KM = KMeans(n_clusters = k)   # Initialize the algorithm with k clusters
@@ -638,14 +643,15 @@ class clusterize:
 
             for n,c in enumerate(KM.cluster_centers_):  # For each cluster
                 hit_pos_this_c = hit_pos[KM.labels_ == n]   # Load hit position and hit charge for this cluster
-                hit_charge_this_c = hit_charge[KM.labels_ == n]
-                included=(abs(hit_pos_this_c-c) < len(hit_pos_this_c)/2+1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
+                included = (abs(hit_pos_this_c-c) < len(hit_pos_this_c)/2+1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
                 if np.any(included != True):
                     k += 1
                 else:
-                    ret_clusters.append((self.charge_centroid(hit_pos_this_c,hit_charge_this_c), np.sum(hit_charge_this_c),len(hit_pos_this_c)) ) #pos,charge, size
+                    hit_charge_this_c = hit_charge[KM.labels_ == n]
+                    hit_id_this_c = hit_id[KM.labels_ == n]
+                    ret_clusters.append( ( self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) ) #pos,charge, size
 
-            if len(ret_clusters) == len (KM.cluster_centers_):
+            if len(ret_clusters) == len(KM.cluster_centers_):
                 return ret_clusters
 
 
@@ -665,7 +671,8 @@ class clusterize:
             "cl_pos_y": [],
             "cl_charge": [],
             "cl_size": [],
-            "cl_id": []
+            "cl_id": [],
+            "hit_ids" : []
 
         }
         for runNo in self.data_pd["runNo"].unique():
@@ -682,7 +689,7 @@ class clusterize:
                             clusters = []
                             data_pd_cut_4 = data_pd_cut_3[data_pd_cut_3[f"strip_{view}"] > 0]
                             if len(data_pd_cut_4) > 0:
-                                clusters = self.clusterize_view(data_pd_cut_4[f"strip_{view}"].to_numpy(), data_pd_cut_4.charge_SH.to_numpy())
+                                clusters = self.clusterize_view(data_pd_cut_4, view)
                             for n,cluster in enumerate(clusters):
                                 dict_4_pd["run"].append(runNo)
                                 dict_4_pd["subrun"].append(subRunNo)
@@ -696,6 +703,7 @@ class clusterize:
                                     dict_4_pd["cl_pos_x"].append(np.nan)
                                 dict_4_pd["cl_charge"].append(cluster[1])
                                 dict_4_pd["cl_size"].append(cluster[2])
+                                dict_4_pd["hit_ids"].append(cluster[3])
                                 dict_4_pd["cl_id"].append(int(n))
 
         return (pd.DataFrame(dict_4_pd))
