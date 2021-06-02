@@ -131,7 +131,7 @@ class runner:
                 pd_list = []
                 for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
                     pd_list.append(pd.read_pickle(filename, compression="gzip"))
-                    subrun_pd=pd.concat(pd_list)
+                    subrun_pd=pd.concat(pd_list,ignore_index=True)
                     subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
 
 
@@ -181,7 +181,7 @@ class runner:
             for filen in file_list:
                 os.remove(filen)
             file_list = []
-            for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.run_number), with_matches=True):
+            for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_pl_ana*".format(self.run_number), with_matches=True):
                 file_list.append(filename)
             for filen in file_list:
                 os.remove(filen)

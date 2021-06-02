@@ -343,13 +343,13 @@ class decoder:
                     dict4_pd = {'channel': l_channel, 'tac': l_tac, 'tcoarse': l_tcoarse,"ecoarse":l_ecoarse, "tfine" : l_tfine, "efine": l_efine, "tcoarse_10b" : l_tcoarse_10b, "tiger" : l_tiger,
                                 "l1ts_min_tcoarse" : l_l1ts_min_tcoarse, "lasttigerframenum" : l_lasttigerframenum, "delta_coarse" : l_delta_coarse, "count_ori" : l_count_ori, "count_new" : l_count, "timestamp" : l_timestamp,
                                 "gemroc":l_gemroc, "runNo" : l_runNo,"subRunNo":l_subRunNo,"l1_framenum" : l_l1framenum}
-                    pd_list.append(pd.DataFrame(dict4_pd))
                     packet_header = 0
                     packet_tailer = 0
                     packet_udp = 0
                     firstPacket = False
+                    pd_list.append(pd.DataFrame(dict4_pd))
         if len(pd_list)>0:
-            final_pd=pd.concat(pd_list)
+            final_pd=pd.concat(pd_list, ignore_index=True)
             if root:
                 import root_pandas
                 filename=path.replace(".dat", ".root")
@@ -432,6 +432,9 @@ class calib:
                 1 : np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c2_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
                        }
 
+    def build_mapping_group(self):
+        self.mapping_group=self.mapping_pd.groupby(["channel_id","tiger","gemroc_id"])
+
     def get_mapping_value(self, field_names, channel_id, tiger, gemroc):
         """
         Return the mapped value for the a certain channel
@@ -442,8 +445,10 @@ class calib:
         :return:
         """
         return_list = []
+        # mapping_pd=self.mapping_pd[(self.mapping_pd.channel_id == channel_id) & (self.mapping_pd.tiger == tiger) & (self.mapping_pd.gemroc_id == gemroc)]
+        mapping_pd=self.mapping_group.get_group((channel_id,tiger,gemroc))
         for field_name in field_names:
-            return_list.append(int(self.mapping_pd[(self.mapping_pd.channel_id == channel_id) & (self.mapping_pd.tiger == tiger) & (self.mapping_pd.gemroc_id == gemroc)][field_name]))
+            return_list.append(int(mapping_pd[field_name]))
         return return_list
 
     def calibrate_charge(self, calib_dict, HW_feb_id, tiger, channel, efine):
@@ -463,6 +468,14 @@ class calib:
         else:
             charge_SH = ((-1 * constant + efine) / slope)
         return charge_SH
+
+    # def calibrate_subrun(self,subrun):
+    # """
+    # usit for profiling
+    # """
+    #     import cProfile
+    #     subrun=int(subrun)
+    #     cProfile.runctx('self.calibrate_subrun_runner(subrun)', globals(), locals(), 'prof%d.prof' %subrun)
 
     def calibrate_subrun(self,subrun):
         """
@@ -565,8 +578,11 @@ class calib:
         else:
             decode_pd=pd.read_pickle("{}/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.data_folder,self.run_number,subrun), compression="gzip")
             ana_pd = decode_pd
+            self.build_mapping_group()
+
             ana_pd["data"] = [self.get_mapping_value(("strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"), *a) for a in tuple(zip(ana_pd["channel"], ana_pd["tiger"], ana_pd["gemroc"]))]
             ana_pd["subrun"] = subrun
+            ana_pd["hit_id"] = ana_pd.index
             ana_pd[["strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"]] = pd.DataFrame(ana_pd.data.tolist())
             ana_pd = ana_pd.drop(columns=["data","subRunNo"] )
             ana_pd = ana_pd.astype(int)
@@ -574,8 +590,9 @@ class calib:
             for HW_feb_id in ana_pd.HW_feb_id.unique():
                 calib_dict[HW_feb_id, 3] = self.get_channels_QDC_calib(HW_feb_id, 3)
             ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
-            import root_pandas
-            root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
+            # import root_pandas
+            # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
+            ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
             return ana_pd
 
     def create_hits_pd_and_single_root(self):
@@ -586,11 +603,19 @@ class calib:
         import root_pandas
 
         data_pd = pd.DataFrame()
-        for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
-            f = R.TFile.Open(filename)
-            if f.tree.GetEvent() > 0:
-                data_pd = data_pd.append(root_pandas.read_root(filename, "tree"), ignore_index=True)
-        data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        if self.root_dec:
+            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
+                f = R.TFile.Open(filename)
+                if f.tree.GetEvent() > 0:
+                    data_pd = data_pd.append(root_pandas.read_root(filename, "tree"), ignore_index=True)
+            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        else:
+            pd_list=[]
+            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.pickle.gzip".format(self.data_folder, self.run_number)):
+                pd_list.append(pd.read_pickle(filename, compression="gzip"))
+            data_pd=pd.concat(pd_list, ignore_index=True)
+            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+
         root_pandas.to_root(data_pd,"{}/raw_root/{}/pl_ana.root".format(self.data_folder,self.run_number),"tree")
 
     def append_hits_pd_and_single_root(self):
