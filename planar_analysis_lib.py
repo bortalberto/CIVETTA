@@ -30,9 +30,10 @@ class decoder:
     This class decode the dat file and produces a root file
     You need to specify GEMROC_ID
     """
-    def __init__(self, GEMROC_ID=0,  RUN=0, SUBRUN=0):
+    def __init__(self, GEMROC_ID=0,  RUN=0, SUBRUN=0, downsamplig=1):
         # self.GEMROC_ID = int(GEMROC_ID) Make more sense to specify GEMROC and subrun while calling the function, since they are different every time
         self.RUN = int(RUN)
+        self.downsampling=downsamplig
         # self.SUBRUN = int(SUBRUN)
 
     def __del__(self):
@@ -341,26 +342,30 @@ class decoder:
                             l_layer .append(0)
 
                     dict4_pd = {'channel': l_channel, 'tac': l_tac, 'tcoarse': l_tcoarse,"ecoarse":l_ecoarse, "tfine" : l_tfine, "efine": l_efine, "tcoarse_10b" : l_tcoarse_10b, "tiger" : l_tiger,
-                                "l1ts_min_tcoarse" : l_l1ts_min_tcoarse, "lasttigerframenum" : l_lasttigerframenum, "delta_coarse" : l_delta_coarse, "count_ori" : l_count_ori, "count_new" : l_count, "timestamp" : l_timestamp,
+                                "l1ts_min_tcoarse" : l_l1ts_min_tcoarse, "lasttigerframenum" : l_lasttigerframenum, "delta_coarse" : l_delta_coarse, "count_ori" : l_count_ori, "count" : l_count, "timestamp" : l_timestamp,
                                 "gemroc":l_gemroc, "runNo" : l_runNo,"subRunNo":l_subRunNo,"l1_framenum" : l_l1framenum}
                     packet_header = 0
                     packet_tailer = 0
                     packet_udp = 0
                     firstPacket = False
-                    pd_list.append(pd.DataFrame(dict4_pd))
+                    # print (l1count)
+                    # print (self.downsampling)
+                    if l1count % self.downsampling == 0:
+                        pd_list.append(pd.DataFrame(dict4_pd))
         if len(pd_list)>0:
             final_pd=pd.concat(pd_list, ignore_index=True)
-            if root:
-                import root_pandas
-                filename=path.replace(".dat", ".root")
-                filename=filename.replace("raw_dat", "raw_root")
-                filename=filename.replace("/RUN_", "/")
-                root_pandas.to_root(final_pd,filename,"tree")
-            else:
-                filename=path.replace(".dat", ".pickle.gzip")
-                filename=filename.replace("raw_dat", "raw_root")
-                filename=filename.replace("/RUN_", "/")
-                final_pd.to_pickle(filename, compression="gzip")
+            if len(final_pd>0):
+                if root:
+                    import root_pandas
+                    filename=path.replace(".dat", ".root")
+                    filename=filename.replace("raw_dat", "raw_root")
+                    filename=filename.replace("/RUN_", "/")
+                    root_pandas.to_root(final_pd,filename,"tree")
+                else:
+                    filename=path.replace(".dat", ".pickle.gzip")
+                    filename=filename.replace("raw_dat", "raw_root")
+                    filename=filename.replace("/RUN_", "/")
+                    final_pd.to_pickle(filename, compression="gzip")
 
 
 
@@ -584,7 +589,7 @@ class calib:
             ana_pd["subrun"] = subrun
             ana_pd["hit_id"] = ana_pd.index
             ana_pd[["strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"]] = pd.DataFrame(ana_pd.data.tolist())
-            ana_pd = ana_pd.drop(columns=["data","subRunNo"] )
+            ana_pd = ana_pd.drop(columns=["data"] )
             ana_pd = ana_pd.astype(int)
             calib_dict = {}
             for HW_feb_id in ana_pd.HW_feb_id.unique():
@@ -623,20 +628,34 @@ class calib:
         Same as above, but appends if data exists
         :return:
         """
-        import root_pandas
-        path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+        if self.root_dec:
 
-        if os.path.isfile(path):
-            data_pd=pd.read_pickle(path, compression="gzip")
+            import root_pandas
+            path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+
+            if os.path.isfile(path):
+                data_pd=pd.read_pickle(path, compression="gzip")
+            else:
+                data_pd=pd.DataFrame()
+            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
+                f = R.TFile.Open(filename)
+                if f.tree.GetEvent() > 0:
+                    data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
+
+            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
         else:
-            data_pd=pd.DataFrame()
-        for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
-            f = R.TFile.Open(filename)
-            if f.tree.GetEvent() > 0:
-                data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
+            path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+            if os.path.isfile(path):
+                data_pd = pd.read_pickle(path, compression="gzip")
+            else:
+                data_pd = pd.DataFrame()
 
-        data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-        root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
+            pd_list=[]
+            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.pickle.gzip".format(self.data_folder, self.run_number)):
+                pd_list.append(pd.read_pickle(filename, compression="gzip"))
+            data_pd=pd.concat(pd_list, ignore_index=True)
+            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
     #
     # mapping_pd=load_mapping()
     #
