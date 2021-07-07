@@ -15,7 +15,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False):
+    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False, downsampling=1):
         self.data_folder = data_folder
         self.calib_folder = calib_folder
         self.mapping_file = mapping_file
@@ -25,15 +25,16 @@ class runner:
         self.purge = purge
         self.alignment = alignment
         self.root = root
+        self.downsampling=downsampling
     ################# Decode part #################
     def decode_on_file(self,input_):
         self.decoder.decode_file(input_, self.root)
-        filename=input_[0]
+        filename = input_[0]
         # os.rename(filename.split(".")[0]+".root",self.data_folder+"/raw_root/{}/".format(self.run_number)+filename.split("/")[-1].split(".")[0]+".root")
 
     def dec_subrun(self, subrun_tgt):
         input_list=[]
-        self.decoder = pl_lib.decoder(1, self.run_number)
+        self.decoder = pl_lib.decoder(1, self.run_number, downsamplig=self.downsampling)
         for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_dat/RUN_{}/SubRUN_*_GEMROC_*_TM.dat".format(self.run_number), with_matches=True):
             input_list.append((filename, int(subrun), int(gemroc)))
         for input in input_list:
@@ -48,7 +49,7 @@ class runner:
         :return:
         """
         input_list=[]
-        self.decoder = pl_lib.decoder(1, self.run_number)
+        self.decoder = pl_lib.decoder(1, self.run_number, downsamplig=self.downsampling)
         if not self.silent:
             print ("Decoding")
         for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_dat/RUN_{}/SubRUN_*_GEMROC_*_TM.dat".format(self.run_number), with_matches=True):
@@ -69,7 +70,7 @@ class runner:
         """
         subrun_list=[]
         input_list=[]
-        self.decoder = pl_lib.decoder(1, self.run_number)
+        self.decoder = pl_lib.decoder(1, self.run_number, downsamplig=self.downsampling)
 
         path=self.data_folder+f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
         if not self.silent:
@@ -131,8 +132,8 @@ class runner:
                 pd_list = []
                 for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
                     pd_list.append(pd.read_pickle(filename, compression="gzip"))
-                    subrun_pd=pd.concat(pd_list,ignore_index=True)
-                    subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
+                subrun_pd=pd.concat(pd_list,ignore_index=True)
+                subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
 
 
         if self.purge:
@@ -157,7 +158,7 @@ class runner:
 
         else:
             for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.pickle.gzip".format(self.run_number), with_matches=True):
-                subrun_list.append(subrun[0])  # subrun is a tuple
+                subrun_list.append(int(subrun[0]))  # subrun is a tuple
                 file_list.append(filename)
 
         return (subrun_list,file_list)
@@ -664,7 +665,7 @@ def main(run, **kwargs):
     if args.subrun==-1:
         subrun_tgt= "All"
     else:
-        subrun_tgt=args.subrun
+        subrun_tgt=int(args.subrun)
 
     subrun_fill=args.subrun_fill
     if not args.Silent:
@@ -724,8 +725,10 @@ def main(run, **kwargs):
         options["alignment"]=False
     if args.root_decode:
         options["root"]=True
+    if args.downsampling:
+        options["downsampling"] = args.downsampling
     if len (op_list)>0:
-        main_runner=runner(data_folder,run,calib_folder,mapping_file,**options)
+        main_runner = runner(data_folder,run,calib_folder,mapping_file,**options)
     else:
         sys.exit(0)
 
@@ -810,6 +813,7 @@ if __name__=="__main__":
     parser.add_argument('-sf','--subrun_fill', help='Runs to fill up to the subrun', type=int, default=-1)
     parser.add_argument('-ali','--alignment', help='Use the alignment', action="store_true")
     parser.add_argument('-root','--root_decode', help='Decode in root', action="store_true")
+    parser.add_argument('-down','--downsampling', help='Downsample the decoded data to speed up analysis ',type=int)
 
     args = parser.parse_args()
     args.method(**vars(args))
