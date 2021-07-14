@@ -655,6 +655,7 @@ class calib:
             for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
                 f = R.TFile.Open(filename)
                 if f.tree.GetEvent() > 0:
+                    pass
                     # data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
 
             data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
