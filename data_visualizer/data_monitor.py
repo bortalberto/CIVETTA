@@ -264,9 +264,14 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
 
 
         trig_tot=0
+        trig_tot_disp=0
+
         for sub in data_pd_pre_2.subRunNo.unique():
+            # trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
+            trig_tot_disp+=len(data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].unique())
             trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
-        trigger_string=f"Displayng {trig_tot} triggers"
+
+        trigger_string=f"Displayng {trig_tot_disp} triggers over ~ {trig_tot} total"
         fig_list.append(trigger_string)
 
     ## Plot da fare sui clusters 2D
@@ -289,7 +294,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
             if len(cluster_pd_2D_pre_2)>0:
                 total_clusters+=len(cluster_pd_2D_pre_2)
                 if plot_opt == "Signal heatmap":
-                    fig = signal_heatmap_plot(cluster_pd_2D_pre_2)
+                    fig = signal_heatmap_plot(cluster_pd_2D_pre_2, sel_binning)
 
                 elif plot_opt == "Clusters vs time":
                     fig = clusters_vs_tim_plot(cluster_pd_2D_pre_2, sel_run)
@@ -548,7 +553,7 @@ def noise_hits_plot(data_pd_cut_2, sel_run, planar):
 
 ## Cluster plots
 
-def signal_heatmap_plot(cluster_pd_2D_pre_2):
+def signal_heatmap_plot(cluster_pd_2D_pre_2, sel_binning):
     fig = px.density_heatmap(x=cluster_pd_2D_pre_2.cl_pos_x, y=cluster_pd_2D_pre_2.cl_pos_y, marginal_x="histogram", marginal_y="histogram", nbinsx=int(128 / sel_binning), nbinsy=int(128 / sel_binning))
     fig.update_layout(
         yaxis_title="Y strips ",
