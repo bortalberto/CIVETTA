@@ -33,7 +33,7 @@ except KeyError as E:
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 server = flask.Flask(__name__) # define flask app.server
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,title="Data visual planars")
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,title="Data visualizer")
 
 colorscale=[[0.0, "rgba(255,255,255,0.0)"],
                 [0.0000000000011111, "#0d0887"],
@@ -96,14 +96,19 @@ app.layout = html.Div(children=[
        id='plot_opt',
        options=[
            {"label":"Charge vs time","value":"Charge vs time"},
+           {"label": "Charge vs time x", "value": "Charge vs time x"},
+           {"label": "Charge vs time y", "value": "Charge vs time y"},
            {"label":"Signal/noise ratio vs time", "value": "Signal ratio"},
            {"label":"Noise vs time", "value": "Noise"},
            {"label":"X strips","value":"X strips"},
            {"label":"Y strips","value":"Y strips"},
            {"label": "N° Clusers vs time", "value": "Clusters vs time"},
            {"label":"Signal heatmap (2D clusters)","value":"Signal heatmap"},
-           {"label":"Distr charge clusters (2D clusters)","value":"Distr charge clusters"}
-               ],
+           {"label":"Distr charge clusters (2D clusters)","value":"Distr charge clusters"},
+           {"label":"Distr charge clusters (1D clusters x)", "value": "charge_cl_x"},
+           {"label": "Distr charge clusters (1D clusters y)", "value": "charge_cl_y"}
+
+       ],
        value='Charge vs time'
         ),
     ], style={'width': '15%', 'display': 'inline-block'}),
@@ -215,7 +220,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
     fig_list=[]
     ### Plot da fare sugli HIT
     signal_lower_limit, signal_upper_limit=load_config_signal_limits(sel_run)
-    if plot_opt in ("Charge vs time", "X strips", "Y strips","Signal ratio","Noise"):
+    if plot_opt in ("Charge vs time","Charge vs time x","Charge vs time y", "X strips", "Y strips","Signal ratio","Noise"):
         data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
         data_pd_pre_0=data_pd[(data_pd.l1ts_min_tcoarse<1600) & (data_pd.l1ts_min_tcoarse>1300) & (data_pd.charge_SH>0)]
         if window_opt=="Signal":
@@ -239,8 +244,9 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
 
             if len (data_pd_cut_2) > 0:
 
-                if plot_opt=="Charge vs time":
-                    fig = charge_vs_time_plot(data_pd_cut_2)
+                if plot_opt=="Charge vs time" or plot_opt=="Charge vs time x" or plot_opt=="Charge vs time y":
+                    fig = charge_vs_time_plot(data_pd_cut_2,plot_opt[-1])
+
 
                 elif plot_opt=="X strips":
                     fig = strips_plot(data_pd_cut_2,"x")
@@ -327,7 +333,57 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         for sub in data_pd_pre_2.subRunNo.unique():
             trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
         fig_list.append(f"{total_clusters} clusters in {trig_tot} triggers")
-        
+
+    ## Plot da fare sui clusters 1D
+    if plot_opt in ("charge_cl_x, charge_cl_y"):
+        total_clusters = 0
+        cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        for planar in range(0, 4):
+            cluster_pd_1D_pre_1 = cluster_pd_1D[cluster_pd_1D.planar == planar]
+            if sel_options == "Last 10":
+                subruns_list = cluster_pd_1D.subrun.unique()
+                subruns_list.sort()
+                cluster_pd_1D_pre_2 = cluster_pd_1D_pre_1[cluster_pd_1D_pre_1.subrun.isin(subruns_list[-10:])]
+
+            elif sel_options == "Select":
+                cluster_pd_1D_pre_2 = cluster_pd_1D_pre_1[cluster_pd_1D_pre_1.subrun == sel_subrun]
+
+            else:
+                cluster_pd_1D_pre_2 = cluster_pd_1D_pre_1
+
+            if len(cluster_pd_1D_pre_2) > 0:
+                total_clusters += len(cluster_pd_1D_pre_2)
+                if plot_opt == "charge_cl_x":
+                    fig = distr_charge_plot_1D(cluster_pd_1D_pre_2, "x")
+
+                elif plot_opt == "charge_cl_y":
+                    fig = distr_charge_plot_1D(cluster_pd_1D_pre_2, "y")
+
+                else:  # Catcher
+                    fig = go.Figure()
+
+                fig_list.append(fig)
+
+            else:
+                fig = go.Figure()
+                fig.update_layout(template=no_data_template)
+                fig_list.append(fig)
+
+        # Aggiungi indicazione sul numero di trigger
+        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        if sel_options == "Last 10":
+            subruns_list = data_pd.subRunNo.unique()
+            subruns_list.sort()
+            data_pd_pre_2 = data_pd[data_pd.subRunNo.isin(subruns_list[-10:])]
+        elif sel_options == "Select":
+            data_pd_pre_2 = data_pd[data_pd.subRunNo == sel_subrun]
+        else:
+            data_pd_pre_2 = data_pd
+        trig_tot = 0
+        for sub in data_pd_pre_2.subRunNo.unique():
+            trig_tot += data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
+        fig_list.append(f"{total_clusters} clusters in {trig_tot} triggers")
+
     # Plot da fare su risultato selezione tracciamento
     return fig_list
 
@@ -432,7 +488,9 @@ def calc_rate_per_sub(row, trig_dict, width):
 
 
 ## Plot functions
-def charge_vs_time_plot(data_pd_cut_2):
+def charge_vs_time_plot(data_pd_cut_2, view="e"):
+    if view!="e":
+        data_pd_cut_2=data_pd_cut_2[data_pd_cut_2[f"strip_{view}"]>0]
     fig = px.density_heatmap(data_pd_cut_2, x="l1ts_min_tcoarse", y="charge_SH",
                              title="Charge vs time",
                              marginal_x="histogram",
@@ -618,6 +676,40 @@ def distr_charge_plot_2D(cluster_pd_2D_pre_2):
                        text=f"""AVG size(x+y): {cluster_pd_2D_cut.cl_size_tot.mean():.2f} +/- {
                        np.std(cluster_pd_2D_cut.cl_size_tot) /
                        (cluster_pd_2D_cut.cl_size_tot.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+
+    return fig
+
+def distr_charge_plot_1D(cluster_pd_1D_pre_2, view):
+    range_b = 250
+    nbins = 250
+    cluster_pd_1D_cut = cluster_pd_1D_pre_2[cluster_pd_1D_pre_2.cl_charge < 250]
+    cluster_pd_1D_cut = cluster_pd_1D_cut[cluster_pd_1D_cut[f"cl_pos_{view}"].notnull()]
+    fit = fill_hist_and_norm_and_fit_landau(cluster_pd_1D_cut, 1, nbins, range_b)
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=cluster_pd_1D_cut.cl_charge, opacity=0.75, xbins=dict(size=range_b / nbins, start=0), name="Charge histogram"))
+    fig.update_layout(
+        yaxis_title="Count",
+        xaxis_title="Cluster charge [fC]",
+        height=800
+    )
+    x_list = np.arange(0, range_b, range_b / nbins)
+    y_list = [calculate_y_landau(fit, x) for x in x_list]
+    fig.add_trace(go.Scatter(x=x_list, y=y_list, name="Landau fit"))
+    textfont = dict(
+        family="sans serif",
+        size=18,
+        color="LightSeaGreen"
+    )
+    fig.add_annotation(x=0.75, xref="paper", y=0.95, yref="paper",
+                       text=f"""AVG Charge: {cluster_pd_1D_cut.cl_charge.mean():.2f} +/- {
+                       np.std(cluster_pd_1D_cut.cl_charge) /
+                       (cluster_pd_1D_cut.cl_charge.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+    fig.add_annotation(x=0.75, xref="paper", y=0.90, yref="paper",
+                       text=f"MPV CHarge: {fit[1]:.2f} +/- {fit[4]:.2f}", showarrow=False, font=textfont)
+    fig.add_annotation(x=0.75, xref="paper", y=0.85, yref="paper",
+                       text=f"""AVG size: {cluster_pd_1D_cut.cl_size.mean():.2f} +/- {
+                       np.std(cluster_pd_1D_cut.cl_size) /
+                       (cluster_pd_1D_cut.cl_size.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
 
     return fig
 if __name__ == '__main__':

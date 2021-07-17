@@ -31,7 +31,7 @@ except KeyError as E:
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 server = flask.Flask(__name__) # define flask app.server
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,title="Data visual planars")
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,title="Trigger stats")
 
 colorscale=[[0.0, "rgba(255,255,255,0.0)"],
                 [0.0000000000011111, "#0d0887"],
@@ -68,7 +68,7 @@ for (dirpath, dirnames, filenames) in walk(data_folder+"/raw_dat"):
             for dirname in dirnames:
                 dirname=dirname.replace("RUN_","")
                 if dirname.isdigit():
-                    if int(dirname)>106 and int(dirname)<5000:
+                    if int(dirname)>130 and int(dirname)<5000:
                         avaible_runs.append(int(dirname))
 avaible_runs.sort()
 fig_0 = go.Figure()
@@ -157,7 +157,7 @@ def update_graph(n_clicks, sel_run):
     fig_list.append(trigger_vs_subrun_plot(trigger_pd, sel_run))
     fig_list.append(trigger_vs_run_plot(trigger_pd))
     fig_list.append(trigger_vs_run_plot(trigger_pd))
-    fig_list.append(generate_table(trigger_pd.groupby("run").agg({"triggers":sum, "subrun": lambda x: x.nunique()})))
+    fig_list.append(generate_table(trigger_pd[trigger_pd.gemroc == 0].groupby("run").agg({"triggers":sum, "subrun": lambda x: x.nunique()})))
 
     return fig_list
 
@@ -181,23 +181,25 @@ def build_trigger_pd():
     run = []
     subrun = []
     trigger = []
+    time_end = []
     for run_n in run_num:
         for filename, sub in glob2.iglob(f"{data_folder}/raw_dat//RUN_{run_n}/ACQ_log_*", with_matches=True):
             with open(filename, 'r') as filelog:
                 for line in filelog.readlines():
-                    if "tot" in line:
+                    if "total" in line:
                         run.append(int(run_n))
                         subrun.append(int(sub[0]))
                         gemroc.append(int(line.split()[11]))
                         trigger.append(int(line.split()[-1]))
-    trigger_pd = pd.DataFrame({"gemroc": gemroc, "run": run, "subrun": subrun, "triggers": trigger})
+                        time_end.append(line.split("--")[0])
+    trigger_pd = pd.DataFrame({"gemroc": gemroc, "run": run, "subrun": subrun, "triggers": trigger, "time":time_end})
     return trigger_pd
 
 
 ## Plot functions
 def trigger_vs_run_plot(trigger_pd):
 
-    fig = px.scatter(x=trigger_pd.groupby("run").sum().index, y=trigger_pd.groupby("run").sum().triggers)
+    fig = px.scatter(x=trigger_pd[trigger_pd.gemroc==0].groupby("run").sum().index, y=trigger_pd[trigger_pd.gemroc==0].groupby("run").sum().triggers)
     fig.update_layout(
         xaxis_title="Run number",
         yaxis_title="Triggers",
