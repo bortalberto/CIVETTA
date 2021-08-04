@@ -741,7 +741,7 @@ class clusterize:
         if subrunNo_tgt:
             data_pd_cut_0 = self.data_pd[(self.data_pd.runNo == self.run_number) & (self.data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.charge_SH > 0) & (self.data_pd.delta_coarse > 0)]
             data_pd_cut_0 = data_pd_cut_0[data_pd_cut_0.subRunNo == subrunNo_tgt]
-        self.data_pd=data_pd_cut_0
+            self.data_pd=data_pd_cut_0
     def read_subruns(self):
         """
         Returns the list of subruns in the run
