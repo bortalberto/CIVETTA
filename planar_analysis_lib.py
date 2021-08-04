@@ -378,12 +378,13 @@ class calib:
     Class created to apply calibration and mapping
     """
 
-    def __init__(self, run_number, calib_folder, mapping_file, data_folder, root_dec):
+    def __init__(self, run_number, calib_folder, mapping_file, data_folder, root_dec,cylinder):
             self.run_number=run_number
             self.calib_folder=calib_folder
             self.mapping_file=mapping_file
             self.data_folder=data_folder
             self.root_dec=root_dec
+            self.cylinder=cylinder
 
 
     def load_mapping(self):
@@ -625,8 +626,13 @@ class calib:
             ana_pd = ana_pd.drop(columns=["data"] )
             ana_pd = ana_pd.astype(int)
             calib_dict = {}
-            for HW_feb_id in ana_pd.HW_feb_id.unique():
-                calib_dict[HW_feb_id, 3] = self.get_channels_QDC_calib(HW_feb_id, 3)
+            if self.cylinder:
+                for HW_feb_id,planar in ana_pd.group_by("HW_feb_id","planar").groups.keys():
+                    calib_dict[(int(HW_feb_id), int(planar))] = self.get_channels_QDC_calib(int(HW_feb_id), int(planar))
+            else:
+                for HW_feb_id in ana_pd["HW_feb_id"].unique():
+                    calib_dict[(int(HW_feb_id), 3)] = self.get_channels_QDC_calib(int(HW_feb_id), 3)
+
             ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
             # import root_pandas
             # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
