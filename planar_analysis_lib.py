@@ -798,7 +798,6 @@ class clusterize:
         :return:
         """
 
-        # self.load_data_pd(subrunNo_tgt)
 
         dict_4_pd = {
             "run": [],
@@ -815,7 +814,7 @@ class clusterize:
 
         }
         for runNo in data_pd["runNo"].unique():
-            data_pd_cut_1 = data_pd[(data_pd.runNo == runNo) & (data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.charge_SH > 0) & (data_pd.delta_coarse > 0)]
+            data_pd_cut_1 = data_pd[(data_pd.runNo == runNo) & (data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (data_pd.charge_SH > 0) & (data_pd.delta_coarse > 0)]
             for count in data_pd_cut_1["count"].unique():
                 data_pd_cut_2 = data_pd_cut_1[data_pd_cut_1["count"] == count]
                 for planar in data_pd_cut_2["planar"].unique():
@@ -827,7 +826,7 @@ class clusterize:
                             clusters = self.clusterize_view(data_pd_cut_4, view)
                         for n,cluster in enumerate(clusters):
                             dict_4_pd["run"].append(runNo)
-                            dict_4_pd["subrun"].append(subRunNo)
+                            dict_4_pd["subrun"].append(int(data_pd.subRunNo.mean()))
                             dict_4_pd["count"].append(count)
                             dict_4_pd["planar"].append(planar)
                             if view == "x":
@@ -887,7 +886,7 @@ class clusterize:
                     if len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x.notna()]) > 0 and len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y.notna()]) > 0:
                         index_x = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x.notna()].cl_charge.idxmax(axis=0)
                         index_y = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y.notna()].cl_charge.idxmax(axis=0)
-                        dict_4_pd["run"].append(run)
+                        dict_4_pd["run"].append(self.run_number)
                         dict_4_pd["subrun"].append(subrun)
                         dict_4_pd["count"].append(count)
                         dict_4_pd["planar"].append(planar)
