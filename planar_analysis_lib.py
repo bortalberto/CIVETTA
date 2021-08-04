@@ -431,9 +431,17 @@ class calib:
         :param layer:
         :return:
         """
+        fname_1="{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c1_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)
+        fname_2="{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c2_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)
+        if not os.path.isfile(fname_1):
+            print (f"Can't find {fname_1}")
+            exit(0)
+        if not os.path.isfile(fname_2):
+            print (f"Can't find {fname_1}")
+            exit(0)
         return {
-                0 : np.loadtxt(fname="{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c1_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
-                1 : np.loadtxt(fname="{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c2_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
+                0 : np.loadtxt(fname=fname_1),
+                1 : np.loadtxt(fname=fname_2),
                        }
 
 
@@ -558,8 +566,8 @@ class calib:
                     strip_y.append(int(mapping.strip_y))
                     planar.append(int (mapping.planar))
                     FEB_label.append(int (mapping.FEB_label))
-                    if (int(mapping.HW_feb_id),3) not in calib_dict.keys():
-                        calib_dict[(int(mapping.HW_feb_id),3)] = self.get_channels_QDC_calib(int(mapping.HW_feb_id),3)
+                    if (int(mapping.HW_feb_id), int(mapping.planar)) not in calib_dict.keys():
+                        calib_dict[(int(mapping.HW_feb_id), int(mapping.planar))] = self.get_channels_QDC_calib(int(mapping.HW_feb_id), int(mapping.planar))
                     constant = calib_dict[int(mapping.HW_feb_id),3][tiger[-1]%2][channel[-1]][1]
                     slope = calib_dict[int(mapping.HW_feb_id),3][tiger[-1]%2][channel[-1]][2]
                     if(efine[-1] >= 1008):
