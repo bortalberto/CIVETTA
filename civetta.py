@@ -682,7 +682,9 @@ def main(run, **kwargs):
         print (f"mapping_file : {mapping_file}")
         print (f"Subrun : {subrun_tgt}")
         if args.cylinder:
-            print ("Cylinder")
+            print ("Geometry: Cylinder")
+        else:
+            print ("Geometry: Planar")
         print (f"Operations:")
         if args.decode:
             print ("        -Decode")

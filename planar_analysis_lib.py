@@ -626,6 +626,7 @@ class calib:
             ana_pd = ana_pd.drop(columns=["data"] )
             ana_pd = ana_pd.astype(int)
             calib_dict = {}
+            print (ana_pd)
             if self.cylinder:
                 for HW_feb_id,planar in ana_pd.groupby("HW_feb_id","planar").groups.keys():
                     calib_dict[(int(HW_feb_id), int(planar))] = self.get_channels_QDC_calib(int(HW_feb_id), int(planar))
