@@ -157,7 +157,7 @@ def update_graph(n_clicks, sel_run):
     fig_list.append(trigger_vs_subrun_plot(trigger_pd, sel_run))
     fig_list.append(trigger_vs_run_plot(trigger_pd))
     fig_list.append(trigger_vs_run_plot(trigger_pd))
-    fig_list.append(generate_table(trigger_pd[trigger_pd.gemroc == 0].groupby("run").agg({"triggers":sum, "subrun": lambda x: x.nunique()})))
+    fig_list.append(generate_table(trigger_pd[trigger_pd.gemroc == 0].groupby("run").agg({"triggers":sum, "subrun": lambda x: x.nunique(), "time":min})))
 
     return fig_list
 

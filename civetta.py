@@ -792,7 +792,7 @@ def main(run, **kwargs):
 if __name__=="__main__":
 
 
-    parser = argparse.ArgumentParser(description='Tools to decode and analyze TIGER data')
+    parser = argparse.ArgumentParser(description="CIVETTA: Tools to decode and analyze TIGER data",)
     parser.add_argument('run', type=int, help='Run number')
     parser.set_defaults(method=main)
     parser.add_argument('-d','--decode',  action="store_true", help='Decode')
