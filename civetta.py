@@ -263,7 +263,8 @@ class runner:
         else:
             clusterizer=pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
         clusterizer.load_data_pd()
-        sub_data=clusterizer.data_pd.groupby("subRunNo")
+        sub_data = clusterizer.data_pd.groupby("subRunNo")
+        del clusterizer.data_pd
         if not self.silent:
             print ("Single view")
         if len(sub_data)>0:
