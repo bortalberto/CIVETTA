@@ -487,7 +487,7 @@ class calib:
             return_list.append(int(mapping_pd[field_name]))
         return return_list
 
-    def calibrate_charge(self, calib_dict, HW_feb_id, tiger, channel, efine):
+    def calibrate_charge(self, calib_dict, HW_feb_id, planar, tiger, channel, efine):
         """
         Calculate the charge, given efine and the channel
         :param calib_dict:
@@ -497,8 +497,8 @@ class calib:
         :param efine:
         :return:
         """
-        constant = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][1]
-        slope = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][2]
+        constant = calib_dict[HW_feb_id, planar][int(tiger % 2)][channel][1]
+        slope = calib_dict[HW_feb_id, planar][int(tiger % 2)][channel][2]
         if (efine >= 1008):
             charge_SH = (((-1 * constant) - (1024 - efine)) / slope)
         else:
@@ -630,7 +630,7 @@ class calib:
                 for HW_feb_id in ana_pd["HW_feb_id"].unique():
                     calib_dict[(int(HW_feb_id), 3)] = self.get_channels_QDC_calib(int(HW_feb_id), 3)
 
-            ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
+            ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["planar"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
             # import root_pandas
             # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
             ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
