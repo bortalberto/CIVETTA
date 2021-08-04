@@ -423,6 +423,11 @@ class calib:
             sys.exit(1)
 
 
+    def convert_none(self, input):
+        if input=='None':
+            return 0
+        else:
+            return input
 
     def get_channels_QDC_calib(self,HW_FEB,layer):
         """
@@ -437,12 +442,12 @@ class calib:
             print (f"Can't find {fname_1}")
             exit(0)
         if not os.path.isfile(fname_2):
-            print (f"Can't find {fname_1}")
+            print (f"Can't find {fname_2}")
             exit(0)
         return {
-                0 : np.loadtxt(fname=fname_1),
-                1 : np.loadtxt(fname=fname_2),
-                       }
+                0 : np.loadtxt(fname=fname_1, converters={0: self.convert_none, 1: self.convert_none}),
+                1 : np.loadtxt(fname=fname_2,  converters={0: self.convert_none, 1: self.convert_none}),
+                }
 
 
 
