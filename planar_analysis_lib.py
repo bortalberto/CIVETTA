@@ -791,14 +791,14 @@ class clusterize:
                 return ret_clusters
 
 
-    def build_view_clusters(self, subrunNo_tgt=None):
+    def build_view_clusters(self, data_pd):
         """
         Builds the cluster for one run (the run selection part is redundant). The subrunNo param allows parallelization
         :param subrunNo:
         :return:
         """
 
-        self.load_data_pd(subrunNo_tgt)
+        # self.load_data_pd(subrunNo_tgt)
 
         dict_4_pd = {
             "run": [],
@@ -814,36 +814,32 @@ class clusterize:
             "hit_ids" : []
 
         }
-        for runNo in self.data_pd["runNo"].unique():
-            data_pd_cut_0 = self.data_pd[(self.data_pd.runNo == runNo) & (self.data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.charge_SH > 0) & (self.data_pd.delta_coarse > 0)]
-            if subrunNo_tgt != None:
-                data_pd_cut_0 = data_pd_cut_0[data_pd_cut_0.subRunNo == subrunNo_tgt]
-            for subRunNo in (data_pd_cut_0["subRunNo"].unique()):
-                data_pd_cut_1 = data_pd_cut_0[data_pd_cut_0.subRunNo == subRunNo]
-                for count in data_pd_cut_1["count"].unique():
-                    data_pd_cut_2 = data_pd_cut_1[data_pd_cut_1["count"] == count]
-                    for planar in data_pd_cut_2["planar"].unique():
-                        data_pd_cut_3 = data_pd_cut_2[data_pd_cut_2.planar == planar]
-                        for view in ("x", "y"):
-                            clusters = []
-                            data_pd_cut_4 = data_pd_cut_3[data_pd_cut_3[f"strip_{view}"] > 0]
-                            if len(data_pd_cut_4) > 0:
-                                clusters = self.clusterize_view(data_pd_cut_4, view)
-                            for n,cluster in enumerate(clusters):
-                                dict_4_pd["run"].append(runNo)
-                                dict_4_pd["subrun"].append(subRunNo)
-                                dict_4_pd["count"].append(count)
-                                dict_4_pd["planar"].append(planar)
-                                if view == "x":
-                                    dict_4_pd["cl_pos_x"].append(cluster[0])
-                                    dict_4_pd["cl_pos_y"].append(np.nan)
-                                else:
-                                    dict_4_pd["cl_pos_y"].append(cluster[0])
-                                    dict_4_pd["cl_pos_x"].append(np.nan)
-                                dict_4_pd["cl_charge"].append(cluster[1])
-                                dict_4_pd["cl_size"].append(cluster[2])
-                                dict_4_pd["hit_ids"].append(cluster[3])
-                                dict_4_pd["cl_id"].append(int(n))
+        for runNo in data_pd["runNo"].unique():
+            data_pd_cut_1 = data_pd[(data_pd.runNo == runNo) & (data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.charge_SH > 0) & (data_pd.delta_coarse > 0)]
+            for count in data_pd_cut_1["count"].unique():
+                data_pd_cut_2 = data_pd_cut_1[data_pd_cut_1["count"] == count]
+                for planar in data_pd_cut_2["planar"].unique():
+                    data_pd_cut_3 = data_pd_cut_2[data_pd_cut_2.planar == planar]
+                    for view in ("x", "y"):
+                        clusters = []
+                        data_pd_cut_4 = data_pd_cut_3[data_pd_cut_3[f"strip_{view}"] > 0]
+                        if len(data_pd_cut_4) > 0:
+                            clusters = self.clusterize_view(data_pd_cut_4, view)
+                        for n,cluster in enumerate(clusters):
+                            dict_4_pd["run"].append(runNo)
+                            dict_4_pd["subrun"].append(subRunNo)
+                            dict_4_pd["count"].append(count)
+                            dict_4_pd["planar"].append(planar)
+                            if view == "x":
+                                dict_4_pd["cl_pos_x"].append(cluster[0])
+                                dict_4_pd["cl_pos_y"].append(np.nan)
+                            else:
+                                dict_4_pd["cl_pos_y"].append(cluster[0])
+                                dict_4_pd["cl_pos_x"].append(np.nan)
+                            dict_4_pd["cl_charge"].append(cluster[1])
+                            dict_4_pd["cl_size"].append(cluster[2])
+                            dict_4_pd["hit_ids"].append(cluster[3])
+                            dict_4_pd["cl_id"].append(int(n))
 
         return (pd.DataFrame(dict_4_pd))
 

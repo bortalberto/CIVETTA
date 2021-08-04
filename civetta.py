@@ -249,7 +249,6 @@ class runner:
 
 
     ################# Cls part #################
-
     def clusterize_run(self, time_limits):
         """
         Clusterize one run
@@ -263,15 +262,13 @@ class runner:
             clusterizer=pl_lib.clusterize(self.run_number, self.data_folder,time_limits[0], time_limits[1])
         else:
             clusterizer=pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
-        clusterizer.load_data_pd()
-        subrun_list=(clusterizer.read_subruns())
-        clusterizer.data_pd=None # Let's empty the data_pd information
+        sub_data=clusterizer.data_pd.groupby("subRunNo")
         if not self.silent:
             print ("Single view")
-        if len(subrun_list)>0:
+        if len(sub_data)>0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar:
-                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_view_clusters, subrun_list)):
+                with tqdm(total=len(sub_data), disable=self.silent) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_view_clusters, sub_data)):
                         pd_1d_return_list.append(x)
                         pbar.update()
             clusterizer.cluster_pd=pd.concat(pd_1d_return_list)
@@ -801,6 +798,8 @@ def main(run, **kwargs):
             main_runner.select_run_fill(subrun_fill)
 
     main_runner.save_config(args)
+
+
 
 if __name__=="__main__":
 
