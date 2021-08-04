@@ -408,14 +408,14 @@ class calib:
         """
         try:
             pass
-            # import root_pandas
-            # mapping_pd=root_pandas.read_root(self.mapping_file)
-            # self.mapping_pd=mapping_pd
-            # self.mapping_pd["tiger"]=self.mapping_pd["SW_FEB_id"]
-            # self.mapping_pd["strip_x"] = self.mapping_pd["pos_x"]
-            # self.mapping_pd["strip_y"] = self.mapping_pd["pos_v"]
-            # self.mapping_pd["planar"] = self.mapping_pd["layer_id"]
-            # self.mapping_pd["HW_feb_id"] = self.mapping_pd["HW_FEB_id"]
+            import root_pandas
+            mapping_pd=root_pandas.read_root(self.mapping_file)
+            self.mapping_pd=mapping_pd
+            self.mapping_pd["tiger"]=self.mapping_pd["SW_FEB_id"]
+            self.mapping_pd["strip_x"] = self.mapping_pd["pos_x"]
+            self.mapping_pd["strip_y"] = self.mapping_pd["pos_v"]
+            self.mapping_pd["planar"] = self.mapping_pd["layer_id"]
+            self.mapping_pd["HW_feb_id"] = self.mapping_pd["HW_FEB_id"]
 
 
         except Exception as E:
