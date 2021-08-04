@@ -84,7 +84,7 @@ app.layout = html.Div(children=[
     dcc.Dropdown(
         id='sel_run',
         options=[{'label': i, 'value': i} for i in avaible_runs],
-        value='15'
+        value=avaible_runs[-1]
         )
 
     ], style={'width': '5%', 'display': 'inline-block'}),
@@ -98,15 +98,21 @@ app.layout = html.Div(children=[
            {"label":"Charge vs time","value":"Charge vs time"},
            {"label": "Charge vs time x", "value": "Charge vs time x"},
            {"label": "Charge vs time y", "value": "Charge vs time y"},
-           {"label":"Signal/noise ratio vs time", "value": "Signal ratio"},
-           {"label":"Noise vs time", "value": "Noise"},
+           # {"label":"Signal/noise ratio vs time", "value": "Signal ratio"},
+           # {"label":"Noise vs time", "value": "Noise"},
            {"label":"X strips","value":"X strips"},
            {"label":"Y strips","value":"Y strips"},
-           {"label": "N° Clusers vs time", "value": "Clusters vs time"},
+           # {"label": "N° Clusers vs time", "value": "Clusters vs time"},
            {"label":"Signal heatmap (2D clusters)","value":"Signal heatmap"},
            {"label":"Distr charge clusters (2D clusters)","value":"Distr charge clusters"},
            {"label":"Distr charge clusters (1D clusters x)", "value": "charge_cl_x"},
-           {"label": "Distr charge clusters (1D clusters y)", "value": "charge_cl_y"}
+           {"label": "Distr charge clusters (1D clusters y)", "value": "charge_cl_y"},
+           {"label": "Distr size clusters (1D clusters x)", "value": "size_cl_x"},
+           {"label": "Distr size clusters (1D clusters y)", "value": "size_cl_y"},
+           {"label": "Tracks residuals (x)", "value": "track_residuals_x"},
+           {"label": "Tracks residuals (y)", "value": "track_residuals_y"},
+           {"label": "Fast efficiency", "value": "efficiency"}
+
 
        ],
        value='Charge vs time'
@@ -167,7 +173,7 @@ app.layout = html.Div(children=[
 
     
     html.Div([
-    html.H6("Planar 0"),
+    html.H6("Planar 0", id="planar_0_name"),
     dcc.Graph(
         id='data_visual_0',
         figure=fig_0,
@@ -175,7 +181,7 @@ app.layout = html.Div(children=[
     )], style={'width': '50%', 'display': 'inline-block'}),
     
     html.Div([
-    html.H6("Planar 1"),
+    html.H6("Planar 1", id="planar_1_name"),
     dcc.Graph(
         id='data_visual_1',
         figure=fig_1,
@@ -183,7 +189,7 @@ app.layout = html.Div(children=[
     )], style={'width': '50%', 'display': 'inline-block'}),
     
     html.Div([
-    html.H6("Planar 2"),
+    html.H6("Planar 2", id="planar_2_name"),
     dcc.Graph(
         id='data_visual_2',
         figure=fig_2,
@@ -191,7 +197,7 @@ app.layout = html.Div(children=[
     )], style={'width': '50%', 'display': 'inline-block'}),
     
     html.Div([
-    html.H6("Planar 3"),
+    html.H6("Planar 3", id="planar_3_name"),
     dcc.Graph(
         id='data_visual_3',
         figure=fig_3,
@@ -275,7 +281,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         for sub in data_pd_pre_2.subRunNo.unique():
             # trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
             trig_tot_disp+=len(data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].unique())
-            trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
+        trig_tot=data_pd_pre_2["count"].max()-data_pd_pre_2["count"].min()
 
         trigger_string=f"Displayng {trig_tot_disp} triggers over ~ {trig_tot} total"
         fig_list.append(trigger_string)
@@ -332,12 +338,13 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         trig_tot=0
         for sub in data_pd_pre_2.subRunNo.unique():
             trig_tot+=data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
+        trig_tot=data_pd_pre_2["count"].max()-data_pd_pre_2["count"].min()
         fig_list.append(f"{total_clusters} clusters in {trig_tot} triggers")
 
     ## Plot da fare sui clusters 1D
-    if plot_opt in ("charge_cl_x, charge_cl_y"):
+    if plot_opt in ("charge_cl_x", "charge_cl_y", "size_cl_x", "size_cl_y"):
         total_clusters = 0
-        cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
         for planar in range(0, 4):
             cluster_pd_1D_pre_1 = cluster_pd_1D[cluster_pd_1D.planar == planar]
             if sel_options == "Last 10":
@@ -358,6 +365,12 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
 
                 elif plot_opt == "charge_cl_y":
                     fig = distr_charge_plot_1D(cluster_pd_1D_pre_2, "y")
+
+                elif plot_opt == "size_cl_x":
+                    fig = distr_cluster_size_1D(cluster_pd_1D_pre_2, "x")
+
+                elif plot_opt == "size_cl_y":
+                    fig = distr_cluster_size_1D(cluster_pd_1D_pre_2, "y")
 
                 else:  # Catcher
                     fig = go.Figure()
@@ -382,7 +395,39 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         trig_tot = 0
         for sub in data_pd_pre_2.subRunNo.unique():
             trig_tot += data_pd_pre_2[data_pd_pre_2.subRunNo == sub]["count"].max()
+        trig_tot=data_pd_pre_2["count"].max()-data_pd_pre_2["count"].min()
+
         fig_list.append(f"{total_clusters} clusters in {trig_tot} triggers")
+
+    if plot_opt in ("track_residuals_x", "track_residuals_y"):
+        track_pd=pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        if len(track_pd)>0:
+            view = plot_opt[-1]
+            for planar in range(0, 4):
+                fig=distr_track_res(track_pd, view, planar)
+                fig_list.append(fig)
+
+        fig_list.append("")
+
+    if plot_opt in ("efficiency"):
+        track_pd=pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        if len(track_pd)>0:
+            eff_pd=calculate_eff_fast(track_pd,0.2,0.2)
+            fig  = plot_eff(eff_pd)
+            fig_list.append(fig)
+            fig_list.append(fig)
+            fig = plot_tot_events(eff_pd)
+            fig_list.append(fig)
+            fig_list.append(fig)
+
+        else:
+            for planar in range(0,4):
+                fig=go.Figure()
+                fig.update_layout(template=no_data_template)
+
+        fig_list.append("Efficiency calculate with fast procedure, underestimated")
+
+
 
     # Plot da fare su risultato selezione tracciamento
     return fig_list
@@ -684,34 +729,153 @@ def distr_charge_plot_1D(cluster_pd_1D_pre_2, view):
     nbins = 250
     cluster_pd_1D_cut = cluster_pd_1D_pre_2[cluster_pd_1D_pre_2.cl_charge < 250]
     cluster_pd_1D_cut = cluster_pd_1D_cut[cluster_pd_1D_cut[f"cl_pos_{view}"].notnull()]
-    fit = fill_hist_and_norm_and_fit_landau(cluster_pd_1D_cut, 1, nbins, range_b)
+    if len(cluster_pd_1D_cut>0):
+        fit = fill_hist_and_norm_and_fit_landau(cluster_pd_1D_cut, 1, nbins, range_b)
+        fig = go.Figure()
+        fig.add_trace(go.Histogram(x=cluster_pd_1D_cut.cl_charge, opacity=0.75, xbins=dict(size=range_b / nbins, start=0), name="Charge histogram"))
+        fig.update_layout(
+            yaxis_title="Count",
+            xaxis_title="Cluster charge [fC]",
+            height=800
+        )
+        x_list = np.arange(0, range_b, range_b / nbins)
+        y_list = [calculate_y_landau(fit, x) for x in x_list]
+        fig.add_trace(go.Scatter(x=x_list, y=y_list, name="Landau fit"))
+        textfont = dict(
+            family="sans serif",
+            size=18,
+            color="LightSeaGreen"
+        )
+        fig.add_annotation(x=0.75, xref="paper", y=0.95, yref="paper",
+                           text=f"""AVG Charge: {cluster_pd_1D_cut.cl_charge.mean():.2f} +/- {
+                           np.std(cluster_pd_1D_cut.cl_charge) /
+                           (cluster_pd_1D_cut.cl_charge.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+        fig.add_annotation(x=0.75, xref="paper", y=0.90, yref="paper",
+                           text=f"MPV CHarge: {fit[1]:.2f} +/- {fit[4]:.2f}", showarrow=False, font=textfont)
+        fig.add_annotation(x=0.75, xref="paper", y=0.85, yref="paper",
+                           text=f"""AVG size: {cluster_pd_1D_cut.cl_size.mean():.2f} +/- {
+                           np.std(cluster_pd_1D_cut.cl_size) /
+                           (cluster_pd_1D_cut.cl_size.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+    else:
+        fig=go.Figure()
+        fig.update_layout(template=no_data_template)
+
+    return fig
+
+def distr_cluster_size_1D(cluster_pd_1D_pre_2, view):
+    range_b = 15
+    nbins = 15
+    cluster_pd_1D_cut = cluster_pd_1D_pre_2[cluster_pd_1D_pre_2.cl_charge < 250]
+    cluster_pd_1D_cut = cluster_pd_1D_cut[cluster_pd_1D_cut[f"cl_pos_{view}"].notnull()]
+    if len(cluster_pd_1D_cut>0):
+
+        fig = go.Figure()
+        fig.add_trace(go.Histogram(x=cluster_pd_1D_cut.cl_size, opacity=0.75, xbins=dict(size=range_b / nbins, start=0), name="Charge histogram"))
+        fig.update_layout(
+            yaxis_title="Count",
+            xaxis_title="Cluster size [hits]",
+            height=800
+        )
+        fig.update_xaxes(range=[0, 15])
+        textfont = dict(
+            family="sans serif",
+            size=18,
+            color="Red"
+        )
+        fig.add_annotation(x=0.75, xref="paper", y=0.95, yref="paper",
+                           text=f"""AVG Charge: {cluster_pd_1D_cut.cl_charge.mean():.2f} +/- {
+                           np.std(cluster_pd_1D_cut.cl_charge) /
+                           (cluster_pd_1D_cut.cl_charge.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+        fig.add_annotation(x=0.75, xref="paper", y=0.85, yref="paper",
+                           text=f"""AVG size: {cluster_pd_1D_cut.cl_size.mean():.2f} +/- {
+                           np.std(cluster_pd_1D_cut.cl_size) /
+                           (cluster_pd_1D_cut.cl_size.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+    else:
+        fig=go.Figure()
+        fig.update_layout(template=no_data_template)
+
+    return fig
+
+def distr_track_res(track_pd, view, planar):
+    range_b = 3
+    nbins = 200
+    cluster_pd_1D_cut = track_pd
+    cluster_pd_1D_cut = cluster_pd_1D_cut[cluster_pd_1D_cut[f"res_planar_{planar}_{view}"].notnull()]
+    # cluster_pd_1D_cut[cluster_pd_1D_cut[f"res_planar_{planar}_{view}"]] = cluster_pd_1D_cut[cluster_pd_1D_cut[f"res_planar_{planar}_{view}"]]
     fig = go.Figure()
-    fig.add_trace(go.Histogram(x=cluster_pd_1D_cut.cl_charge, opacity=0.75, xbins=dict(size=range_b / nbins, start=0), name="Charge histogram"))
+    fig.add_trace(go.Histogram(x=cluster_pd_1D_cut[f"res_planar_{planar}_{view}"], opacity=0.75,nbinsx=nbins, name="Charge histogram"))
     fig.update_layout(
         yaxis_title="Count",
-        xaxis_title="Cluster charge [fC]",
+        xaxis_title="Residual [cm]",
         height=800
     )
-    x_list = np.arange(0, range_b, range_b / nbins)
-    y_list = [calculate_y_landau(fit, x) for x in x_list]
-    fig.add_trace(go.Scatter(x=x_list, y=y_list, name="Landau fit"))
+    fig.update_xaxes(range=[-1.5, 1.5])
     textfont = dict(
         family="sans serif",
         size=18,
-        color="LightSeaGreen"
+        color="Red"
     )
-    fig.add_annotation(x=0.75, xref="paper", y=0.95, yref="paper",
-                       text=f"""AVG Charge: {cluster_pd_1D_cut.cl_charge.mean():.2f} +/- {
-                       np.std(cluster_pd_1D_cut.cl_charge) /
-                       (cluster_pd_1D_cut.cl_charge.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
-    fig.add_annotation(x=0.75, xref="paper", y=0.90, yref="paper",
-                       text=f"MPV CHarge: {fit[1]:.2f} +/- {fit[4]:.2f}", showarrow=False, font=textfont)
-    fig.add_annotation(x=0.75, xref="paper", y=0.85, yref="paper",
-                       text=f"""AVG size: {cluster_pd_1D_cut.cl_size.mean():.2f} +/- {
-                       np.std(cluster_pd_1D_cut.cl_size) /
-                       (cluster_pd_1D_cut.cl_size.count()) ** (1 / 2):.2f}""", showarrow=False, font=textfont)
+    # fig.add_annotation(x=0.75, xref="paper", y=0.85, yref="paper",
+    #                    text=f"""AVG : {cluster_pd_1D_cut[f"res_planar_{planar}_{view}"].mean():.2f} Dev std: {np.std(cluster_pd_1D_cut[f"res_planar_{planar}_{view}"]):.2f}
+    #                    """
+    #                    , showarrow=False, font=textfont)
 
     return fig
+def plot_eff(eff_pd):
+    fig=px.scatter(eff_pd, x="planar", y="eff", error_y="error_eff", color="view")
+    fig.update_layout(
+        title=" Efficiency (all planars)",
+    )
+    fig.update_yaxes(range=[min(0.8, eff_pd.eff.min()), 1])
+    return fig
+
+def plot_tot_events(eff_pd):
+    fig=px.scatter(eff_pd, x="planar", y="denom", color="view")
+    fig.update_layout(
+        title="Number of events considered",
+    )
+    return fig
+
+def calculate_eff_fast(data, res_tol_tr, res_tol_put):
+    mean_dict = {}
+    keys = []
+    data_tr = data
+    for planar in range(0, 4):
+        for view in ("x", "y"):
+            mean_dict[f"res_planar_{planar}_{view}"] = data[f"res_planar_{planar}_{view}"].mean()
+            keys.append(f"res_planar_{planar}_{view}")
+    for key in keys:
+        data_tr[key] = data_tr[key] - mean_dict[key]
+
+    res_pd_dict = {
+        "planar"   : [],
+        "view"     : [],
+        "eff"      : [],
+        "num"      : [],
+        "denom"    : [],
+        "error_eff": []
+    }
+    for put in range(0, 4):
+        for view in ("x", "y"):
+            data_c = data_tr[data_tr[f"{view}_fit"].notna()]
+            trackers = [f"res_planar_{planar}_{view}" for planar in range(0, 4) if planar != put]
+            data_cc = data_c[data_c[trackers].apply(lambda x: all(x < res_tol_tr), 1)]
+            data_put = data_cc[data_cc[f"res_planar_{put}_{view}"] < res_tol_put]
+            res_pd_dict["planar"].append(put)
+            res_pd_dict["view"].append(view)
+            eff = len(data_put) / len(data_cc)
+            num = len(data_put)
+            denom = len(data_cc)
+            error_eff = (float((eff * (1 - eff) / denom) ** (1 / 2)))
+            res_pd_dict["eff"].append(eff)
+            res_pd_dict["num"].append(num)
+            res_pd_dict["denom"].append(denom)
+            res_pd_dict["error_eff"].append(error_eff)
+
+    eff_pd = pd.DataFrame(res_pd_dict)
+    return (eff_pd)
+
+
 if __name__ == '__main__':
     debug = True
     app.run_server(debug=True)
