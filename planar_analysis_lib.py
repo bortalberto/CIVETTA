@@ -423,11 +423,12 @@ class calib:
             sys.exit(1)
 
 
-    def convert_none(self, input):
-        if input=='None':
+    def convert_none(self, input_):
+        print (input_)
+        if input_=='None':
             return 0
         else:
-            return input
+            return input_
 
     def get_channels_QDC_calib(self,HW_FEB,layer):
         """
