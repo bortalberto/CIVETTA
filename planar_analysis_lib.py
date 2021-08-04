@@ -424,6 +424,9 @@ class calib:
 
 
     def convert_none(self, input_):
+        print (input_)
+        print (type(input_))
+        print (str(input_))
         if str(input_)=='None':
             print(input_)
 
