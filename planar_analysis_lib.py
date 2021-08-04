@@ -424,8 +424,9 @@ class calib:
 
 
     def convert_none(self, input_):
-        print (input_)
         if str(input_)=='None':
+            print(input_)
+
             return np.NaN
         else:
             return input_
