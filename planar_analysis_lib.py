@@ -407,9 +407,9 @@ class calib:
         :return:
         """
         try:
-            pass
-            import root_pandas
-            mapping_pd=root_pandas.read_root(self.mapping_file)
+            import uproot
+            file = uproot.open(self.mapping_file)
+            mapping_pd = file["tree"].arrays(library="pd")
             self.mapping_pd=mapping_pd
             self.mapping_pd["tiger"]=self.mapping_pd["SW_FEB_id"]
             self.mapping_pd["strip_x"] = self.mapping_pd["pos_x"]
