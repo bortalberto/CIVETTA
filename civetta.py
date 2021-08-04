@@ -265,6 +265,7 @@ class runner:
             clusterizer=pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
         clusterizer.load_data_pd()
         subrun_list=(clusterizer.read_subruns())
+        clusterizer.data_pd=None # Let's empty the data_pd information
         if not self.silent:
             print ("Single view")
         if len(subrun_list)>0:
