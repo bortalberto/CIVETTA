@@ -4,10 +4,14 @@ import os
 import ROOT as R
 import glob2
 import pandas as pd
+from tqdm import tqdm
+
 from sklearn.cluster import KMeans
 import sys
 import configparser
 import pickle
+from multiprocessing import Pool,cpu_count
+
 config=configparser.ConfigParser()
 config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
@@ -356,11 +360,11 @@ class decoder:
             final_pd=pd.concat(pd_list, ignore_index=True)
             if len(final_pd>0):
                 if root:
-                    # import root_pandas
+                    import root_pandas
                     filename=path.replace(".dat", ".root")
                     filename=filename.replace("raw_dat", "raw_root")
                     filename=filename.replace("/RUN_", "/")
-                    # root_pandas.to_root(final_pd,filename,"tree")
+                    root_pandas.to_root(final_pd,filename,"tree")
                 else:
                     filename=path.replace(".dat", ".pickle.gzip")
                     filename=filename.replace("raw_dat", "raw_root")
@@ -540,7 +544,7 @@ class calib:
                     ecoarse.append(int(getattr(in_f.tree, "ecoarse")))
                     tfine.append(int(getattr(in_f.tree, "tfine")))
                     efine.append(int(getattr(in_f.tree, "efine")))
-                    count.append(int(getattr(in_f.tree, "count_new")))
+                    count.append(int(getattr(in_f.tree, "count")))
                     count_ori.append(int(getattr(in_f.tree, "count_ori")))
                     timestamp.append(int(getattr(in_f.tree, "timestamp")))
                     l1ts_min_tcoarse.append(int(getattr(in_f.tree, "l1ts_min_tcoarse")))
@@ -588,8 +592,8 @@ class calib:
             out_pd["FEB_label"] = FEB_label
             out_pd["charge_SH"] = charge_SH
             out_pd["subRunNo"].astype(int)
-            # import root_pandas
-            # root_pandas.to_root(out_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
+            import root_pandas
+            root_pandas.to_root(out_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
             return out_pd
         else:
             decode_pd=pd.read_pickle("{}/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.data_folder,self.run_number,subrun), compression="gzip")
@@ -619,15 +623,14 @@ class calib:
 
         data_pd = pd.DataFrame()
         if self.root_dec:
-            # import root_pandas
+            import root_pandas
 
             for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
                 f = R.TFile.Open(filename)
                 if f.tree.GetEvent() > 0:
-                    pass
-                    # data_pd = data_pd.append(root_pandas.read_root(filename, "tree"), ignore_index=True)
+                    data_pd = data_pd.append(root_pandas.read_root(filename, "tree"), ignore_index=True)
             data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-            # root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
+            root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
 
 
         else:
@@ -645,7 +648,7 @@ class calib:
         """
         if self.root_dec:
 
-            # import root_pandas
+            import root_pandas
             path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
 
             if os.path.isfile(path):
@@ -655,11 +658,10 @@ class calib:
             for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
                 f = R.TFile.Open(filename)
                 if f.tree.GetEvent() > 0:
-                    pass
-                    # data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
+                    data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
 
             data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-            # root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
+            root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
         else:
             path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
             if os.path.isfile(path):
@@ -1307,7 +1309,85 @@ class tracking_1d:
             self.cluster_pd_1D_selected = pd.concat((self.cluster_pd_1D_selected, cluster_pd_1D_selected_old))
         self.cluster_pd_1D_selected.to_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
+class eff_calculator():
+    """
+    Class to calculate the efficiency, need the aligned clusters and tracks
+    """
+    def __init__(self, run_number, data_folder, res_trk_max, res_put_max, cut):
+        self.res_trk_max=res_trk_max
+        self.res_put_max=res_put_max
+        self.run_number=run_number
+        self.data_folder=f"{data_folder}/raw_root"
+        self.out_folder=f"{self.data_folder}/out_eff/{run_number}"
+        self.out_folder_meta=f"{self.data_folder}/out_eff/{run_number}"
+        if not os.path.isdir(self.out_folder):
+            os.mkdir(self.out_folder)
+        if not os.path.isdir(self.out_folder_meta):
+            os.mkdir(self.out_folder_meta)
+        with open (self.out_folder+"/recap.txt", "w") as recap_file:
+            recap_file.write("Run {}\n".format(run_number))
 
+
+
+    def gaus_fit(self, track_pd_align, planar, view, PUT):
+        c1 = R.TCanvas()
+        h1 = R.TH1F ("h1","h1",400,-0.4,0.4)
+        res_list=[]
+        cut=1
+        for va in track_pd_align[f"res_planar_{planar}_{view}"].values:
+            val = va
+            if abs(val)<cut:
+                h1.Fill(val)
+        h1.Fit("gaus","S")
+        res_mean=h1.GetListOfFunctions().FindObject("gaus").GetParameter(1)
+        res_std=h1.GetListOfFunctions().FindObject("gaus").GetParameter(2)
+        h1.Draw()
+        c1.SaveAs(f"{self.out_folder_meta}/{planar}_{view}_PUT_{PUT}.png");
+    #     print ("saving hist")
+    #     print (f"Fit mean: {res_mean}, std :{res_std}")
+    #     print (f"Distr mean: {h1.GetMean()}, std :{h1.GetStdDev()}")
+
+        return res_mean, res_std
+
+
+    def build_track_pd(self, cluster_pd, PUT):
+        tracking_return_list = []
+
+        for run in cluster_pd.run.unique():
+            input_list = cluster_pd.subrun.unique()
+            tracker = tracking_1d(0, "", True)
+            tracker.PUT = PUT
+            tracker.cluster_pd_1D = cluster_pd[cluster_pd.run == run]
+            with Pool(processes=cpu_count()) as pool:
+                with tqdm(total=len(input_list), desc="tracking", position=0, leave=False) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, input_list)):
+                        tracking_return_list.append(x)
+                        pbar.update()
+
+        return pd.concat(tracking_return_list)
+
+    def build_select_cl_pd_view(self,cluster_pd, view, residual_max_number, PUT):
+        track_pd = self.build_track_pd(cluster_pd, PUT)
+        mean, std = self.gaus_fit(track_pd, PUT, view, PUT)
+        residual_max = residual_max_number * std
+        sel_cd = []
+        track_pd_view = track_pd[pd.notna(track_pd[f"{view}_fit"])]
+        for run in tqdm(track_pd_view.run.unique(), desc="Run selection", position=0, leave=False):
+            pd_r = track_pd_view[track_pd_view.run == run]
+            for subrun in tqdm(pd_r.subrun.unique(), desc="Subrun selction", position=0, leave=False):
+                pd_s = pd_r[pd_r.subrun == subrun]
+                for count in pd_s["count"].unique():
+                    pd_c = pd_s[pd_s["count"] == count]
+                    tr_pd = pd_c
+                    cl_pd = cluster_pd[(cluster_pd["run"] == run) & (cluster_pd["subrun"] == subrun) & (cluster_pd["count"] == count)]
+                    for cl_id in tr_pd.cl_ids.values[0]:
+                        residual = tr_pd[f"res_planar_{cl_id[0]}_{view}"].values[0]
+                        if (residual > (mean - residual_max)) or (residual < (mean + residual_max)):
+                            sel_cd.append(cl_pd[(cl_pd.cl_id == cl_id[1]) & (cl_pd.planar == cl_id[0]) & (cl_pd[f"cl_pos_{view}"] > 0)])
+        if len(sel_cd) > 0:
+            return pd.concat(sel_cd).reindex(), track_pd_view.reindex()
+        else:
+            return pd.DataFrame(), track_pd_view.reindex()
 
 
 def fit_1_d(data_series_x,data_series_y):
