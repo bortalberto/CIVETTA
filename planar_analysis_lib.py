@@ -627,7 +627,7 @@ class calib:
             ana_pd = ana_pd.astype(int)
             calib_dict = {}
             if self.cylinder:
-                for HW_feb_id,planar in ana_pd.group_by("HW_feb_id","planar").groups.keys():
+                for HW_feb_id,planar in ana_pd.groupby("HW_feb_id","planar").groups.keys():
                     calib_dict[(int(HW_feb_id), int(planar))] = self.get_channels_QDC_calib(int(HW_feb_id), int(planar))
             else:
                 for HW_feb_id in ana_pd["HW_feb_id"].unique():

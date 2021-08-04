@@ -648,8 +648,12 @@ def main(run, **kwargs):
     :param kwargs:
     :return:
     """
+
     config=configparser.ConfigParser()
-    config.read(os.path.join(sys.path[0],"config.ini"))
+    config_file="config.ini"
+    if args.cylinder:
+        config_file="config_cyl.ini"
+    config.read(os.path.join(sys.path[0], config_file))
     try:
         data_folder=config["GLOBAL"].get("data_folder")
         if data_folder=="TER":
@@ -677,6 +681,8 @@ def main(run, **kwargs):
         print (f"Calib_folder : {calib_folder}")
         print (f"mapping_file : {mapping_file}")
         print (f"Subrun : {subrun_tgt}")
+        if args.cylinder:
+            print ("Cylinder")
         print (f"Operations:")
         if args.decode:
             print ("        -Decode")
