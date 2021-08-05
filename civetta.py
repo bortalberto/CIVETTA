@@ -487,7 +487,6 @@ class runner:
 
         sub_list=[]
         sub_data = tracker.cluster_pd_1D.groupby("subrun")
-        print (len(tracker.cluster_pd_1D))
         for key in sub_data.groups:
             subrun_pd=sub_data.get_group(key)
 
@@ -540,7 +539,6 @@ class runner:
 
         sub_list=[]
         sub_data = tracker.cluster_pd_1D.groupby("subrun")
-        print (len(tracker.cluster_pd_1D))
         for key in sub_data.groups:
             if key in subrun_list:
                 subrun_pd=sub_data.get_group(key)

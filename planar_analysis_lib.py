@@ -1456,5 +1456,6 @@ def calc_pos_x_cylinder(row):
         tot_strips = 1260
     row["cl_pos_x_cm"]=np.cos(row.cl_pos_x/tot_strips*2*np.pi)*radius
     row["cl_pos_z_cm"]=np.sin(row.cl_pos_x/tot_strips*2*np.pi)*radius
+    row["cl_pos_y_cm"]=0
 
     return row
