@@ -595,19 +595,26 @@ class runner:
         tracking_return_list = []
 
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        if not self.silent:
+            print("Loading clusters")
         tracker.load_cluster_1D()
+        if not self.silent:
+            print("Loading tracks")
         tracker.load_tracks_pd()
         sub_list=[]
         tracks_sub_list=[]
+        if not self.silent:
+            print("Preparing data")
         sub_data = tracker.cluster_pd_1D.groupby("subrun")
         sub_data_tracks = tracker.tracks_pd.groupby("subrun")
-
+        keys_tracker=sub_data_tracks.groups
         for key in sub_data.groups:
-            subrun_pd=sub_data.get_group(key)
-            if self.cylinder:
-                subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
-            sub_list.append(subrun_pd)
-            tracks_sub_list.append(sub_data_tracks.get_group(key))
+            if key in keys_tracker:
+                subrun_pd=sub_data.get_group(key)
+                if self.cylinder:
+                    subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
+                sub_list.append(subrun_pd)
+                tracks_sub_list.append(sub_data_tracks.get_group(key))
         del tracker.cluster_pd_1D
         del tracker.tracks_pd
         input_list=list(zip(sub_list,tracks_sub_list))
@@ -619,10 +626,12 @@ class runner:
                     for i, x in enumerate(pool.imap_unordered(tracker.build_select_cl_pd, input_list)):
                         tracking_return_list.append(x)
                         pbar.update()
-            tracker.cluster_pd_1D_selected = pd.concat(tracking_return_list, ignore_index=True)
         else:
             print("No track information to select subruns")
             return (1)
+        if not self.silent:
+            print("Saving")
+        tracker.cluster_pd_1D_selected = pd.concat(tracking_return_list, ignore_index=True)
         tracker.save_sel_cl_pd()
 
     def select_run_fill(self, subrun_tgt):
