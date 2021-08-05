@@ -527,6 +527,7 @@ class runner:
 
         sub_list=[]
         sub_data = tracker.cluster_pd_1D.groupby("subrun")
+        print (len(tracker.cluster_pd_1D))
         for key in sub_data.groups:
             if key in subrun_list:
                 subrun_pd=sub_data.get_group(key)
@@ -547,7 +548,7 @@ class runner:
             tracker.tracks_pd=pd.concat(tracking_return_list)
             tracker.append_tracks_pd()
         else:
-            print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
+            print ("No subrun to fit, is the file cluster_pd_1D.pickle.gzip in the working folder? Try to launch with -c")
             return (1)
 
 
