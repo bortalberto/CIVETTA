@@ -1047,9 +1047,7 @@ class tracking_1d:
         :return:
         """
         cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-        if cylinder:
-            cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.cl_pos_x.notna()]
-            cluster_pd_1D = cluster_pd_1D.apply(change_planar, 1)
+
         if not self.alignment:
             cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
             cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
@@ -1174,7 +1172,7 @@ class tracking_1d:
                 if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT ].planar.unique())>2):
                     fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2_x, "x")
                     run_l.append(self.run_number)
-                    subrun_l.append(int(sub_pd.subRunNo.mean()))
+                    subrun_l.append(int(sub_pd.subrun.mean()))
                     count_l.append(count)
                     x_fit.append(fit_x)
                     y_fit.append(np.nan)

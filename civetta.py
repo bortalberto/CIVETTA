@@ -507,10 +507,12 @@ class runner:
         """
         tracking_return_list = []
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
-        tracker.load_cluster_1D(cylinder=self.cylinder)
+        tracker.load_cluster_1D()
         if not self.silent:
             print(f"Tracking filling up to subrun {subrun_tgt}")
         path = self.data_folder + f"/raw_root/{self.run_number}/tracks_pd_1D.pickle.gzip"
+        if not self.silent:
+            print ("Preparing data")
         if os.path.isfile(path):
             data_pd = pd.read_pickle(path, compression="gzip")
             done_subruns = data_pd.subrun.unique()
@@ -526,10 +528,15 @@ class runner:
         sub_data = tracker.cluster_pd_1D.groupby("subrun")
         for key in sub_data.groups:
             if key in subrun_list:
-                sub_list.append(sub_data.get_group(key))
+                subrun_pd=sub_data.get_group(key)
+
+                if self.cylinder:
+                    subrun_pd = subrun_pd[subrun_pd.cl_pos_x.notna()]
+                    subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
+                sub_list.append(subrun_pd)
 
         if not self.silent:
-            print ("Single view")
+            print ("Single view tracking")
         if len(sub_list)>0:
             with Pool(processes=self.cpu_to_use) as pool:
                 with tqdm(total=len(sub_list), disable=self.silent) as pbar:
