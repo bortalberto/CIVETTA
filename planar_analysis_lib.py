@@ -1037,7 +1037,7 @@ class tracking_1d:
         """
         self.run_number = run_number
         self.data_folder = data_folder
-        self.residual_tol = 0.2
+        self.residual_tol = 2
         self.alignment=alignment
         self.PUT = False ## Planar under test
 
@@ -1197,7 +1197,7 @@ class tracking_1d:
                 if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT ].planar.unique())>2):
                     fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2_y, "y")
                     run_l.append(self.run_number)
-                    subrun_l.append(sub_pd)
+                    subrun_l.append(int(sub_pd.subrun.mean()))
                     count_l.append(count)
                     x_fit.append(np.nan)
                     y_fit.append(fit_y)
