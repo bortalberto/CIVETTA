@@ -1049,7 +1049,6 @@ class tracking_1d:
         cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         if cylinder:
             cluster_pd_1D = cluster_pd_1D[cluster_pd_1D.cl_pos_x.notna()]
-            cluster_pd_1D=cluster_pd_1D.apply(calc_pos_x_cylinder, 1)
         else:
             if not self.alignment:
                 cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
@@ -1166,6 +1165,8 @@ class tracking_1d:
         }
         cl_id_l=[]
         n_points=[]
+        sub_pd = sub_pd.apply(calc_pos_x_cylinder, 1)
+
         for count in sub_pd["count"].unique():
             df_c2 = sub_pd[sub_pd["count"] == count] # df_c2 is shorter
 
