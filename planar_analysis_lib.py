@@ -1037,7 +1037,7 @@ class tracking_1d:
         """
         self.run_number = run_number
         self.data_folder = data_folder
-        self.residual_tol = 1.2
+        self.residual_tol = 1.5
         self.alignment=alignment
         self.PUT = False ## Planar under test
 
