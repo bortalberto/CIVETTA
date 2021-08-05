@@ -1037,7 +1037,7 @@ class tracking_1d:
         """
         self.run_number = run_number
         self.data_folder = data_folder
-        self.residual_tol = 1.2
+        self.residual_tol = 1
         self.alignment=alignment
         self.PUT = False ## Planar under test
 
@@ -1303,7 +1303,7 @@ class tracking_1d:
                     cl_pd = cluster_pd[(cluster_pd["run"] == run) & (cluster_pd["subrun"] == subrun) & (cluster_pd["count"] == count)]
                     for cl_id in tr_pd.cl_ids.values[0]:
                         res_list=[abs(tr_pd[f"res_planar_{i}_{view}"].values[0]) for i in range(0,4) ]
-                        if all (np.array(res_list) < self.residual_tol*200):
+                        if all (np.array(res_list) < self.residual_tol*2):
                             if abs(tr_pd[f"res_planar_{cl_id[0]}_{view}"].values[0]) < self.residual_tol:
                                 sel_cd.append(cl_pd[(cl_pd.cl_id == cl_id[1]) & (cl_pd.planar == cl_id[0]) & (cl_pd[f"cl_pos_{view}"] > 0)])
         if len(sel_cd)>0:
