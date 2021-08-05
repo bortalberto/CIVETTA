@@ -505,11 +505,12 @@ class runner:
         :param data_folder:
         :return:
         """
+
+        if not self.silent:
+            print(f"Tracking filling up to subrun {subrun_tgt}")
         tracking_return_list = []
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D()
-        if not self.silent:
-            print(f"Tracking filling up to subrun {subrun_tgt}")
         path = self.data_folder + f"/raw_root/{self.run_number}/tracks_pd_1D.pickle.gzip"
         if not self.silent:
             print ("Preparing data")
@@ -539,6 +540,7 @@ class runner:
             print ("Single view tracking")
         if len(sub_list)>0:
             with Pool(processes=self.cpu_to_use) as pool:
+                print (self.cpu_to_use)
                 with tqdm(total=len(sub_list), disable=self.silent) as pbar:
                     for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, sub_list)):
                         tracking_return_list.append(x)
