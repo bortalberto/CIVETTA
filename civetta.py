@@ -596,14 +596,27 @@ class runner:
 
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D()
+        tracker.load_tracks_pd()
+        sub_list=[]
+        tracks_sub_list=[]
+        sub_data = tracker.cluster_pd_1D.groupby("subrun")
+        sub_data_tracks = tracker.tracks_pd.groupby("subrun")
 
-        subrun_list = (tracker.read_subruns(True))
+        for key in sub_data.groups:
+            subrun_pd=sub_data.get_group(key)
+            if self.cylinder:
+                subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
+            sub_list.append(subrun_pd)
+            tracks_sub_list.append(sub_data_tracks.get_group(key))
+        del tracker.cluster_pd_1D
+        del tracker.tracks_pd
+        input_list=list(zip(sub_list,tracks_sub_list))
         if not self.silent:
             print("Selcting cluster using tracks")
-        if len(subrun_list) > 0:
+        if len(input_list) > 0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar:
-                    for i, x in enumerate(pool.imap_unordered(tracker.build_select_cl_pd, subrun_list)):
+                with tqdm(total=len(input_list), disable=self.silent) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(tracker.build_select_cl_pd, input_list)):
                         tracking_return_list.append(x)
                         pbar.update()
             tracker.cluster_pd_1D_selected = pd.concat(tracking_return_list, ignore_index=True)

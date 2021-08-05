@@ -1276,15 +1276,14 @@ class tracking_1d:
         return (self.cluster_pd_1D.subrun.unique())
 
 
-    def build_select_cl_pd(self,subrun_tgt):
+    def build_select_cl_pd(self,pds):
         """
         Use the track information to select the 1-D clusters
         :return:
         """
-        self.load_tracks_pd()
-        cluster_pd = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-        df_x=self.build_select_cl_pd_view(self.tracks_pd, cluster_pd, "x", subrun_tgt)
-        df_y=self.build_select_cl_pd_view(self.tracks_pd, cluster_pd, "y", subrun_tgt)
+        subrun_tgt=pds[0].subrun.mean()
+        df_x=self.build_select_cl_pd_view(pds[1], pds[0], "x", subrun_tgt)
+        df_y=self.build_select_cl_pd_view(pds[1], pds[0], "y", subrun_tgt)
         cluster_pd_1D_selected=pd.concat([df_x, df_y])
         return cluster_pd_1D_selected
 
