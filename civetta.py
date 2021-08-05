@@ -478,24 +478,39 @@ class runner:
         :param data_folder:
         :return:
         """
-        tracking_return_list=[]
-        tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
-        tracker.load_cluster_1D()
-        subrun_list=(tracker.read_subruns())
 
         if not self.silent:
-            print ("Tracking")
-        if len(subrun_list)>0:
+            print(f"Tracking filling up to subrun {subrun_tgt}")
+        tracking_return_list = []
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker.load_cluster_1D(self.cylinder)
+        if not self.silent:
+            print ("Preparing data")
+
+        sub_list=[]
+        sub_data = tracker.cluster_pd_1D.groupby("subrun")
+        print (len(tracker.cluster_pd_1D))
+        for key in sub_data.groups:
+            subrun_pd=sub_data.get_group(key)
+
+            if self.cylinder:
+                subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
+            sub_list.append(subrun_pd)
+
+        del tracker.cluster_pd_1D
+        if not self.silent:
+            print ("Single view tracking")
+        if len(sub_list)>0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar:
-                    for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, subrun_list)):
+                with tqdm(total=len(sub_list), disable=self.silent) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, sub_list)):
                         tracking_return_list.append(x)
                         pbar.update()
-            tracker.tracks_pd = pd.concat(tracking_return_list)
+            tracker.tracks_pd=pd.concat(tracking_return_list)
+            tracker.append_tracks_pd()
         else:
-            print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
+            print ("No subrun to fit, is the file cluster_pd_1D.pickle.gzip in the working folder? Try to launch with -c")
             return (1)
-        tracker.save_tracks_pd()
 
 
     def tracks_run_fill(self, subrun_tgt):
