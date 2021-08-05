@@ -532,7 +532,6 @@ class runner:
                 subrun_pd=sub_data.get_group(key)
 
                 if self.cylinder:
-                    subrun_pd = subrun_pd[subrun_pd.cl_pos_x.notna()]
                     subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
                 sub_list.append(subrun_pd)
 
