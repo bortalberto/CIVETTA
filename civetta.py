@@ -281,17 +281,21 @@ class runner:
             print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
         clusterizer.save_cluster_pd()
-
-        if not self.silent:
-            print ("Clusters 2-D")
-        if len(sub_list) > 0:
-            with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(sub_list), disable=self.silent) as pbar_2:
-                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_2D_clusters, sub_list)):
-                        pd_2d_return_list.append(x)
-                        pbar_2.update()
-            clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
-        clusterizer.save_cluster_pd_2D()
+        if not self.cylinder:
+            sub_data = clusterizer.cluster_pd.groupby("subRunNo")
+            sub_list = []
+            for key in sub_data.groups:
+                sub_list.append(sub_data.get_group(key))
+            if not self.silent:
+                print ("Clusters 2-D")
+            if len(sub_list) > 0:
+                with Pool(processes=self.cpu_to_use) as pool:
+                    with tqdm(total=len(sub_list), disable=self.silent) as pbar_2:
+                        for i, x in enumerate(pool.imap_unordered(clusterizer.build_2D_clusters, sub_list)):
+                            pd_2d_return_list.append(x)
+                            pbar_2.update()
+                clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
+            clusterizer.save_cluster_pd_2D()
 
     def clusterize_run_fill(self, subrun_tgt,time_limits):
         """
@@ -320,12 +324,20 @@ class runner:
         subrun_list = (clusterizer.read_subruns())
         subruns_to_do = (set(subrun_list) - set(done_subruns))
         subrun_list = [x for x in subruns_to_do if x <= subrun_tgt]
+        sub_list=[]
+        sub_data = clusterizer.data_pd.groupby("subRunNo")
+        for key in sub_data.groups:
+            if key in sub_list:
+                sub_list.append(sub_data.get_group(key))
+        del data_pd
+        del clusterizer.data_pd
+
         if not self.silent:
             print ("Single view")
-        if len(subrun_list)>0:
+        if len(sub_list)>0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar:
-                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_view_clusters, subrun_list)):
+                with tqdm(total=len(sub_list), disable=self.silent) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_view_clusters, sub_list)):
                         pd_1d_return_list.append(x)
                         pbar.update()
             clusterizer.cluster_pd=pd.concat(pd_1d_return_list)
@@ -334,18 +346,19 @@ class runner:
             return (1)
         clusterizer.append_cluster_pd()
 
+        if not self.cylinder:
 
-        if not self.silent:
-            print ("Clusters 2-D")
-        if len(subrun_list) > 0:
-            with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar_2:
-                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_2D_clusters, subrun_list)):
-                        pd_2d_return_list.append(x)
-                        pbar_2.update()
-            clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
+            if not self.silent:
+                print ("Clusters 2-D")
+            if len(subrun_list) > 0:
+                with Pool(processes=self.cpu_to_use) as pool:
+                    with tqdm(total=len(subrun_list), disable=self.silent) as pbar_2:
+                        for i, x in enumerate(pool.imap_unordered(clusterizer.build_2D_clusters, subrun_list)):
+                            pd_2d_return_list.append(x)
+                            pbar_2.update()
+                clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
 
-        clusterizer.append_cluster_pd_2D()
+            clusterizer.append_cluster_pd_2D()
 
     def clusterize_subrun(self,subrun, time_limits):
         """
@@ -361,7 +374,9 @@ class runner:
         clusterizer.load_data_pd()
         subrun_list = (clusterizer.read_subruns())
         if subrun in subrun_list:
-            clusterizer.cluster_pd=clusterizer.build_view_clusters(subrun)
+            sub_data = clusterizer.data_pd.groupby("subRunNo")
+            sub_data_to_do = sub_data.get_group(subrun)
+            clusterizer.cluster_pd=clusterizer.build_view_clusters(sub_data_to_do)
         else:
             print(f"Can't find subrun {subrun} to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
@@ -467,6 +482,7 @@ class runner:
         tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D()
         subrun_list=(tracker.read_subruns())
+
         if not self.silent:
             print ("Tracking")
         if len(subrun_list)>0:
@@ -494,7 +510,6 @@ class runner:
         tracker.load_cluster_1D()
         if not self.silent:
             print(f"Tracking filling up to subrun {subrun_tgt}")
-
         path = self.data_folder + f"/raw_root/{self.run_number}/tracks_pd_1D.pickle.gzip"
         if os.path.isfile(path):
             data_pd = pd.read_pickle(path, compression="gzip")
@@ -505,12 +520,20 @@ class runner:
         subrun_list = (tracker.read_subruns())
         subruns_to_do = (set(subrun_list) - set(done_subruns))
         subrun_list = [x for x in subruns_to_do if x <= subrun_tgt]
+
+
+        sub_list=[]
+        sub_data = tracker.cluster_pd_1D.groupby("subRunNo")
+        for key in sub_data.groups:
+            if key in subrun_list:
+                sub_list.append(sub_data.get_group(key))
+
         if not self.silent:
             print ("Single view")
-        if len(subrun_list)>0:
+        if len(sub_list)>0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar:
-                    for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, subrun_list)):
+                with tqdm(total=len(sub_list), disable=self.silent) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, sub_list)):
                         tracking_return_list.append(x)
                         pbar.update()
             tracker.tracks_pd=pd.concat(tracking_return_list)

@@ -1041,12 +1041,15 @@ class tracking_1d:
         self.alignment=alignment
         self.PUT = False ## Planar under test
 
-    def load_cluster_1D(self):
+    def load_cluster_1D(self, cylinder = False):
         """
         Load the cluster 2-D file
         :return:
         """
         cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        if cylinder:
+            cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.cl_pos_x.notna()]
+            cluster_pd_1D = cluster_pd_1D.apply(change_planar, 1)
         if not self.alignment:
             cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
             cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
@@ -1139,7 +1142,7 @@ class tracking_1d:
 
         return fit, ids, res_dict
 
-    def build_tracks_pd(self, subrun_tgt):
+    def build_tracks_pd(self, sub_pd):
         """
 
         :param subrun_tgt:
@@ -1162,55 +1165,49 @@ class tracking_1d:
         }
         cl_id_l=[]
         n_points=[]
-        for run in (self.cluster_pd_1D["run"].unique()):
-            cluster_pd_1D_c0 = self.cluster_pd_1D[self.cluster_pd_1D.run == run]
-            if subrun_tgt != None:
-                cluster_pd_1D_c0 = cluster_pd_1D_c0[cluster_pd_1D_c0.subrun == subrun_tgt]
-            for subrun in cluster_pd_1D_c0["subrun"].unique():
-                data_pd_cut_1 = cluster_pd_1D_c0[cluster_pd_1D_c0.subrun == subrun]
-                for count in data_pd_cut_1["count"].unique():
-                    df_c2 = data_pd_cut_1[data_pd_cut_1["count"] == count] # df_c2 is shorter
+        for count in sub_pd["count"].unique():
+            df_c2 = sub_pd[sub_pd["count"] == count] # df_c2 is shorter
 
-                    # Build track X
-                    df_c2_x=df_c2[df_c2.cl_pos_x_cm.notna()]
-                    if len(df_c2_x.planar.unique())>2: ## I want at least 3 point in that view
-                        if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT ].planar.unique())>2):
-                            fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2_x, "x")
-                            run_l.append(run)
-                            subrun_l.append(subrun)
-                            count_l.append(count)
-                            x_fit.append(fit_x)
-                            y_fit.append(np.nan)
-                            for planar in range(0,4):
-                                if planar in res_dict.keys():
-                                    planar_di[f"res_planar_{planar}_x"].append(res_dict[planar])
-                                    planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                                else:
-                                    planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                                    planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                            cl_id_l.append(cl_ids)
-                            n_points.append(len(df_c2_x.planar.unique()))
+            # Build track X
+            df_c2_x=df_c2[df_c2.cl_pos_x_cm.notna()]
+            if len(df_c2_x.planar.unique())>2: ## I want at least 3 point in that view
+                if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT ].planar.unique())>2):
+                    fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2_x, "x")
+                    run_l.append(self.run_number)
+                    subrun_l.append(int(sub_pd.subRunNo.mean()))
+                    count_l.append(count)
+                    x_fit.append(fit_x)
+                    y_fit.append(np.nan)
+                    for planar in range(0,4):
+                        if planar in res_dict.keys():
+                            planar_di[f"res_planar_{planar}_x"].append(res_dict[planar])
+                            planar_di[f"res_planar_{planar}_y"].append(np.nan)
+                        else:
+                            planar_di[f"res_planar_{planar}_x"].append(np.nan)
+                            planar_di[f"res_planar_{planar}_y"].append(np.nan)
+                    cl_id_l.append(cl_ids)
+                    n_points.append(len(df_c2_x.planar.unique()))
 
 
-                    # Build track Y
-                    df_c2_y=df_c2[df_c2.cl_pos_y_cm.notna()]
-                    if len(df_c2_y.planar.unique())>2: ## I want at least  3 point in that view
-                        if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT ].planar.unique())>2):
-                            fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2_y, "y")
-                            run_l.append(run)
-                            subrun_l.append(subrun)
-                            count_l.append(count)
-                            x_fit.append(np.nan)
-                            y_fit.append(fit_y)
-                            for planar in range(0, 4):
-                                if planar in res_dict.keys():
-                                    planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                                    planar_di[f"res_planar_{planar}_y"].append(res_dict[planar])
-                                else:
-                                    planar_di[f"res_planar_{planar}_x"].append(np.nan)
-                                    planar_di[f"res_planar_{planar}_y"].append(np.nan)
-                            cl_id_l.append(cl_ids)
-                            n_points.append(len(df_c2_x.planar.unique()))
+            # Build track Y
+            df_c2_y=df_c2[df_c2.cl_pos_y_cm.notna()]
+            if len(df_c2_y.planar.unique())>2: ## I want at least  3 point in that view
+                if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT ].planar.unique())>2):
+                    fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2_y, "y")
+                    run_l.append(self.run_number)
+                    subrun_l.append(sub_pd)
+                    count_l.append(count)
+                    x_fit.append(np.nan)
+                    y_fit.append(fit_y)
+                    for planar in range(0, 4):
+                        if planar in res_dict.keys():
+                            planar_di[f"res_planar_{planar}_x"].append(np.nan)
+                            planar_di[f"res_planar_{planar}_y"].append(res_dict[planar])
+                        else:
+                            planar_di[f"res_planar_{planar}_x"].append(np.nan)
+                            planar_di[f"res_planar_{planar}_y"].append(np.nan)
+                    cl_id_l.append(cl_ids)
+                    n_points.append(len(df_c2_x.planar.unique()))
 
 
 
@@ -1429,3 +1426,21 @@ def calc_res(pos, fit, cl_pos_z_cm):
     res= pos.values - (fit[1]+fit[0]*cl_pos_z_cm.values)
 
     return (res[0])
+
+def change_planar(row):
+    """
+    Change the planar number for the cylinder geometry
+    :param row:
+    :return:
+    """
+    if row.planar==2:
+        if row.cl_pos_x>630:
+            row.planar=3
+        else:
+            row.planar =0
+    else:
+        if row.cl_pos_x>856/2:
+            row.planar=2
+        else:
+            row.planar =1
+    return row
