@@ -479,8 +479,6 @@ class runner:
         :return:
         """
 
-        if not self.silent:
-            print(f"Tracking filling up to subrun {subrun_tgt}")
         tracking_return_list = []
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
         tracker.load_cluster_1D(self.cylinder)
