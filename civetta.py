@@ -540,7 +540,6 @@ class runner:
             print ("Single view tracking")
         if len(sub_list)>0:
             with Pool(processes=self.cpu_to_use) as pool:
-                print (self.cpu_to_use)
                 with tqdm(total=len(sub_list), disable=self.silent) as pbar:
                     for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, sub_list)):
                         tracking_return_list.append(x)

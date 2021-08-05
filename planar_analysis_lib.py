@@ -1146,6 +1146,7 @@ class tracking_1d:
         :param subrun_tgt:
         :return:
         """
+        print (sub_pd.subrun.mean())
         run_l = []
         subrun_l = []
         count_l = []
