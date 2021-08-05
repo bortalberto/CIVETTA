@@ -1047,19 +1047,22 @@ class tracking_1d:
         :return:
         """
         cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-
-        if not self.alignment:
-            cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
-            cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
-            cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+        if cylinder:
+            cluster_pd_1D = cluster_pd_1D[cluster_pd_1D.cl_pos_x.notna()]
+            cluster_pd_1D=cluster_pd_1D.apply(calc_pos_x_cylinder, 1)
         else:
-            corr_matrix=self.search_corr_matrix()
-            cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
-            cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
-            cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
-            for planar in (0, 1, 2, 3):
-                for view in ("x", "y"):
-                    cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] - corr_matrix[planar][view]
+            if not self.alignment:
+                cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
+                cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
+                cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+            else:
+                corr_matrix=self.search_corr_matrix()
+                cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
+                cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
+                cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
+                for planar in (0, 1, 2, 3):
+                    for view in ("x", "y"):
+                        cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] - corr_matrix[planar][view]
         cluster_pd_1D = cluster_pd_1D.astype( ## Verifica che i campi che devono essere interi lo siano
             {"run"    : int,
              "subrun" : int,
@@ -1441,4 +1444,16 @@ def change_planar(row):
             row.planar=2
         else:
             row.planar =1
+    return row
+
+def calc_pos_x_cylinder(row):
+    if row.planar==2 or row.planar==1:
+        radius = 18.84
+        tot_strips= 856
+    else:
+        radius = 24.34
+        tot_strips = 1260
+    row["cl_pos_x_cm"]=np.cos(row.cl_pos_x/tot_strips*2*np.pi)*radius
+    row["cl_pos_z_cm"]=np.sin(row.cl_pos_x/tot_strips*2*np.pi)*radius
+
     return row
