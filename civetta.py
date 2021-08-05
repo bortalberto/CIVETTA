@@ -523,7 +523,7 @@ class runner:
 
 
         sub_list=[]
-        sub_data = tracker.cluster_pd_1D.groupby("subRunNo")
+        sub_data = tracker.cluster_pd_1D.groupby("subrun")
         for key in sub_data.groups:
             if key in subrun_list:
                 sub_list.append(sub_data.get_group(key))
