@@ -507,7 +507,7 @@ class runner:
         """
         tracking_return_list = []
         tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
-        tracker.load_cluster_1D()
+        tracker.load_cluster_1D(cylinder=self.cylinder)
         if not self.silent:
             print(f"Tracking filling up to subrun {subrun_tgt}")
         path = self.data_folder + f"/raw_root/{self.run_number}/tracks_pd_1D.pickle.gzip"
