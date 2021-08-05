@@ -445,6 +445,7 @@ class runner:
                         pbar.update()
             tracker.tracks_pd=pd.concat(tracking_return_list)
             tracker.append_tracks_pd()
+
         else:
             print ("No subrun to clusterize, is the file hit_data.pickle.gzip in the working folder? Try to launch with -a")
             return (1)
@@ -504,7 +505,7 @@ class runner:
                         tracking_return_list.append(x)
                         pbar.update()
             tracker.tracks_pd=pd.concat(tracking_return_list)
-            tracker.append_tracks_pd()
+            tracker.save_tracks_pd()
         else:
             print ("No subrun to fit, is the file cluster_pd_1D.pickle.gzip in the working folder? Try to launch with -c")
             return (1)
