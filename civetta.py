@@ -536,6 +536,7 @@ class runner:
                     subrun_pd = subrun_pd.apply(pl_lib.change_planar, 1)
                 sub_list.append(subrun_pd)
 
+        del tracker.cluster_pd_1D
         if not self.silent:
             print ("Single view tracking")
         if len(sub_list)>0:
