@@ -1301,7 +1301,7 @@ class tracking_1d:
                     pd_c = pd_s[pd_s["count"] == count]
                     tr_pd = pd_c
                     cl_pd = cluster_pd[(cluster_pd["run"] == run) & (cluster_pd["subrun"] == subrun) & (cluster_pd["count"] == count)]
-                    if len (tr_pd.cl_ids.vaues[0]) == 4:
+                    if len (tr_pd.cl_ids.values[0]) == 4:
                         for cl_id in tr_pd.cl_ids.values[0]:
                             res_list=[abs(tr_pd[f"res_planar_{i}_{view}"].values[0]) for i in range(0,4) ]
                             if all (np.array(res_list) < self.residual_tol*2):
