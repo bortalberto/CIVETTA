@@ -282,7 +282,7 @@ class runner:
             return (1)
         clusterizer.save_cluster_pd()
         if not self.cylinder:
-            sub_data = clusterizer.cluster_pd.groupby("subRunNo")
+            sub_data = clusterizer.cluster_pd.groupby("subrun")
             sub_list = []
             for key in sub_data.groups:
                 sub_list.append(sub_data.get_group(key))
