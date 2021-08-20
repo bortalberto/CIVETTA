@@ -1119,6 +1119,7 @@ class tracking_1d:
             else:
                 pass
         pd_fit=pd.concat(pd_fit_l)
+        print (pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
         fit = fit_1_d(pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
 
         res_dict={}
