@@ -497,8 +497,12 @@ class calib:
         :param efine:
         :return:
         """
-        constant = calib_dict[HW_feb_id, planar][int(tiger % 2)][channel][1]
-        slope = calib_dict[HW_feb_id, planar][int(tiger % 2)][channel][2]
+        if self.cylinder:
+            constant = calib_dict[HW_feb_id, planar][int(tiger % 2)][channel][1]
+            slope = calib_dict[HW_feb_id, planar][int(tiger % 2)][channel][2]
+        else:
+            constant = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][1]
+            slope = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][2]
         if (efine >= 1008):
             charge_SH = (((-1 * constant) - (1024 - efine)) / slope)
         else:
