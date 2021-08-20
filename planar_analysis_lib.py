@@ -1032,7 +1032,7 @@ class tracking_1d:
     """
     Simple tracking 1D 4 data selection
     """
-    def __init__(self, run_number, data_folder, alignment):
+    def __init__(self, run_number, data_folder, alignment,cylinder):
         """
         It needs the cluster 2_D pickle file to run
         :param alignment:
@@ -1044,6 +1044,7 @@ class tracking_1d:
         self.residual_tol = 1
         self.alignment=alignment
         self.PUT = False ## Planar under test
+        self.cylinder=cylinder
 
     def load_cluster_1D(self, cylinder = False):
         """
@@ -1119,8 +1120,6 @@ class tracking_1d:
             else:
                 pass
         pd_fit=pd.concat(pd_fit_l)
-        print (f"View: {view}")
-        print (pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
         fit = fit_1_d(pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
 
         res_dict={}
@@ -1171,7 +1170,8 @@ class tracking_1d:
         }
         cl_id_l=[]
         n_points=[]
-        sub_pd = sub_pd.apply(calc_pos_x_cylinder, 1)
+        if self.cylinder:
+            sub_pd = sub_pd.apply(calc_pos_x_cylinder, 1)
 
         for count in sub_pd["count"].unique():
             df_c2 = sub_pd[sub_pd["count"] == count] # df_c2 is shorter
@@ -1379,7 +1379,7 @@ class eff_calculator():
 
         for run in cluster_pd.run.unique():
             input_list = cluster_pd.subrun.unique()
-            tracker = tracking_1d(0, "", True)
+            tracker = tracking_1d(0, "", True, cylinder=False)
             tracker.PUT = PUT
             tracker.cluster_pd_1D = cluster_pd[cluster_pd.run == run]
             with Pool(processes=cpu_count()) as pool:

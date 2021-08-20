@@ -47,7 +47,7 @@ if data_folder=="TER":
 
 def build_tracks_pd( cluster_pd_1D, planar):
     tracking_return_list = []
-    tracker = tracking_1d(0, data_folder, False)
+    tracker = tracking_1d(0, data_folder, False, False)
     tracker.PUT = planar
     for run in tqdm(cluster_pd_1D.run.unique(), desc="Run", leave=None):
         tracker.cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.run==run]

@@ -481,7 +481,7 @@ class runner:
         """
 
         tracking_return_list = []
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment, self.cylinder)
         tracker.load_cluster_1D(self.cylinder)
         if not self.silent:
             print ("Preparing data")
@@ -522,7 +522,7 @@ class runner:
         if not self.silent:
             print(f"Tracking filling up to subrun {subrun_tgt}")
         tracking_return_list = []
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment, self.cylinder)
         tracker.load_cluster_1D(self.cylinder)
         path = self.data_folder + f"/raw_root/{self.run_number}/tracks_pd_1D.pickle.gzip"
         if not self.silent:
@@ -572,7 +572,7 @@ class runner:
         :return:
         """
 
-        tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker= pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment, self.cylinder)
         tracker.load_cluster_1D()
         subrun_list=(tracker.read_subruns())
 
@@ -594,7 +594,7 @@ class runner:
         """
         tracking_return_list = []
 
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment, self.cylinder)
         if not self.silent:
             print("Loading clusters")
         tracker.load_cluster_1D()
@@ -642,7 +642,7 @@ class runner:
         :return:
         """
         tracking_return_list = []
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment, self.cylinder)
 
 
         if not self.silent:
@@ -707,7 +707,7 @@ class runner:
         :return:
         """
 
-        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment)
+        tracker = pl_lib.tracking_1d(self.run_number, self.data_folder, self.alignment, self.cylinder)
         tracker.load_cluster_1D()
 
         subrun_list = (tracker.read_subruns(True))
