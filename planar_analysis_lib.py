@@ -1296,7 +1296,13 @@ class tracking_1d:
 
     def build_select_cl_pd_view(self, track_pd, cluster_pd, view, subrun_tgt):
         sel_cd=[]
+        for planar in range(0, 4):
+            y, x, = np.histogram(track_pd[f"res_planar_{planar}_{view}"], bins=400, range=[-0.2, 0.2])
+            x_max = (x[y.argmax()])
+            track_pd[f"res_planar_{planar}_{view}"] = track_pd[f"res_planar_{planar}_{view}"] - x_max
+
         track_pd_view = track_pd[pd.notna(track_pd[f"{view}_fit"])]
+
         for run in track_pd_view.run.unique():
             pd_r = track_pd_view[track_pd_view.run == run]
             if subrun_tgt != None:
