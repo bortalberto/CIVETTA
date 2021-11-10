@@ -1,220 +1,234 @@
-import numpy as np
-import pandas as pd
-
-def isnotebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
-            return True   # Jupyter notebook or qtconsole
-        elif shell == 'TerminalInteractiveShell':
-            return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
-    except NameError:
-        return False      # Probably standard Python interpreter
-
-if isnotebook():
-    from tqdm.notebook import tqdm
-else:
-    from tqdm import tqdm
-
 import pickle
-import sys
-sys.path.append('../analisi_planari')
+import pandas as pd
+from tqdm import tqdm
 import os
+import numpy as np
+from multiprocessing import Pool
 
-import plotly.graph_objects as go
-from multiprocessing import Pool,cpu_count
-import configparser
-from planar_analysis_lib import calc_res,fit_1_d
-from planar_analysis_lib import tracking_1d
-import matplotlib.pyplot as plt
-config=configparser.ConfigParser()
-config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
-try:
-    data_folder = config["GLOBAL"].get("data_folder")
-
-except KeyError as E:
-    print (f"{E} Missing or partial configration file, restore it.")
-    sys.exit(1)
-
-if data_folder=="TER":
-    try:
-        data_folder=os.environ["TER_data"]
-    except KeyError as E:
-        print(f"{E} is not defined in your system variables")
-        sys.exit(1)
-
-def build_tracks_pd( cluster_pd_1D, planar):
-    tracking_return_list = []
-    tracker = tracking_1d(0, data_folder, False, False)
-    tracker.PUT = planar
-    for run in tqdm(cluster_pd_1D.run.unique(), desc="Run", leave=None):
-        tracker.cluster_pd_1D=cluster_pd_1D[cluster_pd_1D.run==run]
-        subrun_list = (tracker.read_subruns())
-        with Pool(processes=cpu_count()) as pool:
-            with tqdm(total=len(subrun_list), desc="Subrun", leave=None) as pbar:
-                for i, x in enumerate(pool.imap_unordered(tracker.build_tracks_pd, subrun_list)):
-                    tracking_return_list.append(x)
-                    pbar.update()
-        tracker.tracks_pd = pd.concat(tracking_return_list)
-    return tracker.tracks_pd
-
-
-def build_displacement_pd(track_pd, bin_max=False):
-    """
-    Calculate the planar displacement
-    :param track_pd:
-    :return:
-    """
-    return_dict = {}
-    for planar in [0, 1, 2, 3]:
-        for view in ["x", "y"]:
-            if not bin_max:
-                return_dict[f"displ_planar_{planar}_{view}"] = np.mean(track_pd[f"res_planar_{planar}_{view}"])
-            else:
-                y, x, _ = plt.hist(track_pd[f"res_planar_{planar}_{view}"], bins=400)
-                x_max = (x[y.argmax()])
-                return_dict[f"displ_planar_{planar}_{view}"] = x_max
-
-
-
-    return return_dict
-
-def align_runs(run_list, iterations=1, inclusive_fit=True, debug = False, init_correction = None, bin_max=False, zero_fixed=False):
-    """
-    Aligns the run in the list, each one will have the same correction array
-    :param run_list:
-    :return:
-    """
-    c_pd_list = []
-    t_pd_list = []
-    for run_number in run_list:
-        # loads all the data in the macrorun
-        c_pd_list.append(pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
-        t_pd_list.append(pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
-    cluster_pd = pd.concat(c_pd_list)
-    track_pd = pd.concat(t_pd_list)
-
-    # Add infos about the cluster position (to be fixed when adding angle)
-    cluster_pd["cl_pos_x_cm"] = cluster_pd.cl_pos_x * 0.0650
-    cluster_pd["cl_pos_y_cm"] = cluster_pd.cl_pos_y * 0.0650
-    cluster_pd["cl_pos_z_cm"] = cluster_pd.planar * 10
-    corr_history=[]
-    # Initialize the dict for correction and displacement
-    displ=build_displacement_pd(track_pd, bin_max=bin_max)
-    correction = {
-        0: {"x": 0, "y": 0},
-        1: {"x": 0, "y": 0},
-        2: {"x": 0, "y": 0},
-        3: {"x": 0, "y": 0}
-
-    }
-    if zero_fixed:
-        planar_list=(1,2,3)
+def get_run_data(runs, dtype="h", data_folder=""):
+    if dtype=="h":
+        filename="hit_data"
+    if dtype=="t":
+        filename="tracks_pd_1D"
+    if dtype=="ta":
+        filename="tracks_pd_1D_align"
+    if dtype=="s":
+        filename="sel_cluster_pd_1D"
+    if dtype=="1D":
+        filename="cluster_pd_1D"
+    if dtype=="2D":
+        filename="cluster_pd_2D"
     else:
-        planar_list=(0,1,2,3)
+        filename="None"
 
-    if init_correction:
-        for planar in planar_list:
-            for view in ("x", "y"):
-                displ[f"displ_planar_{planar}_{view}"] = init_correction[planar][view]
+    data_list=[]
+    for run in runs:
+        data_list.append(pd.read_pickle(f"{data_folder}/raw_root/{run}/{filename}.pickle.gzip", compression="gzip"))
 
+    return pd.concat(data_list)
 
-    # Performs N rounds of alignment
-
-    for j in tqdm(range(0, iterations), desc="Iterations"):
-        for planar in tqdm(planar_list, desc= "Planar"):
-            for view in ("x", "y"):
-                corr_history.append(displ)
-                cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] - displ[f"displ_planar_{planar}_{view}"]
-                correction[planar][view] += displ[f"displ_planar_{planar}_{view}"]
-            if inclusive_fit:
-                planar_exclusive = False
-            else:
-                planar_exclusive = planar
-
-            corr_tracks = build_tracks_pd(cluster_pd, planar_exclusive)
-            if debug:
-                for view in ("x", "y"):
-                    print(f"Res on pl {planar}, view {view}, it {j}: {np.mean(corr_tracks[f'res_planar_{planar}_{view}'])}")
-            displ = build_displacement_pd(corr_tracks, bin_max=bin_max)
-    for run in run_list:
-        pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
-    return corr_tracks, track_pd, corr_history
-
-# def align_runs_neural(run_list, iterations=1):
-#     """
-#     Aligns the run in the list, each one will have the same correction array
-#     :param run_list:
-#     :return:
-#     """
-#     c_pd_list = []
-#     t_pd_list = []
-#     for run_number in run_list:
-#         # loads all the data in the macrorun
-#         c_pd_list.append(pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
-#         t_pd_list.append(pd.read_pickle("{}/raw_root/{}/tracks_pd_1D.pickle.gzip".format(data_folder, run_number), compression="gzip"))
-#     cluster_pd = pd.concat(c_pd_list)
-#     track_pd = pd.concat(t_pd_list)
-#
-#     # Add infos about the cluster position (to be fixed when adding angle)
-#     cluster_pd["cl_pos_x_cm"] = cluster_pd.cl_pos_x * 0.0650
-#     cluster_pd["cl_pos_y_cm"] = cluster_pd.cl_pos_y * 0.0650
-#     cluster_pd["cl_pos_z_cm"] = cluster_pd.planar * 10
-#
-#     # Initialize the dict for correction and displacement
-#     displ=build_displacement_pd(track_pd)
-#     correction = {
-#         0: {"x": 0, "y": 0},
-#         1: {"x": 0, "y": 0},
-#         2: {"x": 0, "y": 0},
-#         3: {"x": 0, "y": 0}
-#
-#     }
-#
-#     # Performs N rounds of alignment
-#     for j in tqdm(range(0, iterations), desc="Iterations"):
-#         for planar in tqdm((0, 1), desc= "Planar"):
-#             for view in ("x", "y"):
-#                 cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd.loc[cluster_pd.planar == planar, f"cl_pos_{view}_cm"] - displ[f"displ_planar_{planar}_{view}"]
-#                 correction[planar][view] += displ[f"displ_planar_{planar}_{view}"]
-#             corr_tracks = build_tracks_pd(cluster_pd)
-#             displ = build_displacement_pd(corr_tracks)
-#     for run in run_list:
-#         pickle.dump(correction, open(os.path.join(data_folder, "alignment", f"{run}"), 'wb'))
-#     return corr_tracks, track_pd
+class alignment_class():
+    """
+    Class to hold the alignment setup
+    """
+    def __init__(self, cpu, rounds):
+        self.cput_to_use=cpu
+        self.rounds=rounds
+        self.corrections=[]
+    def load_cluster_2D_align(self, runs, data_folder):
+        #Load cluster data
+        cl_pd_2D=get_run_data([runs],'2D', data_folder)
+        #Calculate standard position
+        cl_pd_2D["cl_pos_x_cm"] = cl_pd_2D.cl_pos_x * 0.0650
+        cl_pd_2D["cl_pos_y_cm"] = cl_pd_2D.cl_pos_y * 0.0650
+        cl_pd_2D["cl_pos_z_cm"] = cl_pd_2D.planar * 10
+        #Drop old position to save memory
+        cl_pd_2D=cl_pd_2D.drop(columns=["cl_pos_x","cl_pos_y"])
+        #Drop charge and size position, not needed for alinment
+        cl_pd_2D=cl_pd_2D.drop(columns=["cl_charge","cl_charge_x","cl_charge_y","cl_size_x","cl_size_y","cl_size_tot"])
+        #Let's keep only events with 4 planars
+        cl_pd_2D=cl_pd_2D.groupby(["subrun","count"]).filter(lambda x: set(x["planar"])=={0,1,2,3})
+        return cl_pd_2D
 
 
-def apply_correction(cluster_pd, corr):
-    cluster_pd["cl_pos_x_cm"] = cluster_pd.cl_pos_x * 0.0650
-    cluster_pd["cl_pos_y_cm"] = cluster_pd.cl_pos_y * 0.0650
-    cluster_pd["cl_pos_z_cm"] = cluster_pd.planar * 10
-    for planar in (0,1,2,3):
+    def fit_tracks_manager(self, cl_pd, planar="None"):
+        """
+        Manages the parallelizing
+        """
+        sub_data = cl_pd.groupby(["run", "subrun"])
+        sub_list = []
+        return_list = []
+        for key in sub_data.groups:
+            sub_list.append(sub_data.get_group(key))
+        if len(sub_list) > 0:
+            with Pool(processes=20) as pool:
+                with tqdm(total=len(sub_list), desc="Tracks fitting", leave=False) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(fit_tracks_process_pd(planar), sub_list)):
+                        return_list.append(x)
+                        pbar.update()
+            track_pd = pd.concat(return_list)
+        else:
+            print ("No suburns to calibrate")
+            exit()
+            track_pd=pd.DataFrame()
+        track_pd = track_pd.reset_index()
+        # track_pd = track_pd.drop(columns="level_1")
+
+        return track_pd
+
+
+
+
+
+
+    def filter_tracks(self, tracks_pd, cut=0.2, res_max=0.7):
+        ## Filter the tracks before the correction calculation
+        tracks_pd_c = tracks_pd[
+            (tracks_pd["pos_x"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
+            (tracks_pd["pos_y"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
+            (tracks_pd["res_x"].apply(lambda x: np.all(abs(x) < res_max))) &
+            (tracks_pd["res_y"].apply(lambda x: np.all(abs(x) < res_max)))
+            ]
+        #     print (f"Dropped {len(tracks_pd)-len(tracks_pd_c)} tracks")
+        return tracks_pd_c
+
+
+    def calc_correction(self, trk_pd, planar=0):
+        track_pd = trk_pd.copy()
+        ## Calc the correction for a specific planar
+        # Cast planar to int
+        planar = int(planar)
+        fit_dict = {}
+        # Select data only for one planar
+        track_pd["pos_x"] = track_pd["pos_x"].apply(lambda x: x[planar])
+        track_pd["pos_y"] = track_pd["pos_y"].apply(lambda x: x[planar])
+        track_pd["res_x"] = track_pd["res_x"].apply(lambda x: x[planar])
+        track_pd["res_y"] = track_pd["res_y"].apply(lambda x: x[planar])
+        ## Arrotondo al mm per fittare
+        fit = np.polyfit(track_pd["pos_x"], track_pd["res_y"], 1)
+        fit_x = np.poly1d(fit)
+        fit_dict[f"{planar}_x"] = fit_x
+
+        #     tracks_x=track_pd.groupby(f"pos_x")[f"res_y"].mean()
+        #     fig=px.scatter(tracks_x, x=tracks_x.index,y = f"res_y")
+        #     fig.add_trace( px.line(x=range(0,9),y=fit_x(range(0,9)) ).data[0])
+        #     fig.show()
+
+        #     track_pd[f"pos_y"]=((track_pd[f"pos_y"]*100).round())/100
+        #     tracks_y=track_pd.groupby(f"pos_y")[f"res_x"].mean()
+        #     tracks_w=(track_pd.groupby(f"pos_y")[f"res_x"].count())**(1/2)/track_pd.groupby(f"pos_x")[f"res_y"].std()
+        #     try:
+        fit = np.polyfit(track_pd[f"pos_y"], track_pd[f"res_x"], 1)
+        #     except:
+        #         print ("Exception!")
+        #         print (tracks_w)
+        fit_y = np.poly1d(fit)
+        #         fig=px.scatter(tracks_y, x=tracks_y.index,y = f"res_planar_{planar}_x")
+        #         fig.add_trace( px.line(x=range(0,9),y=fit_y(range(0,9)) ).data[0])
+        #         fig.show()
+        fit_dict[f"{planar}_y"] = fit_y
+
+        return fit_dict
+
+
+    def apply_correction(self, cl_pd, planar, correction):
+        sub_data = cl_pd.groupby(["run", "subrun"])
+        sub_list = []
+        return_list = []
+        for key in sub_data.groups:
+            sub_list.append(sub_data.get_group(key))
+        if len(sub_list) > 0:
+            with Pool(processes=20) as pool:
+                with tqdm(total=len(sub_list), desc="Applying correction", leave=False) as pbar:
+                    for i, x in enumerate(pool.imap(apply_correction_fucn(planar, correction), sub_list)):
+                        return_list.append(x)
+                        pbar.update()
+            cl_pd = pd.concat(return_list)
+        return cl_pd
+
+
+    def apply_correction_fucn(self, cl_pd):
+        cl_pd = cl_pd.apply(apply_correction_process, axis=1)
+        return cl_pd
+
+    def save_corrections(self, data_folder, run):
+        """
+        Save the calculate corrections
+        :return:
+        """
+        with open(os.path.join(data_folder,"alignment", str(run)), 'wb+') as ali_file:
+            pickle.dump(self.corrections, ali_file)
+
+
+
+
+
+class apply_correction_fucn(object):
+    def __init__(self, planar, correction):
+        self.target_planar = planar
+        self.correction = correction
+
+    def __call__(self, cl_pd):
+        cl_pd = cl_pd.apply(lambda x: apply_correction_process(x, self.target_planar, self.correction), axis=1)
+        return cl_pd
+
+def apply_correction_process(row, planar, correction):
+    if int(row.planar) == int(planar):
+        angle = (correction[f"{int(row.planar)}_x"][1] - correction[f"{int(row.planar)}_y"][1]) / 2
+        row.cl_pos_y_cm = row.cl_pos_y_cm + angle * (row.cl_pos_x_cm) + correction[f"{int(row.planar)}_x"][0]
+        row.cl_pos_x_cm = row.cl_pos_x_cm - angle * (row.cl_pos_y_cm) + correction[f"{int(row.planar)}_y"][0]
+
+    return row
+
+class fit_tracks_process_pd(object):
+    def __init__(self, planar):
+        self.put = planar
+
+    def __call__(self, cl_pd):
+        cl_pd = cl_pd.reset_index()
+        if self.put == "None":
+            tracks_pd = cl_pd.groupby(["count"])[["run", "subrun", "cl_pos_x_cm", "cl_pos_y_cm", "cl_pos_z_cm", "planar"]].apply(fit_tracks_process_row)
+        else:
+            tracks_pd = cl_pd.groupby(["count"])[["run", "subrun", "cl_pos_x_cm", "cl_pos_y_cm", "cl_pos_z_cm", "planar"]].apply(lambda x: fit_tracks_process_row(x, self.put))
+        return tracks_pd
+
+def fit_tracks_process_row( x, put="None"):
+    x = x.sort_values("planar")
+    fit_x = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_x_cm"], 1)
+    pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
+    res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
+    x = x.sort_values("planar")
+    fit_y = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_y_cm"], 1)
+    pos_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values
+    res_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values
+    run = x["run"].values[0]
+    subrun = x["subrun"].values[0]
+    #     fig=px.scatter(x=x["cl_pos_z_cm"],y = x["cl_pos_x_cm"])
+    #     fit_x=np.poly1d(fit)
+    #     fig.add_trace( px.line(x=range(0,40),y=fit_x(range(0,40)) ).data[0])
+    #     fig.add_trace( px.scatter(x=[0,10,20,30],y=pos ).data[0])
+    #     fig.update_yaxes(range=[0, 9])
+    #     fig.show()
+    #     print (type(fit))
+    #     print (type(pos))
+    return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, fit_y, pos_y, res_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x", "fit_y", "pos_y", "res_y"])
+
+def calibrate_alignment_run(run, rounds, cpu, data_folder):
+    alignment_istance = alignment_class(cpu=cpu, rounds=rounds)
+    cl_pd_2D = alignment_istance.load_cluster_2D_align(run, data_folder)
+    # tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D)
+    # tracks_pd = alignment_istance.filter_tracks(tracks_pd)
+    for it in tqdm(range (0,rounds), desc="Cycles"):
+        correction={}
         for view in ("x","y"):
-            cluster_pd.loc[cluster_pd.planar==planar, f"cl_pos_{view}_cm"]=cluster_pd.loc[cluster_pd.planar==planar, f"cl_pos_{view}_cm"]-corr[planar][view]
-    return cluster_pd
-
-def display_results(corr_tracks, track_pd):
-    fig_list = []
-    for planar in (0, 1, 2, 3):
-        for view in ("x", "y"):
-            fig = go.Figure()
-            fig.add_trace(go.Histogram(x=track_pd[f"res_planar_{planar}_{view}"], nbinsx=1000, xbins=dict(  # bins used for histogram
-                start=-0.2,
-                end=0.2
-            ), name="Pre allineamneto"))
-            fig.add_trace(go.Histogram(x=corr_tracks[f"res_planar_{planar}_{view}"], nbinsx=1000, xbins=dict(  # bins used for histogram
-                start=-0.2,
-                end=0.2),
-                name="Post allineamneto"))
-            fig.update_layout(barmode='overlay')
-            fig.update_traces(opacity=0.50)
-            fig_list.append(fig)
-    for fig in fig_list:
-        fig.show()
-
-
-if __name__ == "__main__":
-    corr,old = align_runs((29,),1)
-    display_results(corr, old)
+            for planar in range (0,4):
+                 correction[f"{planar}_{view}"]=np.poly1d([0,0])
+        for pl in tqdm([3,2,1], leave = False , desc="Planars"):
+            tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D,pl)
+            tracks_pd = alignment_istance.filter_tracks(tracks_pd)
+            correction.update(alignment_istance.calc_correction(tracks_pd, planar=pl))
+            cl_pd_2D = alignment_istance.apply_correction(cl_pd_2D, pl, correction)
+        alignment_istance.corrections.append(correction)
+    alignment_istance.save_corrections(data_folder, run)
+    # tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D)
+    # tracks_pd = alignment_istance.filter_tracks(tracks_pd)
