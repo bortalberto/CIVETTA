@@ -731,6 +731,14 @@ class runner:
             (args.__dict__.pop("method"))
             json.dump(args.__dict__,conf_file,  indent=2)
 
+    def calibrate_alignment(self):
+        """
+        Calbrate the aligment matrix for performance evaluation
+        :return:
+        """
+        import alignment
+        alignment.calibrate_alignment_run(run = self.run_number, rounds = 3, cpu = self.cpu_to_use, data_folder=self.data_folder)
+
 
 ##############################################################################################
 ##																							##
@@ -790,11 +798,13 @@ def main(run, **kwargs):
             print ("        -Clusterize")
         if args.alignment:
             print("---- Using Alignment ----")
+        if args.calibrate_alignment:
+            print ("--Calibrating alignemnt")
         if args.tracking:
             print ("        -Tracking")
         if args.selection:
             print("         -Selection")
-        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection):
+        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment):
             print ("        -Decode\n        -Analyze\n        -Clusterize\n        -Tracking \n        -Selection")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
@@ -815,7 +825,10 @@ def main(run, **kwargs):
     if args.selection:
         op_list.append("S")
 
-    if not (args.decode | args.ana | args.clusterize | args.tracking| args.selection):
+    if args.calibrate_alignment:
+        op_list=("c_align")
+
+    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment):
         op_list=["D","A","C", "T","S"]
 
     options={}
@@ -894,6 +907,8 @@ def main(run, **kwargs):
                 main_runner.select_subrun(subrun_tgt)
         else:
             main_runner.select_run_fill(subrun_fill)
+    if "c_align" in (op_list):
+        main_runner.calibrate_alignment()
 
     main_runner.save_config(args)
 
@@ -925,6 +940,7 @@ if __name__=="__main__":
     parser.add_argument('-root','--root_decode', help='Decode in root', action="store_true")
     parser.add_argument('-down','--downsampling', help='Downsample the decoded data to speed up analysis ',type=int)
     parser.add_argument('-cyl','--cylinder', help='Cylindrical geometry ', action="store_true")
+    parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
