@@ -18,8 +18,6 @@ def get_run_data(runs, dtype="h", data_folder=""):
         filename="cluster_pd_1D"
     if dtype=="2D":
         filename="cluster_pd_2D"
-    else:
-        filename="None"
 
     data_list=[]
     for run in runs:
@@ -68,7 +66,7 @@ class alignment_class():
                         pbar.update()
             track_pd = pd.concat(return_list)
         else:
-            print ("No suburns to calibrate")
+            print ( " No suburns to calibrate")
             exit()
             track_pd=pd.DataFrame()
         track_pd = track_pd.reset_index()
