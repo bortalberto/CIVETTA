@@ -635,10 +635,14 @@ class calib:
                     calib_dict[(int(HW_feb_id), 3)] = self.get_channels_QDC_calib(int(HW_feb_id), 3)
 
             ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["planar"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
+            compress_pd=compress_hit_pd(ana_pd)
+            verifiy_compression_validity(ana_pd,compress_pd )
+            ana_pd=compress_pd
             # import root_pandas
             # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
             ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
             return ana_pd
+
 
     def create_hits_pd_and_single_root(self):
         """
@@ -1472,3 +1476,46 @@ def calc_pos_x_cylinder(row):
     row["cl_pos_y_cm"]=0
 
     return row
+
+def compress_hit_pd(hits):
+    """
+    Compress the dataframe memory usage optimizing the datatypes.
+
+    :param hits:
+    :return:
+    """
+    hit_compre = pd.DataFrame()
+    hit_compre["channel"] = hits.channel.astype(np.byte)
+    hit_compre["tac"] = hits.tac.astype(np.byte)
+    hit_compre["tcoarse"] = hits.tcoarse.astype(np.intc)
+    hit_compre["ecoarse"] = hits.ecoarse.astype(np.short)
+    hit_compre["tfine"] = hits.tfine.astype(np.short)
+    hit_compre["efine"] = hits.efine.astype(np.short)
+    hit_compre["tiger"] = hits.tiger.astype(np.byte)
+    hit_compre["l1ts_min_tcoarse"] = hits.l1ts_min_tcoarse.astype(np.intc)
+    hit_compre["delta_coarse"] = hits.delta_coarse.astype(np.intc)
+    hit_compre["count"] = hits["count"].astype(np.intc)
+    hit_compre["timestamp"] = hits.timestamp.astype(np.intc)
+    hit_compre["gemroc"] = hits.gemroc.astype(np.byte)
+    hit_compre["runNo"] = hits.runNo.astype(np.intc)
+    hit_compre["subRunNo"] = hits.subRunNo.astype(np.intc)
+    hit_compre["l1_framenum"] = hits.l1_framenum.astype(np.intc)
+    hit_compre["hit_id"] = hits.hit_id.astype(np.intc)
+    hit_compre["strip_x"] = hits.strip_x.astype(np.short)
+    hit_compre["strip_y"] = hits.strip_y.astype(np.short)
+    hit_compre["planar"] = hits.planar.astype(np.byte)
+    hit_compre["FEB_label"] = hits.FEB_label.astype(np.short)
+    hit_compre["charge_SH"] = hits.charge_SH.astype(np.half)
+    return hit_compre
+
+def verifiy_compression_validity(hits, compress_hits):
+    """
+    Verify that the min and max values of compressed and uncompressd dataframe are compatbile
+    :param hits:
+    :param compress_hits:
+    :return:
+    """
+    for column in compress_hits.columns:
+        assert (abs(hits[column].max() * 0.99) <=abs(compress_hits[column].max()) <= abs(hits[column].max() * 1.01)) or ( compress_hits[column].max() == hits[column].max()), f" Max error in column {column}, {hits[column].max()} != {compress_hits[column].max()}"
+        assert (abs(hits[column].min() * 0.99) <=abs(compress_hits[column].min()) <= abs(hits[column].min() * 1.01)) or (compress_hits[column].min()) == (hits[column].min()), f" Min error in column {column}, {hits[column].min()} != {compress_hits[column].min()}"
+    return 0

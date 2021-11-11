@@ -739,6 +739,17 @@ class runner:
         import alignment
         alignment.calibrate_alignment_run(run = self.run_number, rounds = 3, cpu = self.cpu_to_use, data_folder=self.data_folder, downsampling=self.downsampling)
 
+    def compress_hit_pd(self):
+        """
+        Optimize the disk usage for the hit pd
+        :return:
+        """
+        clusterizer = pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
+        clusterizer.load_data_pd()
+        compress_data = pl_lib.compress_hit_pd(clusterizer.data_pd)
+        pl_lib.verifiy_compression_validity(clusterizer.data_pd, compress_data)
+        compress_data.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+
 
 ##############################################################################################
 ##																							##
@@ -801,12 +812,14 @@ def main(run, **kwargs):
         if args.alignment:
             print("---- Using Alignment ----")
         if args.calibrate_alignment:
-            print ("--Calibrating alignemnt")
+            print ("-Calibrating alignemnt")
+        if args.compress:
+            print ("-Compressing")
         if args.tracking:
             print ("        -Tracking")
         if args.selection:
             print("         -Selection")
-        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment):
+        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress):
             print ("        -Decode\n        -Analyze\n        -Clusterize\n        -Tracking \n        -Selection")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
@@ -829,8 +842,10 @@ def main(run, **kwargs):
 
     if args.calibrate_alignment:
         op_list=("c_align")
+    if args.compress:
+        op_list=("compress")
 
-    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment):
+    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress):
         op_list=["D","A","C", "T","S"]
 
     options={}
@@ -911,6 +926,8 @@ def main(run, **kwargs):
             main_runner.select_run_fill(subrun_fill)
     if "c_align" in (op_list):
         main_runner.calibrate_alignment()
+    if "compress" in (op_list):
+        main_runner.compress_hit_pd()
 
     main_runner.save_config(args)
 
@@ -943,6 +960,7 @@ if __name__=="__main__":
     parser.add_argument('-down','--downsampling', help='Downsample the decoded data to speed up analysis ',type=int)
     parser.add_argument('-cyl','--cylinder', help='Cylindrical geometry ', action="store_true")
     parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
+    parser.add_argument('-comp','--compress', help='Optimize the disk usage ', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
