@@ -737,7 +737,7 @@ class runner:
         :return:
         """
         import alignment
-        alignment.calibrate_alignment_run(run = self.run_number, rounds = 3, cpu = self.cpu_to_use, data_folder=self.data_folder)
+        alignment.calibrate_alignment_run(run = self.run_number, rounds = 3, cpu = self.cpu_to_use, data_folder=self.data_folder, downsampling=self.downsampling)
 
 
 ##############################################################################################
@@ -785,6 +785,8 @@ def main(run, **kwargs):
         print (f"Calib_folder : {calib_folder}")
         print (f"mapping_file : {mapping_file}")
         print (f"Subrun : {subrun_tgt}")
+        if args.downsampling:
+            print (f"Downsamplig : 1:{args.downsampling}")
         if args.cylinder:
             print ("Geometry: Cylinder")
         else:

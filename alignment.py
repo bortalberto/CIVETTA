@@ -6,6 +6,13 @@ import numpy as np
 from multiprocessing import Pool
 
 def get_run_data(runs, dtype="h", data_folder=""):
+    """
+    Generic functions to load data
+    :param runs:
+    :param dtype:
+    :param data_folder:
+    :return:
+    """
     if dtype=="h":
         filename="hit_data"
     if dtype=="t":
@@ -33,7 +40,14 @@ class alignment_class():
         self.cput_to_use=cpu
         self.rounds=rounds
         self.corrections=[]
-    def load_cluster_2D_align(self, runs, data_folder):
+
+    def load_cluster_2D_align(self, runs, data_folder, downsampling):
+        """
+        Loads the 2D clusters and keeps only the ones with clusters on 4 planars
+        :param runs:
+        :param data_folder:
+        :return:
+        """
         #Load cluster data
         cl_pd_2D=get_run_data([runs],'2D', data_folder)
         #Calculate standard position
@@ -46,6 +60,8 @@ class alignment_class():
         cl_pd_2D=cl_pd_2D.drop(columns=["cl_charge","cl_charge_x","cl_charge_y","cl_size_x","cl_size_y","cl_size_tot"])
         #Let's keep only events with 4 planars
         cl_pd_2D=cl_pd_2D.groupby(["subrun","count"]).filter(lambda x: set(x["planar"])=={0,1,2,3})
+        if downsampling!=1:
+            cl_pd_2D=cl_pd_2D[cl_pd_2D["count"] % downsampling == 0]
         return cl_pd_2D
 
 
@@ -80,6 +96,13 @@ class alignment_class():
 
 
     def filter_tracks(self, tracks_pd, cut=0.2, res_max=0.7):
+        """
+        Filter the tracks to improve the alignment quality
+        :param tracks_pd:
+        :param cut:
+        :param res_max:
+        :return:
+        """
         ## Filter the tracks before the correction calculation
         tracks_pd_c = tracks_pd[
             (tracks_pd["pos_x"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
@@ -92,6 +115,12 @@ class alignment_class():
 
 
     def calc_correction(self, trk_pd, planar=0):
+        """
+        Calc the correction for a specific planar, taking a tracks_pd and a PUT. Performs a linear fit
+        :param trk_pd:
+        :param planar:
+        :return:
+        """
         track_pd = trk_pd.copy()
         ## Calc the correction for a specific planar
         # Cast planar to int
@@ -130,6 +159,13 @@ class alignment_class():
 
 
     def apply_correction(self, cl_pd, planar, correction):
+        """
+        Apply a correction on a 2D.pd
+        :param cl_pd:
+        :param planar:
+        :param correction:
+        :return:
+        """
         sub_data = cl_pd.groupby(["run", "subrun"])
         sub_list = []
         return_list = []
@@ -171,6 +207,9 @@ class alignment_class():
 
 
 class apply_correction_fucn(object):
+    """
+    Usign class function in order to specify arguments.
+    """
     def __init__(self, planar, correction):
         self.target_planar = planar
         self.correction = correction
@@ -180,6 +219,13 @@ class apply_correction_fucn(object):
         return cl_pd
 
 def apply_correction_process(row, planar, correction):
+    """
+    Fucntion used to apply 2D correction to the dataset
+    :param row:
+    :param planar:
+    :param correction:
+    :return:
+    """
     if int(row.planar) == int(planar):
         angle = (correction[f"{int(row.planar)}_x"][1] - correction[f"{int(row.planar)}_y"][1]) / 2
         row.cl_pos_y_cm = row.cl_pos_y_cm + angle * (row.cl_pos_x_cm) + correction[f"{int(row.planar)}_x"][0]
@@ -220,9 +266,9 @@ def fit_tracks_process_row( x, put="None"):
     #     print (type(pos))
     return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, fit_y, pos_y, res_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x", "fit_y", "pos_y", "res_y"])
 
-def calibrate_alignment_run(run, rounds, cpu, data_folder):
+def calibrate_alignment_run(run, rounds, cpu, data_folder, downsampling):
     alignment_istance = alignment_class(cpu=cpu, rounds=rounds)
-    cl_pd_2D = alignment_istance.load_cluster_2D_align(run, data_folder)
+    cl_pd_2D = alignment_istance.load_cluster_2D_align(run, data_folder, downsampling)
     # tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D)
     # tracks_pd = alignment_istance.filter_tracks(tracks_pd)
     for it in tqdm(range (0,rounds), desc="Cycles"):
