@@ -787,10 +787,10 @@ class runner:
         data['FEB_label'] = data['FEB_label'].astype(np.int32)
         data['charge_SH'] = data['charge_SH'].astype(np.float32)
         rdf = R.RDF.MakeNumpyDataFrame(data)
-        folder= os.path.join(self.data_folder_root, self.run_number)
+        folder= os.path.join(self.data_folder_root, str(self.run_number))
         if not os.path.isdir(folder):
             os.mkdir(folder)
-        rdf.Snapshot('tree', os.path.join(self.data_folder_root, self.run_number,"ana.root" ))
+        rdf.Snapshot('tree', os.path.join(self.data_folder_root, str(self.run_number),"ana.root" ))
 
 ##############################################################################################
 ##																							##
