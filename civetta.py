@@ -20,7 +20,8 @@ class runner:
         self.data_folder = data_folder
         if data_folder_root == "Default":
             self.data_folder_root=data_folder
-        self.data_folder_root= data_folder_root
+        else:
+            self.data_folder_root= data_folder_root
         self.calib_folder = calib_folder
         self.mapping_file = mapping_file
         self.cpu_to_use = cpu_to_use
