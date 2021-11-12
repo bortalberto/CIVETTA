@@ -21,7 +21,7 @@ class runner:
         if data_folder_root == "Default":
             self.data_folder_root=data_folder
         else:
-            self.data_folder_root= data_folder_root
+            self.data_folder_root= os.path.join(data_folder_root,"raw_root")
         self.calib_folder = calib_folder
         self.mapping_file = mapping_file
         self.cpu_to_use = cpu_to_use
@@ -791,7 +791,7 @@ class runner:
         folder= os.path.join(self.data_folder_root, str(self.run_number))
         if not os.path.isdir(folder):
             os.mkdir(folder)
-        rdf.Snapshot('tree', os.path.join(self.data_folder_root, str(self.run_number),"ana.root" ))
+        rdf.Snapshot('tree', os.path.join(self.data_folder_root,  str(self.run_number),"ana.root" ))
 
 ##############################################################################################
 ##																							##
