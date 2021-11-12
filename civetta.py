@@ -19,9 +19,9 @@ class runner:
     def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False, downsampling=1, cylinder=False, data_folder_root="Default" ):
         self.data_folder = data_folder
         if data_folder_root == "Default":
-            self.data_folder_root=data_folder
+            self.data_folder_root=os.path.join(data_folder,"raw_root")
         else:
-            self.data_folder_root= os.path.join(data_folder_root,"raw_root")
+            self.data_folder_root=data_folder_root
         self.calib_folder = calib_folder
         self.mapping_file = mapping_file
         self.cpu_to_use = cpu_to_use
