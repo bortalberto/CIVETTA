@@ -360,11 +360,12 @@ class decoder:
             final_pd=pd.concat(pd_list, ignore_index=True)
             if len(final_pd>0):
                 if root:
-                    import root_pandas
-                    filename=path.replace(".dat", ".root")
-                    filename=filename.replace("raw_dat", "raw_root")
-                    filename=filename.replace("/RUN_", "/")
-                    root_pandas.to_root(final_pd,filename,"tree")
+                    pass## Inibit root decode
+                    # import root_pandas
+                    # filename=path.replace(".dat", ".root")
+                    # filename=filename.replace("raw_dat", "raw_root")
+                    # filename=filename.replace("/RUN_", "/")
+                    # root_pandas.to_root(final_pd,filename,"tree")
                 else:
                     filename=path.replace(".dat", ".pickle.gzip")
                     filename=filename.replace("raw_dat", "raw_root")
@@ -383,7 +384,7 @@ class calib:
             self.calib_folder=calib_folder
             self.mapping_file=mapping_file
             self.data_folder=data_folder
-            self.root_dec=root_dec
+            self.root_dec=False
             self.cylinder=cylinder
 
 
@@ -652,14 +653,15 @@ class calib:
 
         data_pd = pd.DataFrame()
         if self.root_dec:
-            import root_pandas
-
-            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
-                f = R.TFile.Open(filename)
-                if f.tree.GetEvent() > 0:
-                    data_pd = data_pd.append(root_pandas.read_root(filename, "tree"), ignore_index=True)
-            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-            root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
+            pass
+            # import root_pandas
+            #
+            # for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
+            #     f = R.TFile.Open(filename)
+            #     if f.tree.GetEvent() > 0:
+            #         data_pd = data_pd.append(root_pandas.read_root(filename, "tree"), ignore_index=True)
+            # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            # root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
 
 
         else:
@@ -676,21 +678,21 @@ class calib:
         :return:
         """
         if self.root_dec:
-
-            import root_pandas
-            path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
-
-            if os.path.isfile(path):
-                data_pd=pd.read_pickle(path, compression="gzip")
-            else:
-                data_pd=pd.DataFrame()
-            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
-                f = R.TFile.Open(filename)
-                if f.tree.GetEvent() > 0:
-                    data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
-
-            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-            root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
+            pass
+            # import root_pandas
+            # path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+            #
+            # if os.path.isfile(path):
+            #     data_pd=pd.read_pickle(path, compression="gzip")
+            # else:
+            #     data_pd=pd.DataFrame()
+            # for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.root".format(self.data_folder, self.run_number)):
+            #     f = R.TFile.Open(filename)
+            #     if f.tree.GetEvent() > 0:
+            #         data_pd = data_pd.append(root_pandas.read_root(filename, "tree"))
+            #
+            # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            # root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
         else:
             path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
             if os.path.isfile(path):

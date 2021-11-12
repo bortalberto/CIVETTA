@@ -10,13 +10,17 @@ import sys
 import argparse
 import pandas as pd
 import json
+import numpy as np
 
 class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False, downsampling=1, cylinder=False):
+    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False, downsampling=1, cylinder=False, data_folder_root="Default" ):
         self.data_folder = data_folder
+        if data_folder_root == "Default":
+            self.data_folder_root=data_folder
+        self.data_folder_root= data_folder_root
         self.calib_folder = calib_folder
         self.mapping_file = mapping_file
         self.cpu_to_use = cpu_to_use
@@ -26,8 +30,8 @@ class runner:
         self.alignment = alignment
         self.root = root
         self.cylinder = cylinder
-
         self.downsampling=downsampling
+
     ################# Decode part #################
     def decode_on_file(self,input_):
         self.decoder.decode_file(input_, self.root)
@@ -749,7 +753,44 @@ class runner:
         compress_data = pl_lib.compress_hit_pd(clusterizer.data_pd)
         pl_lib.verifiy_compression_validity(clusterizer.data_pd, compress_data)
         compress_data.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-
+    def convert_hit_pd_root(self):
+        """
+        Convert the hit file in root
+        :return:
+        """
+        clusterizer = pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
+        clusterizer.load_data_pd()
+        import ROOT as R
+        #Convert PD in dict of arrays
+        data = {key: np.array(clusterizer.data_pd[key].values) for key in clusterizer.data_pd.columns}
+        #Fix data types for root import
+        data['channel'] = data['channel'].astype(np.int32)
+        data['tac'] = data['tac'].astype(np.int32)
+        data['tcoarse'] = data['tcoarse'].astype(np.int32)
+        data['ecoarse'] = data['ecoarse'].astype(np.int32)
+        data['tfine'] = data['tfine'].astype(np.int32)
+        data['efine'] = data['efine'].astype(np.int32)
+        data['tiger'] = data['tiger'].astype(np.int32)
+        data['l1ts_min_tcoarse'] = data['l1ts_min_tcoarse'].astype(np.int32)
+        data['delta_coarse'] = data['delta_coarse'].astype(np.int32)
+        data['timestamp'] = data['timestamp'].astype(np.int32)
+        data['gemroc'] = data['gemroc'].astype(np.int32)
+        data['runNo'] = data['runNo'].astype(np.int32)
+        data['subRunNo'] = data['subRunNo'].astype(np.int32)
+        data['l1_framenum'] = data['l1_framenum'].astype(np.int32)
+        data['hit_id'] = data['hit_id'].astype(np.int32)
+        data['strip_x'] = data['strip_x'].astype(np.int32)
+        data['strip_v'] = data['strip_y'].astype(np.int32)
+        del data["strip_y"]
+        data['layer'] = data['planar'].astype(np.int32)
+        del data['planar']
+        data['FEB_label'] = data['FEB_label'].astype(np.int32)
+        data['charge_SH'] = data['charge_SH'].astype(np.float32)
+        rdf = R.RDF.MakeNumpyDataFrame(data)
+        folder= os.path.join(self.data_folder_root, self.run_number)
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
+        rdf.Snapshot('tree', os.path.join(self.data_folder_root, self.run_number,"ana.root" ))
 
 ##############################################################################################
 ##																							##
@@ -781,6 +822,10 @@ def main(run, **kwargs):
 
     if (args.data_folder):
         data_folder=args.data_folder
+
+    if (args.data_folder_root):
+        data_folder_root=args.data_folder_root
+
     if (args.mapping):
         mapping_file=args.mapping
     if args.subrun==-1:
@@ -819,7 +864,9 @@ def main(run, **kwargs):
             print ("        -Tracking")
         if args.selection:
             print("         -Selection")
-        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress):
+        if args.root_conv:
+            print("         -Converting to root")
+        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv):
             print ("        -Decode\n        -Analyze\n        -Clusterize\n        -Tracking \n        -Selection")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
@@ -841,11 +888,12 @@ def main(run, **kwargs):
         op_list.append("S")
 
     if args.calibrate_alignment:
-        op_list=("c_align")
+        op_list.append("c_align")
     if args.compress:
-        op_list=("compress")
-
-    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress):
+        op_list.append("compress")
+    if args.root_conv:
+        op_list.append("root_conv")
+    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv):
         op_list=["D","A","C", "T","S"]
 
     options={}
@@ -859,12 +907,12 @@ def main(run, **kwargs):
         options["alignment"]=True
     else:
         options["alignment"]=False
-    if args.root_decode:
-        options["root"]=True
     if args.cylinder:
         options["cylinder"]=True
     if args.downsampling:
         options["downsampling"] = args.downsampling
+    if args.data_folder_root:
+        options["data_folder_root"] = args.data_folder_root
     if len (op_list)>0:
         main_runner = runner(data_folder,run,calib_folder,mapping_file,**options)
     else:
@@ -895,6 +943,9 @@ def main(run, **kwargs):
                 main_runner.calib_subrun(subrun_tgt)
         else:
             main_runner.calib_run_fill(subrun_fill)
+
+    if "root_conv" in (op_list):
+        main_runner.convert_hit_pd_root()
 
     if "C" in (op_list):
         if not args.Silent:
@@ -929,6 +980,7 @@ def main(run, **kwargs):
     if "compress" in (op_list):
         main_runner.compress_hit_pd()
 
+
     main_runner.save_config(args)
 
 
@@ -956,7 +1008,9 @@ if __name__=="__main__":
     parser.add_argument('-tw','--time_window', help='Specify the signal time window for clusterization', type=int, nargs=2)
     parser.add_argument('-sf','--subrun_fill', help='Runs to fill up to the subrun', type=int, default=-1)
     parser.add_argument('-ali','--alignment', help='Use the alignment', action="store_true")
-    parser.add_argument('-root','--root_decode', help='Decode in root', action="store_true")
+    parser.add_argument('-root','--root_conv', help='Convert hit_pd in root', action="store_true")
+    parser.add_argument('-rootf','--data_folder_root', help='Specify the folder for the root files (without run folder)', type=str, required=False)
+
     parser.add_argument('-down','--downsampling', help='Downsample the decoded data to speed up analysis ',type=int)
     parser.add_argument('-cyl','--cylinder', help='Cylindrical geometry ', action="store_true")
     parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
