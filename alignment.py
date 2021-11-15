@@ -187,20 +187,21 @@ class alignment_class():
 
     def save_corrections(self, data_folder, run):
         """
-        Save the calculate corrections
+        Save the calculated corrections
         :return:
         """
-        correction = {}
-        for view in ("x", "y"):
-            for planar in range(0, 4):
-                correction[f"{planar}_{view}"] = np.poly1d([0, 0])
-        for elem in self.corrections:
-            for key in elem:
-                correction[key] += elem[key]
+        # Do not compress the correction in one step
+        # correction = {}
+        # for view in ("x", "y"):
+        #     for planar in range(0, 4):
+        #         correction[f"{planar}_{view}"] = np.poly1d([0, 0])
+        # for elem in self.corrections:
+        #     for key in elem:
+        #         correction[key] += elem[key]
 
 
         with open(os.path.join(data_folder,"alignment", str(run)), 'wb+') as ali_file:
-            pickle.dump(correction, ali_file)
+            pickle.dump(self.corrections, ali_file)
 
 
 
