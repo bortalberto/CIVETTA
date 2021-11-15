@@ -282,6 +282,7 @@ def calibrate_alignment_run(run, rounds, cpu, data_folder, downsampling):
             tracks_pd = alignment_istance.filter_tracks(tracks_pd)
             correction.update(alignment_istance.calc_correction(tracks_pd, planar=pl))
             cl_pd_2D = alignment_istance.apply_correction(cl_pd_2D, pl, correction)
+            print(cl_pd_2D.cl_pos_x_cm[cl_pd_2D["count"] == 50])
         alignment_istance.corrections.append(correction)
     alignment_istance.save_corrections(data_folder, run)
     # tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D)
