@@ -823,9 +823,11 @@ class clusterize:
             "hit_ids" : []
 
         }
+        print ("Process spawned")
         for runNo in data_pd["runNo"].unique():
             data_pd_cut_1 = data_pd[(data_pd.runNo == runNo) & (data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (data_pd.charge_SH > 0) & (data_pd.delta_coarse > 0)]
             for count in data_pd_cut_1["count"].unique():
+                print (count)
                 data_pd_cut_2 = data_pd_cut_1[data_pd_cut_1["count"] == count]
                 for planar in data_pd_cut_2["planar"].unique():
                     data_pd_cut_3 = data_pd_cut_2[data_pd_cut_2.planar == planar]
