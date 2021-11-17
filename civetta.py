@@ -267,7 +267,9 @@ class runner:
             clusterizer=pl_lib.clusterize(self.run_number, self.data_folder,time_limits[0], time_limits[1])
         else:
             clusterizer=pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
+        print ("Loading data")
         clusterizer.load_data_pd()
+        print ("Groupping data")
         sub_data = clusterizer.data_pd.groupby("subRunNo")
         sub_list = []
         for key in sub_data.groups:
@@ -276,6 +278,7 @@ class runner:
         if not self.silent:
             print ("Single view")
         if len(sub_list)>0:
+            print ("Processing data")
             with Pool(processes=self.cpu_to_use) as pool:
                 with tqdm(total=len(sub_list), disable=self.silent) as pbar:
                     for i, x in enumerate(pool.imap_unordered(clusterizer.build_view_clusters, sub_list)):
