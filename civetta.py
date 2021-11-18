@@ -121,13 +121,14 @@ class runner:
         file_list = []
         pd_list=[]
         if self.root:
-            for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_root/{}/SubRUN_*_GEMROC_*_TM.root".format(self.run_number), with_matches=True):
-                subrun_list.append(subrun)
-                file_list.append(filename)
-            if not self.silent:
-                print ("Merging files")
-            for subrun in tqdm(set(subrun_list), disable=self.silent):
-               os.system("hadd -f {0}/raw_root/{1}/Sub_RUN_dec_{2}.root {0}/raw_root/{1}/SubRUN_{2}_GEMROC_*_TM.root  >/dev/null 2>&1".format(self.data_folder,self.run_number,subrun))
+            pass
+            # for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_root/{}/SubRUN_*_GEMROC_*_TM.root".format(self.run_number), with_matches=True):
+            #     subrun_list.append(subrun)
+            #     file_list.append(filename)
+            # if not self.silent:
+            #     print ("Merging files")
+            # for subrun in tqdm(set(subrun_list), disable=self.silent):
+            #    os.system("hadd -f {0}/raw_root/{1}/Sub_RUN_dec_{2}.root {0}/raw_root/{1}/SubRUN_{2}_GEMROC_*_TM.root  >/dev/null 2>&1".format(self.data_folder,self.run_number,subrun))
         else:
             for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_root/{}/SubRUN_*_GEMROC_*_TM.pickle.gzip".format(self.run_number), with_matches=True):
                 subrun_list.append(subrun)

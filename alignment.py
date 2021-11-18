@@ -172,7 +172,7 @@ class alignment_class():
         for key in sub_data.groups:
             sub_list.append(sub_data.get_group(key))
         if len(sub_list) > 0:
-            with Pool(processes=20) as pool:
+            with Pool(processes=self.cput_to_use) as pool:
                 with tqdm(total=len(sub_list), desc="Applying correction", leave=False) as pbar:
                     for i, x in enumerate(pool.imap(apply_correction_fucn(planar, correction), sub_list)):
                         return_list.append(x)
