@@ -784,7 +784,7 @@ class clusterize:
 
         while True:
             ret_clusters = []
-            KM = KMeans(n_clusters = k)   # Initialize the algorithm with k clusters
+            KM = KMeans(n_clusters = k, n_init = 1,)   # Initialize the algorithm with k clusters
             KM.fit(hit_pos.reshape(-1, 1))   # Perform the alg and find the clusters centers
 
             for n,c in enumerate(KM.cluster_centers_):  # For each cluster

@@ -262,8 +262,6 @@ class runner:
         :param data_folder:
         :return:
         """
-        os.environ["OMP_NUM_THREADS"] = "1"
-
         pd_1d_return_list=[]
         pd_2d_return_list=[]
         if time_limits:
