@@ -133,7 +133,7 @@ class alignment_class():
         track_pd["res_y"] = track_pd["res_y"].apply(lambda x: x[planar])
         ## Arrotondo al mm per fittare
         fit = np.polyfit(track_pd["pos_x"], track_pd["res_y"], 1)
-        fit_x = np.poly1d(fit)
+        fit_x = fit
         fit_dict[f"{planar}_x"] = fit_x
 
         #     tracks_x=track_pd.groupby(f"pos_x")[f"res_y"].mean()
@@ -149,7 +149,7 @@ class alignment_class():
         #     except:
         #         print ("Exception!")
         #         print (tracks_w)
-        fit_y = np.poly1d(fit)
+        fit_y = fit
         #         fig=px.scatter(tracks_y, x=tracks_y.index,y = f"res_planar_{planar}_x")
         #         fig.add_trace( px.line(x=range(0,9),y=fit_y(range(0,9)) ).data[0])
         #         fig.show()
@@ -227,8 +227,8 @@ def apply_correction_process(row, planar, correction):
     """
     if int(row.planar) == int(planar):
         angle = (correction[f"{int(row.planar)}_x"][1] - correction[f"{int(row.planar)}_y"][1]) / 2
-        row.cl_pos_y_cm = row.cl_pos_y_cm + angle * (row.cl_pos_x_cm) + correction[f"{int(row.planar)}_x"][0]
-        row.cl_pos_x_cm = row.cl_pos_x_cm - angle * (row.cl_pos_y_cm) + correction[f"{int(row.planar)}_y"][0]
+        row.cl_pos_y_cm = row.cl_pos_y_cm + angle * (row.cl_pos_x_cm) + correction[f"{int(row.planar)}_y"][0]
+        row.cl_pos_x_cm = row.cl_pos_x_cm - angle * (row.cl_pos_y_cm) + correction[f"{int(row.planar)}_x"][0]
 
     return row
 
