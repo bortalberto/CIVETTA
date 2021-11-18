@@ -274,7 +274,7 @@ def calibrate_alignment_run(run, rounds, cpu, data_folder, downsampling):
         correction={}
         for view in ("x","y"):
             for planar in range (0,4):
-                 correction[f"{planar}_{view}"]=np.poly1d([0,0])
+                 correction[f"{planar}_{view}"]=np.array([0,0])
         for pl in tqdm([3,2,1], leave = False , desc="Planars"):
             tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D,pl)
             # print(tracks_pd.shape)
