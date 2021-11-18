@@ -181,9 +181,7 @@ class alignment_class():
         return cl_pd
 
 
-    def apply_correction_fucn(self, cl_pd):
-        cl_pd = cl_pd.apply(apply_correction_process, axis=1)
-        return cl_pd
+
 
     def save_corrections(self, data_folder, run):
         """
@@ -248,11 +246,11 @@ class fit_tracks_process_pd(object):
 
 def fit_tracks_process_row( x, put="None"):
     x = x.sort_values("planar")
-    fit_x = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_x_cm"], 1)
+    fit_x = np.polyfit(x[ x.planar != put ]["cl_pos_z_cm"], x[ x.planar != put ]["cl_pos_x_cm"], 1)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
     x = x.sort_values("planar")
-    fit_y = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_y_cm"], 1)
+    fit_y = np.polyfit(x[ x.planar != put ]["cl_pos_z_cm"], x[ x.planar != put ]["cl_pos_y_cm"], 1)
     pos_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values
     res_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values
     run = x["run"].values[0]
