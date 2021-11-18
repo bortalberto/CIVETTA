@@ -226,9 +226,9 @@ def apply_correction_process(row, planar, correction):
     :return:
     """
     if int(row.planar) == int(planar):
-        angle = (correction[f"{int(row.planar)}_x"][1] - correction[f"{int(row.planar)}_y"][1]) / 2
-        row.cl_pos_y_cm = row.cl_pos_y_cm + angle * (row.cl_pos_x_cm) + correction[f"{int(row.planar)}_y"][0]
-        row.cl_pos_x_cm = row.cl_pos_x_cm - angle * (row.cl_pos_y_cm) + correction[f"{int(row.planar)}_x"][0]
+        angle = (correction[f"{int(row.planar)}_x"][0] - correction[f"{int(row.planar)}_y"][0]) / 2
+        row.cl_pos_y_cm = row.cl_pos_y_cm + angle * (row.cl_pos_x_cm) + correction[f"{int(row.planar)}_y"][1]
+        row.cl_pos_x_cm = row.cl_pos_x_cm - angle * (row.cl_pos_y_cm) + correction[f"{int(row.planar)}_x"][1]
 
     return row
 
