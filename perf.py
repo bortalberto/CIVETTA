@@ -280,6 +280,8 @@ def double_gaus_fit(tracks_pd, view="x", put=-1):
             sigma_1 = sigma_0 * 3
             x = (x[1:] + x[:-1]) / 2
             popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1])
+            popt[2]=abs(popt[2])
+            popt[5]=abs(popt[5])
             popt_list.append(popt)
             pcov_list.append(pcov)
             yexp = doublegaus(x, *popt)
@@ -473,7 +475,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        put_sigma_x = abs(put_sigma_x)
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
             raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
@@ -483,7 +484,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        put_sigma_y = abs(put_sigma_y)
         print (f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
@@ -505,7 +505,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
             for pl in trackers_list:
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 res_sigma = ((popt_list[pl][2] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][5] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
-                res_sigma=abs(res_sigma)
                 plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl)
                 # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
