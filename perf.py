@@ -97,6 +97,7 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     x = x.sort_values("planar")
     if tracking_fit:
         x = x[x.planar != put]
+
     fit_x = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_x_cm"], 1)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
@@ -104,6 +105,13 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     fit_y = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_y_cm"], 1)
     pos_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values
     res_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values
+
+    if tracking_fit:
+        pos_x=np.insert(pos_x,put, np.nan)
+        res_x=np.insert(res_x,put, np.nan)
+        pos_y=np.insert(pos_y,put, np.nan)
+        res_y=np.insert(res_y,put, np.nan)
+
     run = x["run"].values[0]
     subrun = x["subrun"].values[0]
     #     fig=px.scatter(x=x["cl_pos_z_cm"],y = x["cl_pos_x_cm"])
@@ -245,36 +253,41 @@ def gaus(x, a, x0, sigma):
 
 
 
-def double_gaus_fit(tracks_pd, view="x", planars=3):
+def double_gaus_fit(tracks_pd, view="x", put=-1):
     popt_list = []
     pcov_list = []
     res_list = []
     R_list = []
 
-
-    for pl in range(0, planars):
-        data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
-        sigma_0 = np.std(data)
-        if sigma_0<0.2:
-            sigma_0=0.2
-        data = data[abs(data) < sigma_0]
-        sigma_0 = np.std(data)
-        y, x = np.histogram(data, bins=int(data.size / 25))
-        mean_1 = x[np.argmax(y)]
-        mean_0 = x[np.argmax(y)]
-        a_0 = np.max(y)
-        a_1 = np.max(y) / 5
-        sigma_1 = sigma_0 * 3
-        x = (x[1:] + x[:-1]) / 2
-        popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1])
-        popt_list.append(popt)
-        pcov_list.append(pcov)
-        yexp = doublegaus(x, *popt)
-        ss_res = np.sum((y - yexp) ** 2)
-        ss_tot = np.sum((y - np.mean(y)) ** 2)
-        res_list.append(y - yexp)
-        r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
-        R_list.append(r2)
+    for pl in range(0, 4):
+        if pl==put:
+            popt_list.append(0)
+            pcov_list.append(0)
+            res_list.append(0)
+            R_list.append(1)
+        else:
+            data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
+            sigma_0 = np.std(data)
+            if sigma_0<0.2:
+                sigma_0=0.2
+            data = data[abs(data) < sigma_0]
+            sigma_0 = np.std(data)
+            y, x = np.histogram(data, bins=int(data.size / 25))
+            mean_1 = x[np.argmax(y)]
+            mean_0 = x[np.argmax(y)]
+            a_0 = np.max(y)
+            a_1 = np.max(y) / 5
+            sigma_1 = sigma_0 * 3
+            x = (x[1:] + x[:-1]) / 2
+            popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1])
+            popt_list.append(popt)
+            pcov_list.append(pcov)
+            yexp = doublegaus(x, *popt)
+            ss_res = np.sum((y - yexp) ** 2)
+            ss_tot = np.sum((y - np.mean(y)) ** 2)
+            res_list.append(y - yexp)
+            r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
+            R_list.append(r2)
     #         yexp=doublegaus(x, *popt)
     #         y_exp_norm =1000*yexp/np.sum(yexp)
     #         print (np.sum(ynorm))
@@ -299,35 +312,32 @@ def load_correction(path, run_number):
         corr = pickle.load(corr_file)
     return corr
 
-def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff ):
-    for pl in range(0, 4):
-        for pl in range(0, 4):
-            data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
-            sigma_0 = np.std(data)
-            data = data[abs(data) < sigma_0]
-            y, x = np.histogram(data, bins=int(data.size / 25))
-            x = (x[1:] + x[:-1]) / 2
-            popt = popt_list[pl]
-            plt.figure(figsize=(10, 6))
-            plt.plot(x, y, 'b*', label='data')
-            x = np.arange(-sigma_0, sigma_0, 0.0005)
-            plt.plot(x, gaus(x, *popt[0:3]), 'c-', label='fit 0')
-            plt.plot(x, gaus(x, *popt[3:6]), 'g-', label='fit 1')
-            plt.plot(x, doublegaus(x, *popt), 'r-', label='fit cumulative')
-            plt.grid()
-            # plt.legend()
-            # plt.title('Fig. 3 - Fit for Time Cons§tant')
-            plt.ylabel('#')
-            plt.xlabel('Residual [cm]')
-            # plt.ion()
-            # plt.show()
-            plt.title(f"Fit view {view}, DUT= {put}, planar{pl}")
-            plt.text(y=np.max(y)*0.8, x=sigma_0/10,s=f"R^2={R_list[pl]:.4f}\n Norm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={abs(popt[2])*10000:.2f}um\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um", fontsize="small")
-            if pl==put:
-                plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r--')
-                plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r--')
-            plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_{put}_{view}_pl{pl}.png"))
-            plt.close()
+def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl ):
+    data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
+    sigma_0 = np.std(data)
+    data = data[abs(data) < sigma_0]
+    y, x = np.histogram(data, bins=int(data.size / 25))
+    x = (x[1:] + x[:-1]) / 2
+    popt = popt_list[pl]
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y, 'b*', label='data')
+    x = np.arange(-1,1, 0.0002)
+    plt.plot(x, gaus(x, *popt[0:3]), 'c-', label='fit 0')
+    plt.plot(x, gaus(x, *popt[3:6]), 'g-', label='fit 1')
+    plt.plot(x, doublegaus(x, *popt), 'r-', label='fit cumulative')
+    plt.grid()
+    # plt.legend()
+    # plt.title('Fig. 3 - Fit for Time Cons§tant')
+    plt.ylabel('#')
+    plt.xlabel('Residual [cm]')
+    # plt.ion()
+    # plt.show()
+    plt.title(f"Fit view {view}, DUT= {put}, planar{pl}")
+    plt.text(y=np.max(y)*0.8, x=sigma_0/10,s=f"R^2={R_list[pl]:.4f}\n Norm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={abs(popt[2])*10000:.2f}um\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um", fontsize="small")
+    plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r--')
+    plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r--')
+    plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_{put}_{view}_pl{pl}.png"))
+    plt.close()
 
 
 class calc_eff_func_class(object):
@@ -425,7 +435,7 @@ def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections
     return match_clusters, eff_pd, eff_x, eff_y, tot_ev
 
 
-def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_eff=5):
+def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
     runs = run
     #Create directories to store the outputs
     if not os.path.isdir(os.path.join(data_folder,"perf_out")):
@@ -447,54 +457,66 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_eff=5):
         put_list=[put]
     for put in  put_list:
         print (f"Measuring performances on planar {put}")
-        trackers_pl = [0,1,2,3]
-        trackers_pl.remove(put)
+        print ("Calculating DUT exclusive residual distribution")
+        trackers_list = [0,1,2,3]
+        trackers_list.remove(put)
         # Seleziona gli eventi con 4 cluster
         cl_pd_2D_res = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: set(x["planar"]) == {0, 1, 2, 3})
         # Fitta le tracce
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
         view = "x"
-        popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view, planars=4)
+        popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put,put_mean_x, put_sigma_x, nsigma_eff)
+        put_sigma_x = abs(put_sigma_x)
+        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
-            raise Warning(f"One R2 in fit is less than 0.9,  verify the fits on view {view}, put {put}")
+            raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
 
 
         view = "y"
-        popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view, planars=4)
+        popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put,put_mean_y, put_sigma_y, nsigma_eff)
+        put_sigma_y = abs(put_sigma_y)
+        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
-            raise Warning(f"One R2 in fit is less than 0.9, verify the fits on view {view}, put {put}")
+            raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
+        print ("Calculating trackers inclusive residual distribution")
 
         # Seleziona gli eventi che hanno i 3 tracciatori
-        cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_pl]))
+        cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
         # Fit them to extract the put sigma and mean
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True)
         ##Seleziona le tracce che rispettano l'intervallo di residui
         ##Seleziona le tracce che rispettano l'intervallo di residui
-        nsigma_eff = 1
-        if any([R < 0.9 for R in R_list]):
-            raise (Exception)
+        nsigma_trck = 1
         tracks_pd_c = tracks_pd
         for view in ("x", "y"):
-            popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view)
-            for pl in range(0, 3):
-                mean_res = ((popt_list[pl][1] * popt_list[pl][0]) + (popt_list[pl][4] * popt_list[pl][3])) / (popt_list[pl][0] + popt_list[pl][3])
-                res_sigma = nsigma_eff * ((popt_list[pl][2] * popt_list[pl][0]) + (popt_list[pl][5] * popt_list[pl][3])) / (popt_list[pl][0] + popt_list[pl][3])
+            popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view, put)
+            if any([R < 0.9 for R in R_list]):
+                raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
+            for pl in trackers_list:
+                mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
+                res_sigma = ((popt_list[pl][2] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][5] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
+                res_sigma=abs(res_sigma)
+                plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl)
+                # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
+                # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
                 tracks_pd_c = tracks_pd_c[
-                    (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - res_sigma)) &
-                    (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + res_sigma))
+                    (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
+                    (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
                     ]
-        print (f"Measuring efficiency on {tracks_pd_c.size} clusters")
-        # Carico i cluster 1D per misurare l'efficienza
-        cl_pd_1D = get_run_data([runs], '1D')
-        # cl_pd_1D=cl_pd_1D[cl_pd_1D.planar==put]
+        print(f"Measuring efficiency on {tracks_pd_c.size} tracks")
 
+        # Carico i cluster 1D per misurare l'efficienza
+        cl_pd_1D = get_run_data([runs], '1D', data_folder)
+        # cl_pd_1D=cl_pd_1D[cl_pd_1D.planar==put]
+        ## Carico la posizione in cm non allineata
+        cl_pd_1D["cl_pos_x_cm"] = cl_pd_1D.cl_pos_x * 0.0650
+        cl_pd_1D["cl_pos_y_cm"] = cl_pd_1D.cl_pos_y * 0.0650
+        cl_pd_1D["cl_pos_z_cm"] = cl_pd_1D.planar * 10
         tracks_pd_c_sub = tracks_pd_c.groupby(["subrun"])
         cl_pd_1D_sub = cl_pd_1D.groupby(["subrun"])
         residuals_dict = {
@@ -509,18 +531,35 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_eff=5):
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
         if len(sub_list) > 0:
             with Pool(processes=cpu_to_use) as pool:
-                with tqdm(total=len(sub_list), desc="Calculating event efficiency", leave=True) as pbar:
-                    for i, x in enumerate(pool.imap(calc_eff_func_class(sigmas=nsigma_eff, residuals_dict=residuals_dict, put=put, corrections=correction), sub_list)):
+                with tqdm(total=len(sub_list), desc="Calculating event efficiency", leave=False) as pbar:
+                    for i, x in enumerate(pool.imap(calc_eff_func_class(sigmas=nsigma_trck, residuals_dict=residuals_dict, put=put, corrections=correction), sub_list)):
                         return_list.append(x)
                         pbar.update()
-        cl_list=[]
-        for x in tqdm(return_list, desc=" Merging return cluster data"):
-            cl_list.append(pd.concat(x[0]))
-        matching_clusters = pd.concat(cl_list)
-        eff_pd = pd.concat([x[1] for x in return_list])
+
         eff_x=np.sum([x [2] for x in return_list])
         eff_y=np.sum([x [3] for x in return_list])
         tot_ev=np.sum([x [4] for x in return_list])
         print (f"Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}")
-        matching_clusters.to_pickle(os.path.join(path_out_eff, f"match_cl_{put}.gzip"), compression="gzip")
+
+        cl_list=[]
+
+        with Pool(processes=cpu_to_use) as pool:
+            with tqdm(total=len(sub_list), desc="Merging return cluster data", leave=False) as pbar:
+                for i, x in enumerate(pool.imap(concat_subrun_cluster, return_list)):
+                    cl_list.append(x)
+                    pbar.update()
+
+        # for x in tqdm(return_list, desc="Merging return cluster data"):
+        #     if len(x[0])>0:
+        #         cl_list.append(pd.concat(x[0]))
+
+        if len(cl_list)>0:
+            matching_clusters = pd.concat(cl_list)
+            matching_clusters.to_pickle(os.path.join(path_out_eff, f"match_cl_{put}.gzip"), compression="gzip")
+
+        eff_pd = pd.concat([x[1] for x in return_list])
         eff_pd.to_pickle(os.path.join(path_out_eff, f"eff_pd_{put}.gzip"), compression="gzip")
+
+def concat_subrun_cluster(cl_list):
+    if len(cl_list[0])>0:
+        return (pd.concat(cl_list[0]))
