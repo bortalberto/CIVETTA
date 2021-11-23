@@ -11,6 +11,7 @@ import argparse
 import pandas as pd
 import json
 import numpy as np
+import perf
 
 class runner:
     """
@@ -794,6 +795,9 @@ class runner:
             os.mkdir(folder)
         rdf.Snapshot('tree', os.path.join(self.data_folder_root,  str(self.run_number),"ana.root" ))
 
+    def eval_perf(self):
+        perf.calculte_eff(self.run_number, self.data_folder, -1, self.cpu_to_use)
+
 ##############################################################################################
 ##																							##
 ##										MAIN												##
@@ -868,7 +872,9 @@ def main(run, **kwargs):
             print("         -Selection")
         if args.root_conv:
             print("         -Converting to root")
-        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv):
+        if args.performance:
+            print("         -Performance evaluation")
+        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv |args.performance):
             print ("        -Decode\n        -Analyze\n        -Clusterize\n        -Tracking \n        -Selection")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
@@ -895,7 +901,10 @@ def main(run, **kwargs):
         op_list.append("compress")
     if args.root_conv:
         op_list.append("root_conv")
-    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv):
+    if args.performance:
+        op_list.append("perf")
+
+    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
         op_list=["D","A","C", "T","S"]
 
     options={}
@@ -982,7 +991,8 @@ def main(run, **kwargs):
     if "compress" in (op_list):
         main_runner.compress_hit_pd()
 
-
+    if "perf" in (op_list):
+        main_runner.eval_perf()
     main_runner.save_config(args)
 
 
@@ -1017,6 +1027,7 @@ if __name__=="__main__":
     parser.add_argument('-cyl','--cylinder', help='Cylindrical geometry ', action="store_true")
     parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
     parser.add_argument('-comp','--compress', help='Optimize the disk usage ', action="store_true")
+    parser.add_argument('-perf','--performance', help='Performance evaluation ', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
