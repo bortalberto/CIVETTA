@@ -305,7 +305,7 @@ def load_nearest_correction(path,run_number):
 
 
 def load_correction(path, run_number):
-    print(f"Nearest run correction: run {run_number}")
+    print(f"Nearest alignment correction: run {run_number}")
     #     print("Last modified: %s" % time.ctime(os.path.getmtime(path)))
     #     print("Created: %s" % time.ctime(os.path.getctime(path)))
     with open(os.path.join(path, str(run_number)), 'rb') as corr_file:
@@ -321,7 +321,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     popt = popt_list[pl]
     plt.figure(figsize=(10, 6))
     plt.plot(x, y, 'b*', label='data')
-    x = np.arange(-1,1, 0.0002)
+    x = np.arange(np.min(x),np.max(x), 0.0002)
     plt.plot(x, gaus(x, *popt[0:3]), 'c-', label='fit 0')
     plt.plot(x, gaus(x, *popt[3:6]), 'g-', label='fit 1')
     plt.plot(x, doublegaus(x, *popt), 'r-', label='fit cumulative')
