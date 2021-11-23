@@ -484,6 +484,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = abs(put_sigma_y)
+        print (f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
             raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
