@@ -796,7 +796,7 @@ class runner:
         rdf.Snapshot('tree', os.path.join(self.data_folder_root,  str(self.run_number),"ana.root" ))
 
     def eval_perf(self):
-        perf.calculte_eff(self.run_number, self.data_folder, 1, self.cpu_to_use)
+        perf.calculte_eff(self.run_number, self.data_folder, -1, self.cpu_to_use)
 
 ##############################################################################################
 ##																							##
