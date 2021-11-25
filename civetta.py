@@ -795,8 +795,8 @@ class runner:
             os.mkdir(folder)
         rdf.Snapshot('tree', os.path.join(self.data_folder_root,  str(self.run_number),"ana.root" ))
 
-    def eval_perf(self):
-        perf.calculte_eff(self.run_number, self.data_folder, -1, self.cpu_to_use)
+    def eval_perf(self,put):
+        perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use)
 
 ##############################################################################################
 ##																							##
@@ -902,7 +902,10 @@ def main(run, **kwargs):
     if args.root_conv:
         op_list.append("root_conv")
     if args.performance:
-        op_list.append("perf")
+        if args.performance in (0,1,2,3,-1):
+            op_list.append("perf")
+        else:
+            print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
     if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
         op_list=["D","A","C", "T","S"]
@@ -992,13 +995,13 @@ def main(run, **kwargs):
         main_runner.compress_hit_pd()
 
     if "perf" in (op_list):
-        main_runner.eval_perf()
+
+        main_runner.eval_perf(args.performance)
     main_runner.save_config(args)
 
 
 
 if __name__=="__main__":
-
 
     parser = argparse.ArgumentParser(description="CIVETTA: Tools to decode and analyze TIGER data",)
     parser.add_argument('run', type=int, help='Run number')
@@ -1027,7 +1030,7 @@ if __name__=="__main__":
     parser.add_argument('-cyl','--cylinder', help='Cylindrical geometry ', action="store_true")
     parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
     parser.add_argument('-comp','--compress', help='Optimize the disk usage ', action="store_true")
-    parser.add_argument('-perf','--performance', help='Performance evaluation ', action="store_true")
+    parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int)
 
     args = parser.parse_args()
     args.method(**vars(args))

@@ -297,18 +297,18 @@ def double_gaus_fit(tracks_pd, view="x", put=-1):
     #         print (chisquare(ynorm,y_exp_norm, 6 ))
     return popt_list, pcov_list, res_list, R_list
 
-def load_nearest_correction(path,run_number):
-    path_list=glob.glob(os.path.join(path,"*"))
-    corr_list=[int(path.split("/")[-1]) for path in path_list]
-    corr_list=[corr for corr in corr_list if corr <= run_number]
-    align_number=min(corr_list, key=lambda x:abs(x-run_number))
+def load_nearest_correction(path,run_number, logger=None):
+    path_list = glob.glob(os.path.join(path,"*"))
+    corr_list = [int(path.split("/")[-1]) for path in path_list]
+    corr_list = [corr for corr in corr_list if corr <= run_number]
+    align_number = min(corr_list, key=lambda x:abs(x-run_number))
+    logger.write_log(f"Nearest alignment correction: run {align_number}, Created: {time.ctime(os.path.getctime(os.path.join(path, str(align_number))))}")
     corr=load_correction(path, align_number)
     return corr
 
 
 def load_correction(path, run_number):
     print(f"Nearest alignment correction: run {run_number}")
-    #     print("Last modified: %s" % time.ctime(os.path.getmtime(path)))
     #     print("Created: %s" % time.ctime(os.path.getctime(path)))
     with open(os.path.join(path, str(run_number)), 'rb') as corr_file:
         corr = pickle.load(corr_file)
@@ -440,6 +440,16 @@ def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections
     })
     return match_clusters, eff_pd, eff_x, eff_y, tot_ev
 
+class log_writer():
+    def __init__(self, path, run):
+        self.path = path
+        self.run = run
+        with open(os.path.join(path, "logfile"), "w+") as logfile:
+            pass
+
+    def write_log(self, text):
+        with open(os.path.join(str(self.path), "logfile"), "a") as logfile:
+            logfile.write(text+"\n")
 
 def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
     runs = run
@@ -451,10 +461,11 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
     path_out_eff=os.path.join(data_folder,"perf_out",str(run))
     if not os.path.isdir(os.path.join(path_out_eff,"res_fit")):
         os.mkdir(os.path.join(path_out_eff,"res_fit"))
+    logger=log_writer(path_out_eff, run)
     # Caricamento dei cluster 2D per i tracciatori
     cl_pd_2D_ori = load_cluster_2D_align(runs, data_folder)
     #Carica la correzione più vicina al run (minore del run)
-    correction = load_nearest_correction(os.path.join(data_folder,"alignment"), runs)
+    correction = load_nearest_correction(os.path.join(data_folder,"alignment"), runs, logger)
     # Applica la correzione dell'allineamento al cluster 2D
     cl_pd_2D = apply_correction(cl_pd_2D_ori, correction)
     if put==-1:
@@ -463,6 +474,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         put_list=[put]
     for put in  put_list:
         print (f"Measuring performances on planar {put}")
+        logger.write_log(f"Measuring performances on planar {put}")
         print ("Calculating DUT exclusive residual distribution")
         trackers_list = [0,1,2,3]
         trackers_list.remove(put)
@@ -477,6 +489,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
+            logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
 
 
@@ -485,8 +498,12 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         print (f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
+        logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
+
+
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_trck, put)
         if any([R < 0.9 for R in R_list]):
+            logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
         print ("Calculating trackers inclusive residual distribution")
 
@@ -498,10 +515,14 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         ##Seleziona le tracce che rispettano l'intervallo di residui
         nsigma_trck = 1
         tracks_pd_c = tracks_pd
+        logger.write_log(f"{tracks_pd_c.size} tracks with all trackres before cutting")
+
         for view in ("x", "y"):
             popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view, put)
             if any([R < 0.9 for R in R_list]):
+                logger.write_log(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
                 raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
+
             for pl in trackers_list:
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 res_sigma = ((popt_list[pl][2] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][5] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
@@ -509,11 +530,15 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
                 # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
                 print (f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
+                logger.write_log("Trackers fits")
+                logger.write_log(f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
+
                 tracks_pd_c = tracks_pd_c[
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
                     ]
         print(f"Measuring efficiency on {tracks_pd_c.size} tracks")
+        logger.write_log(f"Measuring efficiency on {tracks_pd_c.size} tracks")
 
         # Carico i cluster 1D per misurare l'efficienza
         cl_pd_1D = get_run_data([runs], '1D', data_folder)
@@ -545,6 +570,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         eff_y=np.sum([x [3] for x in return_list])
         tot_ev=np.sum([x [4] for x in return_list])
         print (f"Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}")
+        logger.write_log(f"Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}")
 
         cl_list=[]
 
