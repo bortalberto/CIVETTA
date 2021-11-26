@@ -508,18 +508,13 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
         # Fit them to extract the put sigma and mean
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True)
-        print (tracks_pd.size)
         ##Seleziona le tracce che rispettano l'intervallo di residui
         ##Seleziona le tracce che rispettano l'intervallo di residui
         nsigma_trck = 1
         tracks_pd_c = tracks_pd
-        tracks_pd_c_cleaned=tracks_pd_c.drop_duplicates()
-        tracks_pd_c=tracks_pd_c_cleaned
-        del(tracks_pd_c_cleaned)
-        if  (tracks_pd_c.size!=tracks_pd_c.size):
-            print(tracks_pd_c_cleaned.size, tracks_pd_c.size)
-        logger.write_log(f"{tracks_pd_c.size} tracks with all trackres before cutting")
-        print (tracks_pd_c.size)
+        # tracks_pd_c.drop_duplicates(inplace=True)
+
+        logger.write_log(f"{tracks_pd_c.shape[0]} tracks with all trackres before cutting")
 
         for view in ("x", "y"):
             popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view, put)
@@ -540,8 +535,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
                     ]
-        logger.write_log(f"Measuring efficiency on {tracks_pd_c.size} tracks")
-        print (tracks_pd_c.size)
+        logger.write_log(f"Measuring efficiency on {tracks_pd_c.shape[0]} tracks")
 
         # Carico i cluster 1D per misurare l'efficienza
         cl_pd_1D = get_run_data([runs], '1D', data_folder)
