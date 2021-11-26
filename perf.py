@@ -451,7 +451,7 @@ class log_writer():
         with open(os.path.join(str(self.path), "logfile"), "a") as logfile:
             logfile.write(text+"\n")
 
-def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
+def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
     runs = run
     #Create directories to store the outputs
     if not os.path.isdir(os.path.join(data_folder,"perf_out")):
@@ -487,7 +487,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_trck, put)
+        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put)
         if any([R < 0.9 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
@@ -501,7 +501,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
 
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_trck, put)
+        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put)
         if any([R < 0.9 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
@@ -557,12 +557,14 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_trck=5):
         }
         sub_list = []
         return_list = []
+        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.3f}+/-{put_sigma_x:.3f} \n, Residual y tolerance on DUT: {put_mean_y:.3f}+/-{put_sigma_y:.3f}\n")
+
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
         if len(sub_list) > 0:
             with Pool(processes=cpu_to_use) as pool:
                 with tqdm(total=len(sub_list), desc="Calculating event efficiency", leave=False) as pbar:
-                    for i, x in enumerate(pool.imap(calc_eff_func_class(sigmas=nsigma_trck, residuals_dict=residuals_dict, put=put, corrections=correction), sub_list)):
+                    for i, x in enumerate(pool.imap(calc_eff_func_class(sigmas=nsigma_put, residuals_dict=residuals_dict, put=put, corrections=correction), sub_list)):
                         return_list.append(x)
                         pbar.update()
 
