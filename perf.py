@@ -475,7 +475,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
     for put in  put_list:
         print (f"Measuring performances on planar {put}")
         logger.write_log(f"Measuring performances on planar {put}")
-        print ("Calculating DUT exclusive residual distribution")
         trackers_list = [0,1,2,3]
         trackers_list.remove(put)
         # Seleziona gli eventi con 4 cluster
@@ -497,7 +496,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        print (f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
         logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
 
@@ -505,17 +503,23 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         if any([R < 0.9 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
-        print ("Calculating trackers inclusive residual distribution")
 
         # Seleziona gli eventi che hanno i 3 tracciatori
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
         # Fit them to extract the put sigma and mean
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True)
+        print (tracks_pd.size)
         ##Seleziona le tracce che rispettano l'intervallo di residui
         ##Seleziona le tracce che rispettano l'intervallo di residui
         nsigma_trck = 1
         tracks_pd_c = tracks_pd
+        tracks_pd_c_cleaned=tracks_pd_c.drop_duplicates()
+        tracks_pd_c=tracks_pd_c_cleaned
+        del(tracks_pd_c_cleaned)
+        if  (tracks_pd_c.size!=tracks_pd_c.size):
+            print(tracks_pd_c_cleaned.size, tracks_pd_c.size)
         logger.write_log(f"{tracks_pd_c.size} tracks with all trackres before cutting")
+        print (tracks_pd_c.size)
 
         for view in ("x", "y"):
             popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view, put)
@@ -529,7 +533,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
                 plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl)
                 # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
-                print (f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
                 logger.write_log("Trackers fits")
                 logger.write_log(f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
 
@@ -537,8 +540,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
                     ]
-        print(f"Measuring efficiency on {tracks_pd_c.size} tracks")
         logger.write_log(f"Measuring efficiency on {tracks_pd_c.size} tracks")
+        print (tracks_pd_c.size)
 
         # Carico i cluster 1D per misurare l'efficienza
         cl_pd_1D = get_run_data([runs], '1D', data_folder)
