@@ -279,9 +279,9 @@ def double_gaus_fit(tracks_pd, view="x", put=-1):
             a_1 = np.max(y) / 5
             sigma_1 = sigma_0 * 3
             x = (x[1:] + x[:-1]) / 2
-            popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1])
-            popt[2]=abs(popt[2])
-            popt[5]=abs(popt[5])
+            upper_bound=[np.inf, 0.1, 1, np.inf,0.1,2]
+            lower_bound=[0,-0.1,0,0,-0.1,0]
+            popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1], bounds=(lower_bound, upper_bound))
             popt_list.append(popt)
             pcov_list.append(pcov)
             yexp = doublegaus(x, *popt)
@@ -338,7 +338,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     # plt.ion()
     # plt.show()
     plt.title(f"Fit view {view}, DUT= {put}, planar{pl}")
-    plt.text(y=np.max(y)*0.8, x=sigma_0/10,s=f"R^2={R_list[pl]:.4f}\n Norm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={abs(popt[2])*10000:.2f}um\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um", fontsize="small")
+    plt.text(y=np.max(y)*0.7, x=put_mean-6.99*put_sigma, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um\nNorm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um", fontsize="small")
     plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.xlim([put_mean-7*put_sigma, put_mean+7*put_sigma])
