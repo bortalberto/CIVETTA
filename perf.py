@@ -268,11 +268,11 @@ def double_gaus_fit(tracks_pd, view="x", put=-1):
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             sigma_0 = np.std(data)
-            if sigma_0<0.2:
-                sigma_0=0.2
+            if sigma_0<0.1:
+                sigma_0=0.1
             data = data[abs(data) < sigma_0]
             sigma_0 = np.std(data)
-            y, x = np.histogram(data, bins=int(data.size / 25))
+            y, x = np.histogram(data, bins=int(data.shape[0] / 25))
             mean_1 = x[np.argmax(y)]
             mean_0 = x[np.argmax(y)]
             a_0 = np.max(y)
@@ -317,8 +317,11 @@ def load_correction(path, run_number):
 def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl ):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     sigma_0 = np.std(data)
+    if sigma_0 < 0.1:
+        sigma_0 = 0.1
     data = data[abs(data) < sigma_0]
-    y, x = np.histogram(data, bins=int(data.size / 25))
+    sigma_0 = np.std(data)
+    y, x = np.histogram(data, bins=int(data.shape[0] / 25))
     x = (x[1:] + x[:-1]) / 2
     popt = popt_list[pl]
     plt.figure(figsize=(10, 6))
