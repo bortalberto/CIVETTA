@@ -558,7 +558,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         }
         sub_list = []
         return_list = []
-        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.3f}+/-{put_sigma_x*nsigma_put:.3f}\nResidual y tolerance on DUT: {put_mean_y:.3f}+/-{put_sigma_y*nsigma_put:.3f}\n")
+        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f}\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f}\n")
 
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
