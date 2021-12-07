@@ -874,8 +874,8 @@ def main(run, **kwargs):
             print("         -Converting to root")
         if args.performance:
             print("         -Performance evaluation")
-        if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv |args.performance):
-            print ("        -Decode\n        -Analyze\n        -Clusterize\n        -Tracking \n        -Selection")
+        # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv |args.performance):
+        #     print ("        -Decode\n        -Analyze\n        -Clusterize\n        -Tracking \n        -Selection")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
         print ("#############################################################")
@@ -907,8 +907,8 @@ def main(run, **kwargs):
         else:
             print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
-    if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
-        op_list=["D","A","C", "T","S"]
+    # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
+    #     op_list=["D","A","C", "T","S"]
 
     options={}
     if args.cpu:
