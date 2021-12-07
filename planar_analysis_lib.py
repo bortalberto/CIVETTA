@@ -766,6 +766,7 @@ class clusterize:
         :param hit_charge:
         :return:
         """
+        hit_charge=np.abs(hit_charge)
         ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
         return ret_centers
 
