@@ -125,16 +125,16 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, fit_y, pos_y, res_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x", "fit_y", "pos_y", "res_y"])
 
 
-def filter_tracks(tracks_pd, cut=0.2, res_max=0.7):
-    ## Filter the tracks before the correction calculation
-    tracks_pd_c = tracks_pd[
-        (tracks_pd["pos_x"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
-        (tracks_pd["pos_y"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
-        (tracks_pd["res_x"].apply(lambda x: np.all(abs(x) < res_max))) &
-        (tracks_pd["res_y"].apply(lambda x: np.all(abs(x) < res_max)))
-        ]
-    #     print (f"Dropped {len(tracks_pd)-len(tracks_pd_c)} tracks")
-    return tracks_pd_c
+# def filter_tracks(tracks_pd, cut=0.2, res_max=0.7):
+#     ## Filter the tracks before the correction calculation
+#     tracks_pd_c = tracks_pd[
+#         (tracks_pd["pos_x"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
+#         (tracks_pd["pos_y"].apply(lambda x: np.all(x < 8.32 - cut) & np.all(x > 0 + cut))) &
+#         (tracks_pd["res_x"].apply(lambda x: np.all(abs(x) < res_max))) &
+#         (tracks_pd["res_y"].apply(lambda x: np.all(abs(x) < res_max)))
+#         ]
+#     #     print (f"Dropped {len(tracks_pd)-len(tracks_pd_c)} tracks")
+#     return tracks_pd_c
 
 
 def calc_correction(trk_pd, planar=0):
@@ -477,8 +477,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
     else:
         put_list=[put]
     for put in  put_list:
-        print (f"Measuring performances on planar {put}")
-        logger.write_log(f"Measuring performances on planar {put}")
+        print (f" Measuring performances on planar {put}")
+        logger.write_log(f"-------\n Measuring performances on planar {put}")
         trackers_list = [0,1,2,3]
         trackers_list.remove(put)
         # Seleziona gli eventi con 4 cluster
@@ -491,9 +491,9 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put)
-        if any([R < 0.9 for R in R_list]):
-            logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
-            raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
+        if any([R < 0.95 for R in R_list]):
+            logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
+            raise Warning(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
 
 
         view = "y"
@@ -504,9 +504,9 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
 
 
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put)
-        if any([R < 0.9 for R in R_list]):
-            logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
-            raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
+        if any([R < 0.95 for R in R_list]):
+            logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
+            raise Warning(f"One R2 in PUT fit is less than 0.95, verify the fits on view {view}, put {put}")
 
         # Seleziona gli eventi che hanno i 3 tracciatori
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
@@ -522,9 +522,9 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
 
         for view in ("x", "y"):
             popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view, put)
-            if any([R < 0.9 for R in R_list]):
-                logger.write_log(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
-                raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
+            if any([R < 0.95 for R in R_list]):
+                logger.write_log(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
+                raise Warning(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
 
             for pl in trackers_list:
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
@@ -558,7 +558,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         }
         sub_list = []
         return_list = []
-        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.3f}+/-{put_sigma_x:.3f} \n, Residual y tolerance on DUT: {put_mean_y:.3f}+/-{put_sigma_y:.3f}\n")
+        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.3f}+/-{put_sigma_x*nsigma_put:.3f}\nResidual y tolerance on DUT: {put_mean_y:.3f}+/-{put_sigma_y*nsigma_put:.3f}\n")
 
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
@@ -572,8 +572,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         eff_x=np.sum([x [2] for x in return_list])
         eff_y=np.sum([x [3] for x in return_list])
         tot_ev=np.sum([x [4] for x in return_list])
-        print (f"Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}")
-        logger.write_log(f"Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}")
+        print (f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
+        logger.write_log(f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
 
         cl_list=[]
 
