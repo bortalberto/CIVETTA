@@ -749,7 +749,7 @@ class clusterize:
         """
         self.data_pd=pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         if subrunNo_tgt:
-            data_pd_cut_0 = self.data_pd[(self.data_pd.runNo == self.run_number) & (self.data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.charge_SH > 0) & (self.data_pd.delta_coarse > 0)]
+            data_pd_cut_0 = self.data_pd[(self.data_pd.runNo == self.run_number) & (self.data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.delta_coarse > 0)]
             data_pd_cut_0 = data_pd_cut_0[data_pd_cut_0.subRunNo == subrunNo_tgt]
             self.data_pd=data_pd_cut_0
     def read_subruns(self):
@@ -766,7 +766,8 @@ class clusterize:
         :param hit_charge:
         :return:
         """
-        hit_charge=np.abs(hit_charge)
+        # hit_charge=np.abs(hit_charge)
+        hit_charge[hit_charge<0.1] = 0.1
         ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
         return ret_centers
 
