@@ -771,7 +771,7 @@ class clusterize:
         ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
         return ret_centers
 
-    def clusterize_view(self, data_pd, view):
+    def clusterize_view_old(self, data_pd, view):
         """
         Recursively search for the number of cluster which minimize the distance. Tolerates holes in the cluster
         :param hit_pos:
@@ -802,6 +802,44 @@ class clusterize:
             if len(ret_clusters) == len(KM.cluster_centers_):
                 return ret_clusters
 
+    def clusterize_view(self, data_pd, view):
+        """
+        Recursively search for the number of cluster which minimize the distance. Tolerates holes in the cluster
+        :param hit_pos:
+        :param hit_charge:
+        :return:
+        """
+        hit_pos = data_pd[f"strip_{view}"].to_numpy()
+        hit_charge = data_pd.charge_SH.to_numpy()
+        hit_id = data_pd.hit_id.to_numpy()
+
+        k = 1  # Initialize with 1 cluster
+        centers = np.random.uniform(0, 128, k)
+
+        while True:
+            #     print (k)
+            ret_clusters = []
+            if len(hit_pos) == 0:
+                print("No hit")
+                break
+            cluster_centers, labels = manual_kmean(hit_pos, centers)  # Initialize the algorithm with k clusters
+            #     print (cluster_centers)
+
+            for n, c in enumerate(cluster_centers):  # For each cluster
+                hit_pos_this_c = hit_pos[labels == n]  # Load hit position and hit charge for this cluster
+                included = (abs(hit_pos_this_c - c) < len(hit_pos_this_c) / 2 + 1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
+                #         print (included)
+                if np.any(included != True):
+                    k += 1
+                    centers = np.append(centers, np.random.choice(hit_pos_this_c[~included]))
+                    break
+                else:
+                    hit_charge_this_c = hit_charge[labels == n]
+                    hit_id_this_c = hit_id[labels == n]
+                    ret_clusters.append( ( self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) ) #pos,charge, size
+
+            if len(ret_clusters) == len(cluster_centers):
+                return ret_clusters
 
     def build_view_clusters(self, data_pd):
         """
@@ -1522,3 +1560,35 @@ def verifiy_compression_validity(hits, compress_hits):
         assert (abs(hits[column].max() * 0.99) <=abs(compress_hits[column].max()) <= abs(hits[column].max() * 1.01)) or ( compress_hits[column].max() == hits[column].max()), f" Max error in column {column}, {hits[column].max()} != {compress_hits[column].max()}"
         assert (abs(hits[column].min() * 0.99) <=abs(compress_hits[column].min()) <= abs(hits[column].min() * 1.01)) or (compress_hits[column].min()) == (hits[column].min()), f" Min error in column {column}, {hits[column].min()} != {compress_hits[column].min()}"
     return 0
+
+def assign_data(data, centers):
+    """
+    Assign the hit to the nearest center
+    """
+    dx=np.zeros([len(centers),len(data) ])
+    for n,center in enumerate(centers):
+        dx[n] = (np.abs(data - center))
+    labels=dx.argmin(0)
+    max_dist=data[dx.min(0).argmax()]
+    return labels,max_dist
+
+
+def manual_kmean(hit_pos,centers):
+    """
+        Performs a simple 1D kmean algoritm
+
+    """
+    for i in range (0,2000):
+        prev_centers=centers.copy()
+        labels,max_dist=assign_data(hit_pos, centers)
+        for n,center in enumerate(centers):
+            hit_pos_this_c = hit_pos[labels == n]
+            if len(hit_pos_this_c)>0:
+                centers[n]=hit_pos_this_c.mean()
+            else:
+                centers[n]=max_dist
+
+        if np.all(prev_centers==centers):
+            return (centers, labels)
+    print ("WARNING kmeans not converged")
+    raise Exception("Note convergence error")
