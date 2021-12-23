@@ -396,6 +396,14 @@ class runner:
         Builds 2D clusters from the 1D clusters
         """
         clusterizer = pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
+        if not self.silent:
+            if subrun_fill:
+                print (f"Filling clusters 2D up to subrun {subrun_tgt}\n")
+            elif subrun_tgt=="All":
+                print ("Building clusters 2D for all run \n")
+            else:
+                print (f"Building clusters 2D subrun {subrun_tgt} \n")
+
         if subrun_fill:
             path = self.data_folder + f"/raw_root/{self.run_number}/cluster_pd_2D.pickle.gzip"
             if os.path.isfile(path):
@@ -410,7 +418,7 @@ class runner:
             clusterizer.load_cluster_pd(subrun_tgt)
         else:
             clusterizer.load_cluster_pd("All")
-        subrun_list = (clusterizer.cluster_pd.subrun.uniqe()) ## tutti i subrun che esistono in 1D
+        subrun_list = (clusterizer.cluster_pd.subrun.unique()) ## tutti i subrun che esistono in 1D
         subruns_to_do = (set(subrun_list) - set(done_subruns))
         if subrun_tgt!="All":
             subruns_to_do = [x for x in subruns_to_do if x <= subrun_tgt]
