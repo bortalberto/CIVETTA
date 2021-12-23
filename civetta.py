@@ -434,7 +434,7 @@ class runner:
                 sub_list.append(sub_data.get_group(key))
 
         del clusterizer.cluster_pd
-        del data_pd
+
         pd_2d_return_list=[]
         if not self.silent:
             print ("Clusters 2-D")
@@ -445,6 +445,10 @@ class runner:
                         pd_2d_return_list.append(x)
                         pbar_2.update()
             clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
+        else:
+            if not self.silent:
+                print ("Nothing to do")
+            return 0
         if subrun_fill:
             clusterizer.append_cluster_pd_2D()
         else:
