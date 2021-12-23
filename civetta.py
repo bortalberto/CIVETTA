@@ -438,10 +438,10 @@ class runner:
         pd_2d_return_list=[]
         if not self.silent:
             print ("Clusters 2-D")
-        if len(subrun_list) > 0:
+        if len(sub_list) > 0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(subrun_list), disable=self.silent) as pbar_2:
-                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_2D_clusters, subrun_list)):
+                with tqdm(total=len(sub_list), disable=self.silent) as pbar_2:
+                    for i, x in enumerate(pool.imap_unordered(clusterizer.build_2D_clusters, sub_list)):
                         pd_2d_return_list.append(x)
                         pbar_2.update()
             clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
