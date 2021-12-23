@@ -396,6 +396,9 @@ class runner:
         Builds 2D clusters from the 1D clusters
         """
         clusterizer = pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
+        if subrun_fill>0:
+            subrun_fill= True
+            subrun_tgt=subrun_fill
         if not self.silent:
             if subrun_fill:
                 print (f"Filling clusters 2D up to subrun {subrun_tgt}\n")
