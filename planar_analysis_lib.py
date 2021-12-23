@@ -910,44 +910,41 @@ class clusterize:
         else:
             self.cluster_pd=pd.read_pickle("{}/raw_root/{}/cluster_pd_1D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,subrun), compression="gzip")
 
-
     def build_2D_clusters(self, cluster_pd):
         dict_4_pd = {
-            "run": [],
-            "subrun": [],
-            "count": [],
-            "planar": [],
-            "cl_pos_x": [],
-            "cl_pos_y": [],
-            "cl_charge": [],
+            "run"        : [],
+            "subrun"     : [],
+            "count"      : [],
+            "planar"     : [],
+            "cl_pos_x"   : [],
+            "cl_pos_y"   : [],
+            "cl_charge"  : [],
             "cl_charge_x": [],
             "cl_charge_y": [],
-            "cl_size_x": [],
-            "cl_size_y": [],
+            "cl_size_x"  : [],
+            "cl_size_y"  : [],
             "cl_size_tot": []
         }
-        for subrun in (cluster_pd["subrun"].unique()):
-            cluster_pd_cut_1 = cluster_pd[cluster_pd.subrun == subrun]
-            for count in cluster_pd_cut_1["count"].unique():
-                cluster_pd_cut_2 = cluster_pd_cut_1[cluster_pd_cut_1["count"] == count]
-                for planar in cluster_pd_cut_2["planar"].unique():
-                    cluster_pd_cut_3 = cluster_pd_cut_2[cluster_pd_cut_2.planar == planar]
-                    if len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x.notna()]) > 0 and len(cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y.notna()]) > 0:
-                        index_x = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_x.notna()].cl_charge.idxmax(axis=0)
-                        index_y = cluster_pd_cut_3[cluster_pd_cut_3.cl_pos_y.notna()].cl_charge.idxmax(axis=0)
-                        dict_4_pd["run"].append(self.run_number)
-                        dict_4_pd["subrun"].append(subrun)
-                        dict_4_pd["count"].append(count)
-                        dict_4_pd["planar"].append(planar)
-                        dict_4_pd["cl_pos_x"].append(cluster_pd_cut_3.cl_pos_x[index_x])
-                        dict_4_pd["cl_pos_y"].append(cluster_pd_cut_3.cl_pos_y[index_y])
-                        dict_4_pd["cl_charge"].append(cluster_pd_cut_3.cl_charge[index_x] + cluster_pd_cut_3.cl_charge[index_y])
-                        dict_4_pd["cl_charge_x"].append(cluster_pd_cut_3.cl_charge[index_x])
-                        dict_4_pd["cl_charge_y"].append( cluster_pd_cut_3.cl_charge[index_y])
-                        dict_4_pd["cl_size_x"].append(cluster_pd_cut_3.cl_size[index_x])
-                        dict_4_pd["cl_size_y"].append(cluster_pd_cut_3.cl_size[index_y])
-                        dict_4_pd["cl_size_tot"].append((cluster_pd_cut_3.cl_size[index_x] + cluster_pd_cut_3.cl_size[index_y]))
-
+        events_pd_clusters = cluster_pd.groupby(["count", "planar"])
+        for key in events_pd_clusters.groups:
+            event_pd_cl = events_pd_clusters.get_group(key)
+            cls_x = event_pd_cl[event_pd_cl.cl_pos_x.notna()]
+            cls_y = event_pd_cl[event_pd_cl.cl_pos_y.notna()]
+            if (cls_x.shape[0] > 0) and (cls_y.shape[0] > 0):
+                cl_x = event_pd_cl.loc[cls_x.cl_charge.idxmax(axis=0)]
+                cl_y = event_pd_cl.loc[cls_y.cl_charge.idxmax(axis=0)]
+                dict_4_pd["run"].append(self.run_number)
+                dict_4_pd["subrun"].append(cl_x.subrun)
+                dict_4_pd["count"].append(key[0])
+                dict_4_pd["planar"].append(key[1])
+                dict_4_pd["cl_pos_x"].append(cl_x.cl_pos_x)
+                dict_4_pd["cl_pos_y"].append(cl_y.cl_pos_y)
+                dict_4_pd["cl_charge"].append(cl_x.cl_charge + cl_y.cl_charge)
+                dict_4_pd["cl_charge_x"].append(cl_x.cl_charge)
+                dict_4_pd["cl_charge_y"].append(cl_y.cl_charge)
+                dict_4_pd["cl_size_x"].append(cl_x.cl_size)
+                dict_4_pd["cl_size_y"].append(cl_y.cl_size)
+                dict_4_pd["cl_size_tot"].append(cl_x.cl_size + cl_y.cl_size)
         return (pd.DataFrame(dict_4_pd))
 
     def save_cluster_pd_2D(self, subrun="All"):
