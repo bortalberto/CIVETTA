@@ -907,7 +907,7 @@ def main(run, **kwargs):
             print ("        -Analyze")
         if args.clusterize:
             print ("        -Clusterize")
-        if args.clusterize_2:
+        if args.clusterize_2D:
             print ("        -Clusterize 2D")
         if args.alignment:
             print("---- Using Alignment ----")
@@ -937,7 +937,7 @@ def main(run, **kwargs):
 
     if args.clusterize:
         op_list.append("C")
-    if args.clusterize_2:
+    if args.clusterize_2D:
         op_list.append("C2")
     if args.tracking:
         op_list.append("T")
