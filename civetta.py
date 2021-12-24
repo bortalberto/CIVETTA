@@ -904,7 +904,7 @@ def main(run, **kwargs):
 
     subrun_fill=args.subrun_fill
     if not args.Silent:
-        print ("#############################################################")
+        print ("\n#############################################################")
         print (f"Run : {run}")
         print (f"Data_folder : {data_folder}")
         print (f"Calib_folder : {calib_folder}")

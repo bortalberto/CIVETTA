@@ -476,7 +476,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         put_list=[0,1,2,3]
     else:
         put_list=[put]
-    for put in  put_list:
+    for put in tqdm( put_list, description="Planar"):
         print (f" Measuring performances on planar {put}")
         logger.write_log(f"-------\n Measuring performances on planar {put}")
         trackers_list = [0,1,2,3]
