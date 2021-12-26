@@ -12,6 +12,7 @@ import pickle
 import matplotlib.pyplot as plt
 import glob
 from scipy.optimize import curve_fit
+import scipy.integrate
 
 def get_run_data(runs, dtype="h", data_folder=""):
     """
@@ -101,10 +102,14 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     fit_x = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_x_cm"], 1)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
+    chi_x = np.sum(((fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values)**2)
+             / fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values)
 
     fit_y = np.polyfit(x[x.planar != put]["cl_pos_z_cm"], x[x.planar != put]["cl_pos_y_cm"], 1)
     pos_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values
     res_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values
+    chi_y = np.sum(((fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values)**2)
+             / fit_y[1] + fit_y[0] * x["cl_pos_y_cm"].values)
 
     if tracking_fit:
         pos_x=np.insert(pos_x,put, np.nan)
@@ -122,7 +127,7 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     #     fig.show()
     #     print (type(fit))
     #     print (type(pos))
-    return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, fit_y, pos_y, res_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x", "fit_y", "pos_y", "res_y"])
+    return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, chi_x, fit_y, pos_y, res_y, chi_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x","chi_x", "fit_y", "pos_y", "res_y","chi_y"])
 
 
 # def filter_tracks(tracks_pd, cut=0.2, res_max=0.7):
@@ -242,8 +247,8 @@ def apply_correction_eff(row, epos_x, epos_y, corrections):
 
 
 
-def doublegaus(x, a_0, x0_0, sigma_0, a_1, x0_1, sigma_1):
-    return gaus(x, a_0, x0_0, sigma_0) + gaus(x, a_1, x0_1, sigma_1)
+def doublegaus(x, a_0, x0_0, sigma_0, a_1, x0_1, sigma_1, c):
+    return gaus(x, a_0, x0_0, sigma_0) + gaus(x, a_1, x0_1, sigma_1) + c
 
 
 def gaus(x, a, x0, sigma):
@@ -272,16 +277,18 @@ def double_gaus_fit(tracks_pd, view="x", put=-1):
                 sigma_0=0.1
             data = data[abs(data) < sigma_0]
             sigma_0 = np.std(data)
-            y, x = np.histogram(data, bins=int(data.shape[0] / 25))
+            y, x = np.histogram(data, bins=1000)
+            if y.max<200:
+                y, x = np.histogram(data, bins=50)
             mean_1 = x[np.argmax(y)]
             mean_0 = x[np.argmax(y)]
             a_0 = np.max(y)
             a_1 = np.max(y) / 5
             sigma_1 = sigma_0 * 3
             x = (x[1:] + x[:-1]) / 2
-            upper_bound=[np.inf, 0.1, 1, np.inf,0.1,2]
-            lower_bound=[0,-0.1,0,0,-0.1,0]
-            popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1], bounds=(lower_bound, upper_bound))
+            upper_bound=[np.inf, 0.1, 1, np.inf,0.1,2,0]
+            lower_bound=[0,-0.1,0,0,-0.1,0,np.mean(y)]
+            popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, 0], bounds=(lower_bound, upper_bound))
             popt_list.append(popt)
             pcov_list.append(pcov)
             yexp = doublegaus(x, *popt)
@@ -455,7 +462,7 @@ class log_writer():
         with open(os.path.join(str(self.path), "logfile"), "a") as logfile:
             logfile.write(text+"\n")
 
-def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
+def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0):
     runs = run
     #Create directories to store the outputs
     if not os.path.isdir(os.path.join(data_folder,"perf_out")):
@@ -490,7 +497,11 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
+        par_for_int = popt_list[put]
+        par_for_int[6] = 0
+        integral_x=scipy.integrate.quad(doublegaus, -0.1, 0.1, *par_for_int)[0]
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put)
+
         if any([R < 0.95 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
@@ -500,6 +511,9 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
+        par_for_int = popt_list[put]
+        par_for_int[6] = 0
+        integral_y=scipy.integrate.quad(doublegaus, -0.1, 0.1, *par_for_int)[0]
         logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
 
@@ -514,7 +528,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True)
         ##Seleziona le tracce che rispettano l'intervallo di residui
         ##Seleziona le tracce che rispettano l'intervallo di residui
-        nsigma_trck = 1
+        nsigma_trck = nsigma_trackers
         tracks_pd_c = tracks_pd
         # tracks_pd_c.drop_duplicates(inplace=True)
 
@@ -558,7 +572,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
         }
         sub_list = []
         return_list = []
-        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f}\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f}\n")
+        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f} {put_sigma_x*nsigma_put/integral_x*100}% of total integral"
+                         f"\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f} {put_sigma_x*nsigma_put/integral_y*100}% of total integral\n")
 
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
@@ -569,10 +584,10 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5):
                         return_list.append(x)
                         pbar.update()
 
-        eff_x=np.sum([x [2] for x in return_list])
-        eff_y=np.sum([x [3] for x in return_list])
-        tot_ev=np.sum([x [4] for x in return_list])
-        print (f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
+        eff_x = np.sum([x [2] for x in return_list])
+        eff_y = np.sum([x [3] for x in return_list])
+        tot_ev = np.sum([x [4] for x in return_list])
+        print(f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
         logger.write_log(f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
 
         cl_list=[]

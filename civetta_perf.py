@@ -17,14 +17,18 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5 ):
+    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_sqared=False):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
         self.cylinder = cylinder
+        self.sigmas_trackers = sigmas_trackers
+        self.sigmas_DUT = sigmas_DUT
+        self.chi_squared = chi_sqared
 
     def eval_perf(self,put):
-        perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use)
+        perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
+                          nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers)
 
 ##############################################################################################
 ##																							##
@@ -82,7 +86,7 @@ def main(run, **kwargs):
     if args.Silent:
         options["Silent"]=args.Silent
     if len (op_list)>0:
-        main_runner = runner(data_folder,run,calib_folder,mapping_file,**options)
+        main_runner = runner(data_folder,run,**options)
     else:
         sys.exit(0)
 
