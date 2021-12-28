@@ -271,7 +271,7 @@ def root_fit(data, p0, lower_bounds, upper_bounds):
     func.SetParameters(a_0,mean_0,sigma_0,a_1,mean_1,sigma_1, c)
     for n, limits in enumerate(zip(lower_bounds,upper_bounds)):
         func.SetParLimits (n, limits[0], limits[1])
-    gaussFit=h1.Fit(func,"B")
+    gaussFit=h1.Fit(func,"BQ")
     pars=func.GetParameters()
     popt=[pars[i] for i in range (0,7)]
     chi2 = func.GetChisquare()
@@ -586,11 +586,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd_res, view)
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        par_for_int = popt_list[put]
-        par_for_int[6] = 0
-        integral_x=scipy.integrate.quad(doublegaus, -0.1, 0.1, *par_for_int)[0]
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put, chi_list, deg_list)
-
+        popt_list_put_x=popt_list
         if any([R < 0.95 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
@@ -600,9 +596,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd_res, view)
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
-        par_for_int = popt_list[put]
-        par_for_int[6] = 0
-        integral_y=scipy.integrate.quad(doublegaus, -0.1, 0.1, *par_for_int)[0]
+
+        popt_list_put_y=popt_list
         logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
 
@@ -661,8 +656,17 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         }
         sub_list = []
         return_list = []
-        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f} {put_sigma_x*nsigma_put/integral_x*100}% of total integral"
-                         f"\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f} {put_sigma_x*nsigma_put/integral_y*100}% of total integral\n")
+        par_for_int = popt_list_put_x[put]
+        par_for_int[6] = 0
+        integral_x=scipy.integrate.quad(doublegaus, -0.1, 0.1,args=(tuple(par_for_int)))[0]
+        this_x_int = scipy.integrate.quad(doublegaus, put_mean_x-put_sigma_x*nsigma_put,put_mean_x+put_sigma_x*nsigma_put,args=(tuple(par_for_int)))[0]
+
+        par_for_int = popt_list_put_y[put]
+        par_for_int[6] = 0
+        integral_y=scipy.integrate.quad(doublegaus, -0.1, 0.1,args=(tuple(par_for_int)))[0]
+        this_y_int = scipy.integrate.quad(doublegaus, put_mean_y-put_sigma_y*nsigma_put,put_mean_y+put_sigma_y*nsigma_put,args=(tuple(par_for_int)))[0]
+        logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f} {this_x_int/integral_x*100}% of total integral"
+                         f"\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f} {this_y_int/integral_y*100}% of total integral\n")
 
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
