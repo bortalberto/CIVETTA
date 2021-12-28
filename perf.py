@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import glob
 from scipy.optimize import curve_fit
 import scipy.integrate
+import ROOT as R
 
 def get_run_data(runs, dtype="h", data_folder=""):
     """
