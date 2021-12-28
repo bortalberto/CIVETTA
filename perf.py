@@ -304,7 +304,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1):
             y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
 
             x = (x[1:] + x[:-1]) / 2
-            x = np.insert(x,0,0)
+            x = np.insert(x,0,-0.1)
             y = np.insert(y,0,0)
             #             x=x[4000:6000]
             #             y=y[4000:6000]
@@ -412,13 +412,16 @@ def load_correction(path, run_number):
 
 def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list ):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
-    sigma_0 = np.std(data)
-    if sigma_0 < 0.1:
-        sigma_0 = 0.1
+    sigma_0 = 0.1
     data = data[abs(data) < sigma_0]
-    sigma_0 = np.std(data)
-    y, x = np.histogram(data, bins=int(data.shape[0] / 25))
+    if data.shape[0] > 20000:
+        nbins = 1000
+    else:
+        nbins = 200
+    y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
     x = (x[1:] + x[:-1]) / 2
+    x = np.insert(x, 0, -0.1)
+    y = np.insert(y, 0, 0)
     popt = popt_list[pl]
     plt.figure(figsize=(10, 6))
     plt.plot(x, y, 'b*', label='data')
@@ -590,7 +593,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         popt_list_put_x=popt_list
-        if any([R < 0.95 for R in R_list]):
+        if any([R < 0.9 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
 
@@ -605,7 +608,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 
 
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put, chi_list, deg_list)
-        if any([R < 0.95 for R in R_list]):
+        if any([R < 0.9 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.95, verify the fits on view {view}, put {put}")
 
@@ -623,9 +626,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 
         for view in ("x", "y"):
             popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd, view, put)
-            if any([R < 0.95 for R in R_list]):
-                logger.write_log(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
-                raise Warning(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
+
 
             for pl in trackers_list:
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
@@ -635,11 +636,14 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
                 logger.write_log("Trackers fits")
                 logger.write_log(f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
-
                 tracks_pd_c = tracks_pd_c[
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
                     ]
+            if any([R < 0.9 for R in R_list]):
+                logger.write_log(
+                    f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
+                raise Warning(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
         logger.write_log(f"Measuring efficiency on {tracks_pd_c.shape[0]} tracks")
 
         # Carico i cluster 1D per misurare l'efficienza
