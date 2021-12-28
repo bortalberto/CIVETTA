@@ -256,7 +256,93 @@ def gaus(x, a, x0, sigma):
 
 
 
+def root_fit(data, p0, lower_bounds, upper_bounds):
+    if data.shape[0]>20000:
+        nbins=1000
+    else:
+        nbins=200
+    data={"res":data.values.astype(np.float32) }
+    rdf = R.RDF.MakeNumpyDataFrame(data)
+    amodel=R.RDF.TH1DModel("h1","h1",nbins,-0.1,0.1)
+    h1 = rdf.Histo1D(amodel,"res")
+    func=R.TF1("func", "gaus(0) + gaus(3) +[6]", -0.1,0.1,6)
+    a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c = p0
+    func.SetParameters(a_0,mean_0,sigma_0,a_1,mean_1,sigma_1, c)
+    for n, limits in enumerate(zip(lower_bounds,upper_bounds)):
+        func.SetParLimits (n, limits[0], limits[1])
+    gaussFit=h1.Fit(func,"B")
+    pars=func.GetParameters()
+    popt=[pars[i] for i in range (0,7)]
+    chi2 = func.GetChisquare()
+    ndof = func.GetNDF ()
+    return popt, chi2
 
+def double_gaus_fit_root(tracks_pd, view="x", put=-1):
+    popt_list = []
+    pcov_list = []
+    res_list = []
+    R_list = []
+    chi_list = []
+    deg_list = []
+    for pl in range(0, 4):
+        if pl==put:
+            popt_list.append(0)
+            pcov_list.append(0)
+            res_list.append(0)
+            R_list.append(1)
+        else:
+            data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
+            sigma_0=0.1
+            data = data[abs(data) < sigma_0]
+            if data.shape[0]>20000:
+                nbins=1000
+            else:
+                nbins=200
+            y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
+
+            x = (x[1:] + x[:-1]) / 2
+            x = np.insert(x,0,0)
+            y = np.insert(y,0,0)
+            #             x=x[4000:6000]
+            #             y=y[4000:6000]
+            mean_1 =  x[np.argmax(y)]
+            mean_0 =  x[np.argmax(y)]
+            a_0 = np.max(y)
+            a_1 = np.max(y) / 10
+            sigma_0=np.std(data)/3
+            sigma_1 = np.std(data)*2
+            c=0
+#             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
+#             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
+#             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
+
+            lower_bound=[0,             x[np.argmax(y)]-0.01,0,               0,x[np.argmax(y)]-0.01,0,     0]
+            upper_bound=[np.max(y)   ,x[np.argmax(y)]+0.01,1,        np.max(y),x[np.argmax(y)]+0.01,1,     200]
+
+            popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound )
+            pcov=0
+            popt_list.append(popt)
+            pcov_list.append(pcov)
+            yexp = doublegaus(x, *popt)
+            ss_res = np.sum((y - yexp) ** 2)
+            ss_tot = np.sum((y - np.mean(y)) ** 2)
+            res_list.append(y - yexp)
+            r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
+            R_list.append(r2)
+#             print(scipy.stats.chisquare(y, yexp,len(x)-6-1))
+
+#             chi_list.append(scipy.stats.chisquare(y, yexp,len(x)-6-1))
+#             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
+            chi_list.append(chi_sqr)
+
+
+            deg_list.append(len(x)-6-1)
+    #         yexp=doublegaus(x, *popt)
+    #         y_exp_norm =1000*yexp/np.sum(yexp)
+    #         print (np.sum(ynorm))
+    #         print (np.sum(y_exp_norm))
+    #         print (chisquare(ynorm,y_exp_norm, 6 ))
+    return popt_list, pcov_list, res_list, R_list, chi_list, deg_list
 
 def double_gaus_fit(tracks_pd, view="x", put=-1):
     popt_list = []
@@ -321,7 +407,7 @@ def load_correction(path, run_number):
         corr = pickle.load(corr_file)
     return corr
 
-def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl ):
+def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list ):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     sigma_0 = np.std(data)
     if sigma_0 < 0.1:
@@ -345,7 +431,9 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     # plt.ion()
     # plt.show()
     plt.title(f"Fit view {view}, DUT= {put}, planar{pl}")
-    plt.text(y=np.max(y)*0.7, x=put_mean-6.99*put_sigma, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um\nNorm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um", fontsize="small")
+    plt.text(y=np.max(y)*0.7, x=put_mean-6.99*put_sigma, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um"
+                                                           f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um"
+                                                           f"\n Chi_sqrt={chi_list[pl]}, Chi_sqrt/NDoF = {chi_list[pl]/deg_list[pl]}", fontsize="small")
     plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.xlim([put_mean-7*put_sigma, put_mean+7*put_sigma])
@@ -494,13 +582,13 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
         view = "x"
-        popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
+        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd_res, view)
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_x = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         par_for_int = popt_list[put]
         par_for_int[6] = 0
         integral_x=scipy.integrate.quad(doublegaus, -0.1, 0.1, *par_for_int)[0]
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put)
+        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put, chi_list, deg_list)
 
         if any([R < 0.95 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
@@ -508,7 +596,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 
 
         view = "y"
-        popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd_res, view)
+        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd_res, view)
         put_mean_y = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         put_sigma_y = ((popt_list[put][2] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][5] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
         par_for_int = popt_list[put]
@@ -517,7 +605,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
 
-        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put)
+        plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put, chi_list, deg_list)
         if any([R < 0.95 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.95,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.95, verify the fits on view {view}, put {put}")
@@ -535,7 +623,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         logger.write_log(f"{tracks_pd_c.shape[0]} tracks with all trackres before cutting")
 
         for view in ("x", "y"):
-            popt_list, pcov_list, res_list, R_list = double_gaus_fit(tracks_pd, view, put)
+            popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd, view, put)
             if any([R < 0.95 for R in R_list]):
                 logger.write_log(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
                 raise Warning(f"One R2 in  trackers fit is less than 0.95,  verify the fits on view {view}, put {put}")
@@ -543,7 +631,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
             for pl in trackers_list:
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 res_sigma = ((popt_list[pl][2] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][5] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
-                plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl)
+                plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl, chi_list, deg_list)
                 # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
                 logger.write_log("Trackers fits")
