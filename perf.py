@@ -709,7 +709,10 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         eff_pd = pd.concat([x[1] for x in return_list])
         eff_pd.to_pickle(os.path.join(path_out_eff, f"eff_pd_{put}.gzip"), compression="gzip")
         tracks_pd.to_pickle(os.path.join(path_out_eff, f"tracks_pd_{put}.gzip"), compression="gzip")
-
+        del eff_pd
+        del tracks_pd
+        del cl_pd_1D
+        del cl_pd_2D
 def concat_subrun_cluster(cl_list):
     if len(cl_list[0])>0:
         return (pd.concat(cl_list[0]))
