@@ -712,7 +712,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         del eff_pd
         del tracks_pd
         del cl_pd_1D
-        del cl_pd_2D
 def concat_subrun_cluster(cl_list):
     if len(cl_list[0])>0:
         return (pd.concat(cl_list[0]))
