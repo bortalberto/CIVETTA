@@ -259,9 +259,9 @@ def gaus(x, a, x0, sigma):
 
 def root_fit(data, p0, lower_bounds, upper_bounds):
     if data.shape[0]>20000:
-        nbins=2000
+        nbins=1000
     else:
-        nbins=400
+        nbins=200
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
     amodel=R.RDF.TH1DModel("h1","h1",nbins,-0.2,0.2)
@@ -298,9 +298,9 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1):
             sigma_0=0.2
             data = data[abs(data) < sigma_0]
             if data.shape[0]>20000:
-                nbins=2000
+                nbins=1000
             else:
-                nbins=400
+                nbins=200
             y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
 
             x = (x[1:] + x[:-1]) / 2
@@ -415,9 +415,9 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     sigma_0 = 0.2
     data = data[abs(data) < sigma_0]
     if data.shape[0] > 20000:
-        nbins = 2000
+        nbins = 1000
     else:
-        nbins = 400
+        nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
     x = (x[1:] + x[:-1]) / 2
     x = np.insert(x, 0, -0.2)
