@@ -105,7 +105,7 @@ if __name__=="__main__":
                         help='Specify the data folder, default set by the .ini file')
     parser.add_argument('-cpu','--cpu', help='Specify CPU count ',type=int)
     parser.add_argument('-S','--Silent', help='Print only errors ',action="store_true")
-    parser.add_argument('-sT','--sigmas_trackers', help='Sigma trackers', type=int, default=1)
+    parser.add_argument('-sT','--sigmas_trackers', help='Sigma trackers', type=float, default=1)
     parser.add_argument('-chi','--chi_sqared', help='Use chi squared cut on trackers',action="store_true")
     parser.add_argument('-sD','--sigmas_DUT', help='Sigma DUT', type=int, default=5)
     parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int, default=-1)
