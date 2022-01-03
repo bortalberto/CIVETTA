@@ -439,7 +439,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     plt.title(f"Fit view {view}, DUT= {put}, planar{pl}")
     plt.text(y=np.max(y)*0.7, x=put_mean-6.99*put_sigma, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um"
                                                            f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um"
-                                                           f"\n Chi_sqrt={chi_list[pl]:.2e}, Chi_sqrt/NDoF = {chi_list[pl]/deg_list[pl]:.2e}", fontsize="small")
+                                                           f"\n Chi_sqrt={chi_list[pl]:.3e}, Chi_sqrt/NDoF = {chi_list[pl]/deg_list[pl]:.3e}", fontsize="small")
     plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.xlim([put_mean-7*put_sigma, put_mean+7*put_sigma])
@@ -665,6 +665,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         }
         sub_list = []
         return_list = []
+
         par_for_int = popt_list_put_x[put]
         par_for_int[6] = 0
         integral_x = scipy.integrate.quad(doublegaus, -0.5, 0.5,args=(tuple(par_for_int)))[0]
