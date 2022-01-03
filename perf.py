@@ -298,9 +298,9 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1):
             sigma_0=0.2
             data = data[abs(data) < sigma_0]
             if data.shape[0]>20000:
-                nbins=1000
+                nbins=2000
             else:
-                nbins=200
+                nbins=400
             y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
 
             x = (x[1:] + x[:-1]) / 2
@@ -415,9 +415,9 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     sigma_0 = 0.2
     data = data[abs(data) < sigma_0]
     if data.shape[0] > 20000:
-        nbins = 1000
+        nbins = 2000
     else:
-        nbins = 200
+        nbins = 400
     y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
     x = (x[1:] + x[:-1]) / 2
     x = np.insert(x, 0, -0.2)
