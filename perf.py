@@ -259,9 +259,9 @@ def gaus(x, a, x0, sigma):
 
 def root_fit(data, p0, lower_bounds, upper_bounds):
     if data.shape[0]>20000:
-        nbins=1000
+        nbins=2000
     else:
-        nbins=200
+        nbins=400
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
     amodel=R.RDF.TH1DModel("h1","h1",nbins,-0.2,0.2)
@@ -319,7 +319,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1):
 #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
 #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
 
-            lower_bound=[0,             x[np.argmax(y)]-0.01,0,               0,x[np.argmax(y)]-0.01,0,     0]
+            lower_bound=[0,           x[np.argmax(y)]-0.01,0,               0,x[np.argmax(y)]-0.01,0,     0]
             upper_bound=[np.max(y)   ,x[np.argmax(y)]+0.01,1,        np.max(y),x[np.argmax(y)]+0.01,1,     200]
 
             popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound )
@@ -375,8 +375,8 @@ def double_gaus_fit(tracks_pd, view="x", put=-1):
             a_1 = np.max(y) / 5
             sigma_1 = sigma_0 * 3
             x = (x[1:] + x[:-1]) / 2
-            upper_bound=[np.inf, 0.2, 1, np.inf,0.2,2,0]
-            lower_bound=[0,-0.2,0,0,-0.2,0,np.mean(y)]
+            upper_bound=[np.inf, 0.1, 1, np.inf,0.1,2,0]
+            lower_bound=[0,-0.1,0,0,-0.1,0,np.mean(y)]
             popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, 0], bounds=(lower_bound, upper_bound))
             popt_list.append(popt)
             pcov_list.append(pcov)
