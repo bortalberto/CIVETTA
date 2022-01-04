@@ -74,20 +74,24 @@ def main(run, **kwargs):
         print ("#############################################################")
 
     op_list=[]
+    options={}
+
     if args.performance:
         if args.performance in (0,1,2,3,-1):
             op_list.append("perf")
+            options["sigmas_trackers"] = args.sigmas_trackers
+            options["sigmas_DUT"] = args.sigmas_DUT
         else:
             print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
 
-    options={}
     if args.cpu:
         options["cpu_to_use"]=args.cpu
     if args.Silent:
         options["Silent"]=args.Silent
+
     if len (op_list)>0:
         main_runner = runner(data_folder,run,**options)
     else:
