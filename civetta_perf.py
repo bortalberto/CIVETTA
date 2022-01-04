@@ -27,10 +27,11 @@ class runner:
         self.chi_squared = chi_sqared
 
     def eval_perf(self,put):
+        print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
+
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
                           nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers)
 
-        print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
 
 ##############################################################################################
 ##																							##
