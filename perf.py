@@ -278,6 +278,7 @@ def root_fit(data, p0, lower_bounds, upper_bounds):
     ndof = func.GetNDF ()
     return popt, chi2
 
+
 def double_gaus_fit_root(tracks_pd, view="x", put=-1):
     popt_list = []
     pcov_list = []
