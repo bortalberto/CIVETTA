@@ -714,7 +714,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         eff_pd = pd.concat([x[1] for x in return_list])
         eff_pd.to_pickle(os.path.join(path_out_eff, f"eff_pd_{put}.gzip"), compression="gzip")
         eff_pd_c = eff_pd
-
+        eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process(x, correction), axis=1))
         k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
         n = eff_pd_c[(eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
         eff_x_good = k / n
@@ -735,3 +735,14 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 def concat_subrun_cluster(cl_list):
     if len(cl_list[0])>0:
         return (pd.concat(cl_list[0]))
+
+def de_correct_process(row, corr):
+    planar = row.PUT
+    pos_x = row.pos_x
+    pos_y = row.pos_y
+    rev_corr = corr[::-1]
+    for correction in corr:
+        angle = (correction[f"{int(planar)}_x"][0] - correction[f"{int(planar)}_y"][0]) / 2
+        pos_x = pos_x - correction[f"{int(planar)}_y"][1] + angle * (pos_y)
+        pos_y = pos_y - correction[f"{int(planar)}_x"][1] - angle * (pos_x)
+    return pos_x, pos_y
