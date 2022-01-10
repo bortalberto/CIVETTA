@@ -827,11 +827,12 @@ class clusterize:
 
             for n, c in enumerate(cluster_centers):  # For each cluster
                 hit_pos_this_c = hit_pos[labels == n]  # Load hit position and hit charge for this cluster
+                distance = abs(hit_pos_this_c - c) # Distance from center
                 included = (abs(hit_pos_this_c - c) < len(hit_pos_this_c) / 2 + 1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
                 #         print (included)
                 if np.any(included != True):
                     k += 1
-                    centers = np.append(centers, np.random.choice(hit_pos_this_c[~included]))
+                    centers = np.append(centers, hit_pos_this_c[np.max(distance)]) # Add to the center list the farthest point
                     break
                 else:
                     hit_charge_this_c = hit_charge[labels == n]
