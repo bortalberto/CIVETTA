@@ -844,9 +844,9 @@ class clusterize:
             if len(set(labels)) > 1:
                 i = 0
                 running = True
+                combs = list(itertools.combinations(set(labels), 2))
+
                 while running:
-                    combs = list(itertools.combinations(set(labels), 2))
-                    print (combs)
                     n, m = combs[i]
                     gr_1 = (hit_pos[labels == n])
                     gr_2 = (hit_pos[labels == m])
@@ -855,7 +855,9 @@ class clusterize:
                         i = 0
                     else:
                         i = i + 1
-                    if i == len(combs):
+                    combs = list(itertools.combinations(set(labels), 2))
+
+                    if i >= len(combs):
                         break
             cluster_centers = []
             for label in set(labels):
