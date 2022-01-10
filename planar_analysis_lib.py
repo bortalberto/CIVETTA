@@ -825,26 +825,26 @@ class clusterize:
             cluster_centers, labels = manual_kmean(hit_pos, centers)  # Initialize the algorithm with k clusters
             #     print (cluster_centers)
             ##Merging near clusters:
-            # if len(set(labels)) > 1:
-            #     i = 0
-            #     running = True
-            #     while running:
-            #         combs = list(itertools.combinations(set(labels), 2))
-            #         n, m = combs[i]
-            #         gr_1 = (hit_pos[labels == n])
-            #         gr_2 = (hit_pos[labels == m])
-            #         if (abs(max(gr_1) - min(gr_2)) < 2) or (abs(min(gr_1) - max(gr_2)) < 2):
-            #             labels[labels == n] = m
-            #             i = 0
-            #         else:
-            #             i = i + 1
-            #         if i == len(combs):
-            #             break
-            # cluster_centers = []
-            # for label in set(labels):
-            #     hit_pos_this_c = hit_pos[labels == label]
-            #     cluster_centers.append(np.mean(hit_pos_this_c))
-            # # End merging near clusters
+            if len(set(labels)) > 1:
+                i = 0
+                running = True
+                while running:
+                    combs = list(itertools.combinations(set(labels), 2))
+                    n, m = combs[i]
+                    gr_1 = (hit_pos[labels == n])
+                    gr_2 = (hit_pos[labels == m])
+                    if (abs(max(gr_1) - min(gr_2)) < 2) or (abs(min(gr_1) - max(gr_2)) < 2):
+                        labels[labels == n] = m
+                        i = 0
+                    else:
+                        i = i + 1
+                    if i == len(combs):
+                        break
+            cluster_centers = []
+            for label in set(labels):
+                hit_pos_this_c = hit_pos[labels == label]
+                cluster_centers.append(np.mean(hit_pos_this_c))
+            # End merging near clusters
             for n, c in enumerate(cluster_centers):  # For each cluster
                 hit_pos_this_c = hit_pos[labels == n]  # Load hit position and hit charge for this cluster
                 distance = abs(hit_pos_this_c - c) # Distance from center
