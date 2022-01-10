@@ -846,6 +846,7 @@ class clusterize:
                 running = True
                 while running:
                     combs = list(itertools.combinations(set(labels), 2))
+                    print (combs)
                     n, m = combs[i]
                     gr_1 = (hit_pos[labels == n])
                     gr_2 = (hit_pos[labels == m])
