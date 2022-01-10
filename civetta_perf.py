@@ -17,7 +17,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_sqared=False, multi_track_suppression=False):
+    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_sqared=False, multi_tracks_suppresion=False):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
