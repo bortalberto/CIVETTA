@@ -832,7 +832,7 @@ class clusterize:
                 #         print (included)
                 if np.any(included != True):
                     k += 1
-                    centers = np.append(centers, hit_pos_this_c[np.max(distance)]) # Add to the center list the farthest point
+                    centers = np.append(centers, hit_pos_this_c[np.argmax(distance)]) # Add to the center list the farthest point
                     break
                 else:
                     hit_charge_this_c = hit_charge[labels == n]
