@@ -851,7 +851,7 @@ class clusterize:
                         n, m = labels_list[i], labels_list[i + 1]
                         gr_1 = (hit_pos[labels == n])
                         gr_2 = (hit_pos[labels == m])
-                        if (abs(max(gr_1) - min(gr_2)) < 2) or (abs(min(gr_1) - max(gr_2)) < 2):
+                        if (abs(max(gr_1) - min(gr_2)) < 3) or (abs(min(gr_1) - max(gr_2)) < 3):
                             labels[labels == n] = m
                             cluster_centers = []
                             for label in set(labels):
