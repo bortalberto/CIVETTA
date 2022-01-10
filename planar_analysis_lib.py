@@ -840,33 +840,34 @@ class clusterize:
                     # hit_charge_this_c = hit_charge[labels == n]
                     # hit_id_this_c = hit_id[labels == n]
                     # ret_clusters.append( (self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) )  # pos,charge, size
-            #Merging near clusters:
-            if len(set(labels)) > 1:
-                i = 0
-                running = True
-                combs = list(itertools.combinations(set(labels), 2))
 
-                while running:
-                    n, m = combs[i]
-                    gr_1 = (hit_pos[labels == n])
-                    gr_2 = (hit_pos[labels == m])
-                    if (abs(max(gr_1) - min(gr_2)) < 2) or (abs(min(gr_1) - max(gr_2)) < 2):
-                        labels[labels == n] = m
-                        i = 0
-                    else:
-                        i = i + 1
-                    combs = list(itertools.combinations(set(labels), 2))
-
-                    if i >= len(combs):
-                        break
-            cluster_centers = []
-            for label in set(labels):
-                hit_pos_this_c = hit_pos[labels == label]
-                cluster_centers.append(np.mean(hit_pos_this_c))
-            # End merging near clusters
 
 
             if len(cluster_centers)==good_clusters:
+                # Merging near clusters:
+                if len(set(labels)) > 1:
+                    i = 0
+                    running = True
+                    combs = list(itertools.combinations(set(labels), 2))
+
+                    while running:
+                        n, m = combs[i]
+                        gr_1 = (hit_pos[labels == n])
+                        gr_2 = (hit_pos[labels == m])
+                        if (abs(max(gr_1) - min(gr_2)) < 2) or (abs(min(gr_1) - max(gr_2)) < 2):
+                            labels[labels == n] = m
+                            i = 0
+                        else:
+                            i = i + 1
+                        combs = list(itertools.combinations(set(labels), 2))
+
+                        if i >= len(combs):
+                            break
+                cluster_centers = []
+                for label in set(labels):
+                    hit_pos_this_c = hit_pos[labels == label]
+                    cluster_centers.append(np.mean(hit_pos_this_c))
+                # End merging near clusters
                 for label in set(labels):
                     hit_pos_this_c = hit_pos[labels == label]
                     hit_charge_this_c = hit_charge[labels == label]
