@@ -694,6 +694,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         print(f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
         logger.write_log(f"-Eff dut {put}:\n X:{eff_x/tot_ev} Y:{eff_y/tot_ev}\n")
 
+
         cl_list=[]
 
         with Pool(processes=cpu_to_use) as pool:
@@ -712,6 +713,21 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 
         eff_pd = pd.concat([x[1] for x in return_list])
         eff_pd.to_pickle(os.path.join(path_out_eff, f"eff_pd_{put}.gzip"), compression="gzip")
+        eff_pd_c = eff_pd
+
+        k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
+        n = eff_pd_c[(eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
+        eff_x_good = k / n
+        eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+        logger.write_log(f"Efficiency in range [3.2,7.8]")
+        logger.write_log(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
+
+        k = eff_pd_c[(eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8)].count().eff_y
+        n = eff_pd_c[(eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8)].count().eff_y
+        eff_y_good = k / n
+        eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+        logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+
         tracks_pd.to_pickle(os.path.join(path_out_eff, f"tracks_pd_{put}.gzip"), compression="gzip")
         del eff_pd
         del tracks_pd
