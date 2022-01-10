@@ -17,7 +17,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_sqared=False):
+    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_sqared=False, multi_track_suppression=False):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
@@ -25,12 +25,13 @@ class runner:
         self.sigmas_trackers = sigmas_trackers
         self.sigmas_DUT = sigmas_DUT
         self.chi_squared = chi_sqared
+        self.multi_tracks_suppresion=multi_tracks_suppresion
 
     def eval_perf(self,put):
         print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
 
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
-                          nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers)
+                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion)
 
 
 ##############################################################################################
@@ -81,6 +82,10 @@ def main(run, **kwargs):
             op_list.append("perf")
             options["sigmas_trackers"] = args.sigmas_trackers
             options["sigmas_DUT"] = args.sigmas_DUT
+            if args.multi_tracks_suppresion:
+                print("Using multi_tracks_suppresion \n")
+            options["multi_tracks_suppresion"] = True
+
         else:
             print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
@@ -116,6 +121,7 @@ if __name__=="__main__":
     parser.add_argument('-chi','--chi_sqared', help='Use chi squared cut on trackers',action="store_true")
     parser.add_argument('-sD','--sigmas_DUT', help='Sigma DUT', type=int, default=5)
     parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int, default=-1)
+    parser.add_argument('-mt','--multi_tracks_suppresion', help='Activate suppression of multi tracks events',action="store_true")
 
 
     args = parser.parse_args()

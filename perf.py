@@ -557,7 +557,7 @@ class log_writer():
         with open(os.path.join(str(self.path), "logfile"), "a") as logfile:
             logfile.write(text+"\n")
 
-def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0):
+def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False):
     runs = run
     #Create directories to store the outputs
     if not os.path.isdir(os.path.join(data_folder,"perf_out")):
@@ -584,6 +584,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         trackers_list = [0,1,2,3]
         trackers_list.remove(put)
         # Seleziona gli eventi con 4 cluster
+        if multi_tracks_suppresion:
+            cl_pd_2D = cl_pd_2D.groupby(["subrun", "count", "planar"]).filter(lambda x: x.shape[0]==1)  # Filtering away events with more than 1 cluster per view
         cl_pd_2D_res = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: set(x["planar"]) == {0, 1, 2, 3})
         # Fitta le tracce
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
