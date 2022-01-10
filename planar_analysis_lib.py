@@ -824,7 +824,23 @@ class clusterize:
                 break
             cluster_centers, labels = manual_kmean(hit_pos, centers)  # Initialize the algorithm with k clusters
             #     print (cluster_centers)
-            ##Merging near clusters:
+
+            good_clusters=0
+            for n, c in enumerate(cluster_centers):  # For each cluster
+                hit_pos_this_c = hit_pos[labels == n]  # Load hit position and hit charge for this cluster
+                distance = abs(hit_pos_this_c - c) # Distance from center
+                included = (abs(hit_pos_this_c - c) < len(hit_pos_this_c) / 2 + 1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
+                #         print (included)
+                if np.any(included != True):
+                    k += 1
+                    centers = np.append(cluster_centers, hit_pos_this_c[np.argmax(distance)])  # Add to the center list the farthest point
+                    break
+                else:
+                    good_clusters=good_clusters+1
+                    # hit_charge_this_c = hit_charge[labels == n]
+                    # hit_id_this_c = hit_id[labels == n]
+                    # ret_clusters.append( (self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) )  # pos,charge, size
+            #Merging near clusters:
             if len(set(labels)) > 1:
                 i = 0
                 running = True
@@ -845,21 +861,14 @@ class clusterize:
                 hit_pos_this_c = hit_pos[labels == label]
                 cluster_centers.append(np.mean(hit_pos_this_c))
             # End merging near clusters
-            for n, c in enumerate(cluster_centers):  # For each cluster
-                hit_pos_this_c = hit_pos[labels == n]  # Load hit position and hit charge for this cluster
-                distance = abs(hit_pos_this_c - c) # Distance from center
-                included = (abs(hit_pos_this_c - c) < len(hit_pos_this_c) / 2 + 1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
-                #         print (included)
-                if np.any(included != True):
-                    k += 1
-                    centers = np.append(cluster_centers, hit_pos_this_c[np.argmax(distance)])  # Add to the center list the farthest point
-                    break
-                else:
-                    hit_charge_this_c = hit_charge[labels == n]
-                    hit_id_this_c = hit_id[labels == n]
-                    ret_clusters.append( (self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) )  # pos,charge, size
 
-            if len(ret_clusters) == len(cluster_centers):
+
+            if len(cluster_centers)==good_clusters:
+                for label in set(labels):
+                    hit_pos_this_c = hit_pos[labels == label]
+                    hit_charge_this_c = hit_charge[labels == label]
+                    hit_id_this_c = hit_id[labels == label]
+                    ret_clusters.append( (self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) )  # pos,charge, size
                 return ret_clusters
 
     def build_view_clusters(self, data_pd):
