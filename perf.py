@@ -457,20 +457,20 @@ class calc_eff_func_class(object):
     Using class function to initialize the efficiency calculator
     """
 
-    def __init__(self, sigmas, residuals_dict, put, corrections):
+    def __init__(self, sigmas, residuals_dict, put, corrections, hit_efficiency=False):
         self.nsigma = sigmas
         self.res_dict = residuals_dict
         self.put = put
         self.corrections = corrections
-
+        self.hit_efficiency = hit_efficiency
     def __call__(self, cl_and_tr):
         cl_pd_1d = cl_and_tr[0]
         tracks_pd = cl_and_tr[1]
-        matching_cluster_pd, events_pd, eff_x, eff_y, tot_ev = calc_eff_process(tracks_pd, cl_pd_1d, self.res_dict, self.nsigma, self.put, corrections=self.corrections)
+        matching_cluster_pd, events_pd, eff_x, eff_y, tot_ev = calc_eff_process(tracks_pd, cl_pd_1d, self.res_dict, self.nsigma, self.put, corrections=self.corrections, hit_efficiency=self.hit_efficiency)
         return matching_cluster_pd, events_pd, eff_x, eff_y, tot_ev
 
 
-def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections):
+def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections, hit_efficiency):
     """
     Process to calcualate the efficiency, returns a return blob
     """
@@ -494,6 +494,7 @@ def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections
     put_mean_y = res_dict["put_mean_y"]
     put_sigma_y = res_dict["put_sigma_y"]
     tracks_pd_c_event = tracks_pd.groupby(["count"])
+
     cl_pd_1D_event = cl_pd_1D.groupby(["count"])
     for event in tracks_pd_c_event.groups:
         #         if event in (cl_pd_1D_event.groups):
@@ -557,7 +558,7 @@ class log_writer():
         with open(os.path.join(str(self.path), "logfile"), "a") as logfile:
             logfile.write(text+"\n")
 
-def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False):
+def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False):
     runs = run
     #Create directories to store the outputs
     if not os.path.isdir(os.path.join(data_folder,"perf_out")):
@@ -680,6 +681,11 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         this_y_int = scipy.integrate.quad(doublegaus, put_mean_y-put_sigma_y*nsigma_put,put_mean_y+put_sigma_y*nsigma_put,args=(tuple(par_for_int)))[0]
         logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f} {this_x_int/integral_x*100}% of total integral"
                          f"\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f} {this_y_int/integral_y*100}% of total integral\n")
+        if hit_efficiency:
+            cl_pd_1D = get_run_data([runs], 'h', data_folder)
+            cl_pd_1D_sub = cl_pd_1D.groupby(["subRunNo"])
+            cl_pd_1D["cl_pos_x_cm"] = cl_pd_1D[cl_pd_1D.strip_x > -1].strip_x * 0.0650
+            cl_pd_1D["cl_pos_y_cm"] = cl_pd_1D[cl_pd_1D.strip_y > -1].strip_y * 0.0650
 
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
