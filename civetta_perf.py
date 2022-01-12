@@ -32,7 +32,7 @@ class runner:
         print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
 
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
-                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=hit_efficiency)
+                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
 
 
 ##############################################################################################
@@ -99,6 +99,7 @@ def main(run, **kwargs):
         options["Silent"] = args.Silent
     if args.hit_efficiency:
         options["hit_efficiency"] = args.hit_efficiency
+        print ("Efficiency on hits")
     if len (op_list)>0:
         main_runner = runner(data_folder, run, **options)
     else:
