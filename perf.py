@@ -682,11 +682,14 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         logger.write_log(f"Residual x tolerance on DUT:{put_mean_x:.4f}+/-{put_sigma_x*nsigma_put:.3f} {this_x_int/integral_x*100}% of total integral"
                          f"\nResidual y tolerance on DUT: {put_mean_y:.4f}+/-{put_sigma_y*nsigma_put:.3f} {this_y_int/integral_y*100}% of total integral\n")
         if hit_efficiency:
+
+            time_min=cl_pd_1D.l1ts_min_tcoarse.min()
+            time_max=cl_pd_1D.l1ts_min_tcoarse.max()
             cl_pd_1D = get_run_data([runs], 'h', data_folder)
+            cl_pd_1D=cl_pd_1D[(cl_pd_1D["l1ts_min_tcoarse"]>time_min) & (cl_pd_1D["l1ts_min_tcoarse"]<=time_max)]
             cl_pd_1D_sub = cl_pd_1D.groupby(["subRunNo"])
             cl_pd_1D["cl_pos_x_cm"] = cl_pd_1D[cl_pd_1D.strip_x > -1].strip_x * 0.0650
             cl_pd_1D["cl_pos_y_cm"] = cl_pd_1D[cl_pd_1D.strip_y > -1].strip_y * 0.0650
-
         for key in tracks_pd_c_sub.groups:
             sub_list.append((cl_pd_1D_sub.get_group(key), tracks_pd_c_sub.get_group(key)))
         if len(sub_list) > 0:
