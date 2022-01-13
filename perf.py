@@ -686,8 +686,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         if hit_efficiency:
             config = configparser.ConfigParser()
             config.read(os.path.join(sys.path[0], "config.ini"))
-            signal_window_lower_limit_conf = config["GLOBAL"].get("signal_window_lower_limit")
-            signal_window_upper_limit_conf = config["GLOBAL"].get("signal_window_upper_limit")
+            signal_window_lower_limit_conf = int(config["GLOBAL"].get("signal_window_lower_limit"))
+            signal_window_upper_limit_conf = int(config["GLOBAL"].get("signal_window_upper_limit"))
             cl_pd_1D = get_run_data([runs], 'h', data_folder)
             cl_pd_1D=cl_pd_1D[(cl_pd_1D["l1ts_min_tcoarse"]>signal_window_lower_limit_conf) & (cl_pd_1D["l1ts_min_tcoarse"]<signal_window_upper_limit_conf)]
             cl_pd_1D_sub = cl_pd_1D.groupby(["subRunNo"])
