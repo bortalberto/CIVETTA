@@ -102,13 +102,13 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     if tracking_fit:
         x = x[x.planar != put]
 
-    fit_x = np.polyfit(x[x.planar != put]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_x_cm"].dropna(), 1)
+    fit_x = np.polyfit(x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_x_cm"].dropna(), 1)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
     chi_x = np.sum(((fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values)**2)
              / fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values)
 
-    fit_y = np.polyfit(x[x.planar != put]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_y_cm"].dropna(), 1)
+    fit_y = np.polyfit(x[(x.planar != put) & (x.cl_pos_y_cm.notna())]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_y_cm"].dropna(), 1)
     pos_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values
     res_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values
     chi_y = np.sum(((fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values)**2)
