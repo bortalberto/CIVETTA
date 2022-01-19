@@ -281,7 +281,7 @@ def root_fit(data, p0, lower_bounds, upper_bounds):
     return popt, chi2
 
 
-def double_gaus_fit_root(tracks_pd, view="x", put=-1):
+def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_0=0.2):
     popt_list = []
     pcov_list = []
     res_list = []
@@ -298,7 +298,6 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1):
             deg_list.append(1)
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
-            sigma_0=0.2
             data = data[abs(data) < sigma_0]
             if data.shape[0]>20000:
                 nbins=1000
