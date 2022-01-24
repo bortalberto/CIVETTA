@@ -401,7 +401,8 @@ def load_nearest_correction(path,run_number, logger=None):
     corr_list = [int(path.split("/")[-1]) for path in path_list]
     corr_list = [corr for corr in corr_list if corr <= run_number]
     align_number = min(corr_list, key=lambda x:abs(x-run_number))
-    logger.write_log(f"Nearest alignment correction: run {align_number}, Created: {time.ctime(os.path.getctime(os.path.join(path, str(align_number))))}")
+    if logger:
+        logger.write_log(f"Nearest alignment correction: run {align_number}, Created: {time.ctime(os.path.getctime(os.path.join(path, str(align_number))))}")
     corr=load_correction(path, align_number)
     return corr
 
