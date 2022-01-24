@@ -92,14 +92,14 @@ class event_visualizer:
             side="right"
         ), secondary_y=False)
         pos_x = de_correct_process(this_evt_cluster.cl_pos_x_cm.values[0], this_evt_tracks_pd.prev_pos_put_y.values[0],
-                                   correction, put)
+                                   self.correction, self.put)
         pos_x_prev = de_correct_process(this_evt_tracks_pd.prev_pos_put_x.values[0],
-                                        this_evt_tracks_pd.prev_pos_put_y.values[0], correction, put)
+                                        this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction, self.put)
 
         subfig.add_vline(pos_x_prev[0] / 0.0650, line=dict(color="orange", dash="dot", width=0.7), name="Prev pos")
         subfig.add_vline(pos_x[0] / 0.0650, line=dict(color="red", dash="dot", width=0.7), name="Nearest cl pos")
 
-        subfig.update_layout(title=f"Event {event}, planar {put}, vista X")
+        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista X")
         subfig.update_layout(template="plotly_dark")
         subfig.show()
         #     lap.write_html(subfig, f"eff_evt_30gradi_x_{i}", width=750)
