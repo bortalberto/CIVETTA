@@ -276,7 +276,7 @@ class eff_calculation:
             prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
             real_eff = (eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)
             error_real_eff = ((eff_x_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
-            print(f"Prob noise eff={prob_noise_eff:.5f} +/- {prob_noise_eff_err:.5f}")
+            print(f"Prob noise eff = {prob_noise_eff:.5f} +/- {prob_noise_eff_err:.5f}")
             print(f"Real eff = {real_eff:.5f} +/- {error_real_eff:.5f}")
             print(f"---")
 
@@ -293,7 +293,7 @@ class eff_calculation:
             prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
             real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
             error_real_eff = ((eff_y_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
-            print(f"Prob noise eff={prob_noise_eff:.5f} +/- {prob_noise_eff_err:.5f}")
+            print(f"Prob noise eff = {prob_noise_eff:.5f} +/- {prob_noise_eff_err:.5f}")
             print(f"Real eff = {real_eff:.5f} +/- {error_real_eff:.5f}")
             print(f"---")
 
@@ -330,7 +330,7 @@ class eff_calculation:
             real_eff = (eff_and_good - prob_noise_eff) / (1 - prob_noise_eff)
             error_real_eff = ((eff_and_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
 
-            print(f"2D eff {eff_and_good:.5f} +/- {eff_and_good_error:.5f}")
+            print(f"2D eff = {eff_and_good:.5f} +/- {eff_and_good_error:.5f}")
             print(f"Real eff = {real_eff:.5f} +/- {error_real_eff:.5f}")
             print(f"---")
 
