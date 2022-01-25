@@ -274,8 +274,10 @@ class eff_calculation:
             error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
             prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
+            real_eff = (eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)
+            error_real_eff = ((eff_x_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
             print(f"Prob noise eff={prob_noise_eff} +/- {prob_noise_eff_err}")
-            print(f"Real eff = {(eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)}")
+            print(f"Real eff = {real_eff} +/- {error_real_eff}")
             print(f"---")
 
             k = eff_pd_c[(eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8)].count().eff_y
@@ -289,8 +291,10 @@ class eff_calculation:
             error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
             prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
+            real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
+            error_real_eff = ((eff_y_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
             print(f"Prob noise eff={prob_noise_eff} +/- {prob_noise_eff_err}")
-            print(f"Real eff = {(eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)}")
+            print(f"Real eff = {real_eff} +/- {error_real_eff}")
             print(f"---")
 
         for put in range(0,4):
