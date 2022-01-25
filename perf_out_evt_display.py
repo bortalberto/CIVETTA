@@ -14,11 +14,12 @@ import glob
 from scipy.optimize import curve_fit
 import scipy.integrate
 import ROOT as R
-import  sys
+import sys
 import configparser
 import perf
 from plotly.subplots import make_subplots
 from scipy.stats import poisson
+
 
 def de_correct_process(pos_x, pos_y, corr, planar):
     rev_corr = corr[::-1]
@@ -30,26 +31,27 @@ def de_correct_process(pos_x, pos_y, corr, planar):
         pos_y = pos_y_0
     return pos_x, pos_y
 
+
 def de_correct_process_pd(row, corr):
     planar = row.PUT
     pos_x = row.pos_x
     pos_y = row.pos_y
-    rev_corr=corr[::-1]
+    rev_corr = corr[::-1]
     for correction in corr:
         angle = (correction[f"{int(planar)}_x"][0] - correction[f"{int(planar)}_y"][0]) / 2
         pos_x = pos_x - correction[f"{int(planar)}_y"][1] + angle * (pos_y)
         pos_y = pos_y - correction[f"{int(planar)}_x"][1] - angle * (pos_x)
 
-
     return pos_x, pos_y
+
+
 class event_visualizer:
     """
     Class to manage the event visualizer without pre-elaborate the data each time
     """
 
-
-    def __init__(self, cluster_pd_1D,cluster_pd_match, tracks_pd, hit_pd, eff_pd, put, correction):
-        self.cluster_pd_1D  = cluster_pd_1D
+    def __init__(self, cluster_pd_1D, cluster_pd_match, tracks_pd, hit_pd, eff_pd, put, correction):
+        self.cluster_pd_1D = cluster_pd_1D
         self.cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
         self.cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
         self.cluster_pd_match = cluster_pd_match
@@ -63,8 +65,6 @@ class event_visualizer:
         self.correction = correction
         self.data_pd = hit_pd
         self.event_eff_list = self.eff_pd["count"].unique()
-
-
 
     def plot_evt(self, event):
         """
@@ -94,14 +94,14 @@ class event_visualizer:
             this_evt_cluster = clusters.iloc[(clusters['cl_pos_x_cm'] - this_evt_tracks_pd.prev_pos_put_x.values[0]).abs().argsort()[:1]]
 
         data_pd_evt = self.data_pd[(self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_x"] > 0) & (
-                    self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
+                self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
             hit_ids = [-1]
-        data_pd_evt.loc[:,"cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
+        data_pd_evt.loc[:, "cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
         color_discrete_map = {False: 'cyan', True: 'red'}
-        data_pd_evt.loc[:,"time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
+        data_pd_evt.loc[:, "time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
 
         fig = px.scatter(data_pd_evt, "strip_x", "charge_SH", color="cluster_eff",
                          color_discrete_map=color_discrete_map)
@@ -147,7 +147,7 @@ class event_visualizer:
                 evt_type = " Not efficient"
         subfig.update_layout(title=f"Event {event}, planar {self.put}, vista X" + evt_type)
         subfig.update_layout(template="plotly_dark")
-        subfig_x=subfig
+        subfig_x = subfig
         #     lap.write_html(subfig, f"eff_evt_30gradi_x_{i}", width=750)
 
         # Y
@@ -187,7 +187,7 @@ class event_visualizer:
         fig2 = px.scatter(data_pd_evt, "strip_y", "time", color_discrete_sequence=["grey"])
         fig.update_traces(yaxis="y2")
         #     fig2.update_layout(name="time")
-        if len (fig.data) > 1:
+        if len(fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
         if data_pd_evt.shape[0] > 0:
@@ -224,10 +224,12 @@ class event_visualizer:
                 evt_type = " Efficient"
             else:
                 evt_type = " Not efficient"
-        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista Y"+ evt_type)
+        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista Y" + evt_type)
         subfig.update_layout(template="plotly_dark")
-        subgix_y=subfig
+        subgix_y = subfig
         return (subfig_x, subgix_y)
+
+
 #     lap.write_html(subfig, f"eff_evt_30gradi_y_{i}", width=750)
 #     lap.write_html(fig, f"eff_evt_{i}_3D", width=750)
 
@@ -236,14 +238,17 @@ class eff_calculation:
     """
     Class to calculate the
     """
+
     def __init__(self, eff_pd, hit_pd, log_path, correction):
         self.eff_pd = eff_pd
         self.hit_pd = hit_pd
         self.log_path = log_path
         self.correction = correction
 
-
     def calc_eff(self):
+        """
+        Calculate the efficiency and the probability to acquire one noise hit instead of signal
+        """
         with open(self.log_path, "r") as logfile:
             view = "x"
             tol_x = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
@@ -251,9 +256,8 @@ class eff_calculation:
             view = "y"
             tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
         time_win = (1440 - 1370) * 6.25 * 1e-9
-        print (tol_y)
+
         for put in range(0, 4):
-            #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
             print(f"\n---\nPlanar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
             eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
@@ -282,3 +286,38 @@ class eff_calculation:
             print(f"Prob noise eff={prob_noise_eff}")
             print(f"Real eff = {(eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)}")
             print(f"---")
+
+        for put in range(0,4):
+            #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
+            print(f"Planar {put} ")
+            eff_pd = self.eff_pd[self.eff_pd.PUT == put]
+            eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
+
+            eff_pd_c = eff_pd
+
+            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            eff_x_good = k / n
+            eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x.notna())].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 128
+            rate_strip_avg = rate_strip_avg * time_win
+            prob_noise_effx = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y.notna())].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 128
+            rate_strip_avg = rate_strip_avg * time_win
+            prob_noise_effy = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
+            prob_noise_eff = prob_noise_effx * prob_noise_effy
+            print(f"2D eff: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
+            print(prob_noise_eff)
+            print(f"Real eff = {(eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)}")
+
+
+class res_measure:
+    """
+    Class for the calculation of resolution
+    """
+
+    def __init__(self):
+        pass
+    def calc_res(self):
+        return null
