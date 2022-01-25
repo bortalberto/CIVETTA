@@ -250,7 +250,7 @@ class eff_calculation:
             view = "y"
             tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
         time_win = (1440 - 1370) * 6.25 * 1e-9
-
+        print (tol_y)
         for put in range(0, 4):
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
             print(f"\n---\nPlanar {put} ")
