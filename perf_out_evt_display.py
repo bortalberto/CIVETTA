@@ -30,6 +30,18 @@ def de_correct_process(pos_x, pos_y, corr, planar):
         pos_y = pos_y_0
     return pos_x, pos_y
 
+def de_correct_process_pd(row, corr):
+    planar = row.PUT
+    pos_x = row.pos_x
+    pos_y = row.pos_y
+    rev_corr=corr[::-1]
+    for correction in corr:
+        angle = (correction[f"{int(planar)}_x"][0] - correction[f"{int(planar)}_y"][0]) / 2
+        pos_x = pos_x - correction[f"{int(planar)}_y"][1] + angle * (pos_y)
+        pos_y = pos_y - correction[f"{int(planar)}_x"][1] - angle * (pos_x)
+
+
+    return pos_x, pos_y
 class event_visualizer:
     """
     Class to manage the event visualizer without pre-elaborate the data each time
@@ -224,11 +236,12 @@ class eff_calculation:
     """
     Class to calculate the
     """
-    def __init__(self, eff_pd, hit_pd, log_file, log_path):
+    def __init__(self, eff_pd, hit_pd, log_file, log_path, correction):
         self.eff_pd = eff_pd
         self.hit_pd = hit_pd
         self.log_file = log_file
         self.log_path = log_path
+        self.correction = correction
 
 
     def calc_eff(self):
@@ -243,7 +256,7 @@ class eff_calculation:
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
             print(f"\n---\nPlanar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
-            eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process(x, correction), axis=1))
+            eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
             eff_pd_c = eff_pd
 
             k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
