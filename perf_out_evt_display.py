@@ -236,10 +236,9 @@ class eff_calculation:
     """
     Class to calculate the
     """
-    def __init__(self, eff_pd, hit_pd, log_file, log_path, correction):
+    def __init__(self, eff_pd, hit_pd, log_path, correction):
         self.eff_pd = eff_pd
         self.hit_pd = hit_pd
-        self.log_file = log_file
         self.log_path = log_path
         self.correction = correction
 
