@@ -267,7 +267,7 @@ class eff_calculation:
             n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
-            print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
+            print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.5f}")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
@@ -284,7 +284,7 @@ class eff_calculation:
             n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8)].count().eff_y
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
-            print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.5f}")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
