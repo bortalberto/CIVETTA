@@ -99,7 +99,7 @@ class event_visualizer:
         if len(fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
-        if len(data_pd_evt.shape[0]) > 0:
+        if data_pd_evt.shape[0] > 0:
             fig2.data[-1].name = 'Time'
             fig2.data[-1].showlegend = True
         subfig.add_traces(fig.data)
@@ -178,7 +178,7 @@ class event_visualizer:
         if len (fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
-        if len(data_pd_evt.shape[0]) > 0:
+        if data_pd_evt.shape[0] > 0:
             fig2.data[-1].name = 'Time'
             fig2.data[-1].showlegend = True
         subfig.add_traces(fig.data)
