@@ -296,6 +296,9 @@ class eff_calculation:
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
             print(f"---")
+        print(f"---")
+        print(f"AND eff")
+        print(f"---")
 
         for put in range(0,4):
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
