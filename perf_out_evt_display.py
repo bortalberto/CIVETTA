@@ -18,7 +18,7 @@ import  sys
 import configparser
 import perf
 from plotly.subplots import make_subplots
-
+from scipy.stats import poisson
 
 def de_correct_process(pos_x, pos_y, corr, planar):
     rev_corr = corr[::-1]
@@ -135,7 +135,7 @@ class event_visualizer:
                 evt_type = " Not efficient"
         subfig.update_layout(title=f"Event {event}, planar {self.put}, vista X" + evt_type)
         subfig.update_layout(template="plotly_dark")
-        subfig.show()
+        subfig_x=subfig
         #     lap.write_html(subfig, f"eff_evt_30gradi_x_{i}", width=750)
 
         # Y
@@ -214,6 +214,58 @@ class event_visualizer:
                 evt_type = " Not efficient"
         subfig.update_layout(title=f"Event {event}, planar {self.put}, vista Y"+ evt_type)
         subfig.update_layout(template="plotly_dark")
-        return subfig
+        subgix_y=subfig
+        return (subfig_x, subgix_y)
 #     lap.write_html(subfig, f"eff_evt_30gradi_y_{i}", width=750)
 #     lap.write_html(fig, f"eff_evt_{i}_3D", width=750)
+
+
+class eff_calculation:
+    """
+    Class to calculate the
+    """
+    def __init__(self, eff_pd, hit_pd, log_file, log_path):
+        self.eff_pd = eff_pd
+        self.hit_pd = hit_pd
+        self.log_file = log_file
+        self.log_path = log_path
+
+
+    def calc_eff(self):
+        with open(self.log_path, "r") as log:
+            view = "x"
+            tol_x = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Rzesidual {view}" in line]
+            view = "y"
+            tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
+        time_win = (1440 - 1370) * 6.25 * 1e-9
+
+        for put in range(0, 4):
+            #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
+            print(f"\n---\nPlanar {put} ")
+            eff_pd = self.eff_pd[self.eff_pd.PUT == put]
+            eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process(x, correction), axis=1))
+            eff_pd_c = eff_pd
+
+            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            eff_x_good = k / n
+            eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+            print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x.notna())].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 128
+            rate_strip_avg = rate_strip_avg * time_win
+            prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
+            print(f"Prob noise eff={prob_noise_eff}")
+            print(f"Real eff = {(eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)}")
+            print(f"---")
+
+            k = eff_pd_c[(eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8)].count().eff_y
+            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8)].count().eff_y
+            eff_y_good = k / n
+            eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+            print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y.notna())].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 128
+            rate_strip_avg = rate_strip_avg * time_win
+            prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
+            print(f"Prob noise eff={prob_noise_eff}")
+            print(f"Real eff = {(eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)}")
+            print(f"---")
