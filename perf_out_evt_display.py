@@ -260,7 +260,7 @@ class eff_calculation:
         for put in range(0, 4):
             print(f"\n---\nPlanar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
-            eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
+            eff_pd.loc[:,"pos_x_pl"], eff_pd.loc[:,"pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
             eff_pd_c = eff_pd
 
             k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
@@ -268,13 +268,13 @@ class eff_calculation:
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 128
-            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 128
-            print (rate_strip_avg)
-            print (error_rate_strip)
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
+            error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
-            print(f"Prob noise eff={prob_noise_eff}")
+            prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
+            print(f"Prob noise eff={prob_noise_eff} +/- {prob_noise_eff_err}")
             print(f"Real eff = {(eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)}")
             print(f"---")
 
@@ -283,13 +283,13 @@ class eff_calculation:
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 128
-            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 128
-            print (rate_strip_avg)
-            print (error_rate_strip)
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
+            error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
-            print(f"Prob noise eff={prob_noise_eff}")
+            prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
+            print(f"Prob noise eff={prob_noise_eff} +/- {prob_noise_eff_err}")
             print(f"Real eff = {(eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)}")
             print(f"---")
 
@@ -306,10 +306,10 @@ class eff_calculation:
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
 
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x.notna())].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 128
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x>0)].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             prob_noise_effx = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y.notna())].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 128
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y>0)].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             prob_noise_effy = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
             prob_noise_eff = prob_noise_effx + prob_noise_effy - prob_noise_effx*prob_noise_effy
