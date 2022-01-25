@@ -161,7 +161,7 @@ class event_visualizer:
             this_evt_cluster = clusters.iloc[(clusters['cl_pos_y_cm'] - this_evt_tracks_pd.prev_pos_put_y.values[0]).abs().argsort()[:1]]
 
         data_pd_evt = self.data_pd[(self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_y"] > 0) & (
-                self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
+                self.data_pd["l1ts_min_tcoarse"] > 0) & (self.data_pd["l1ts_min_tcoarse"] < 1600)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
