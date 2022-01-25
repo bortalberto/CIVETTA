@@ -301,7 +301,7 @@ class eff_calculation:
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
             print(f"Planar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
-            eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
+            eff_pd.loc[:,"pos_x_pl"], eff_pd.loc[:,"pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
 
             eff_pd_c = eff_pd
 
