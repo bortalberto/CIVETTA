@@ -232,7 +232,7 @@ class eff_calculation:
 
 
     def calc_eff(self):
-        with open(self.log_path, "r") as log:
+        with open(self.log_path, "r") as logfile:
             view = "x"
             tol_x = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Rzesidual {view}" in line]
             view = "y"
