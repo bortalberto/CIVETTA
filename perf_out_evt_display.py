@@ -126,8 +126,14 @@ class event_visualizer:
 
             subfig.add_vline(pos_x_prev[0] / 0.0650, line=dict(color="orange", dash="dot", width=0.7), name="Prev pos")
             subfig.add_vline(pos_x[0] / 0.0650, line=dict(color="red", dash="dot", width=0.7), name="Nearest cl pos")
-
-        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista X")
+        if not evt_for_eff:
+            evt_type = " No good track"
+        else:
+            if efficient_x:
+                evt_type = " Efficient"
+            else:
+                evt_type = " Not efficient"
+        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista X" + evt_type)
         subfig.update_layout(template="plotly_dark")
         subfig.show()
         #     lap.write_html(subfig, f"eff_evt_30gradi_x_{i}", width=750)
@@ -199,8 +205,14 @@ class event_visualizer:
 
             subfig.add_vline(pos_x_prev[1] / 0.0650, line=dict(color="orange", dash="dot", width=0.7), name="Prev pos")
             subfig.add_vline(pos_x[1] / 0.0650, line=dict(color="red", dash="dot", width=0.7), name="Nearest cl pos")
-
-        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista Y")
+        if not evt_for_eff:
+            evt_type = " No good track"
+        else:
+            if efficient_y:
+                evt_type = " Efficient"
+            else:
+                evt_type = " Not efficient"
+        subfig.update_layout(title=f"Event {event}, planar {self.put}, vista Y"+ evt_type)
         subfig.update_layout(template="plotly_dark")
         return subfig
 #     lap.write_html(subfig, f"eff_evt_30gradi_y_{i}", width=750)
