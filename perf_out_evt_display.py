@@ -246,7 +246,7 @@ class eff_calculation:
     def calc_eff(self):
         with open(self.log_path, "r") as logfile:
             view = "x"
-            tol_x = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Rzesidual {view}" in line]
+            tol_x = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
             view = "y"
             tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
         time_win = (1440 - 1370) * 6.25 * 1e-9
