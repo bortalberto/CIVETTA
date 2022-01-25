@@ -87,9 +87,9 @@ class event_visualizer:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
             hit_ids = [-1]
-        data_pd_evt.loc["cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
+        data_pd_evt.loc[:,"cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
         color_discrete_map = {False: 'cyan', True: 'red'}
-        data_pd_evt.loc["time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
+        data_pd_evt.loc[:,"time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
 
         fig = px.scatter(data_pd_evt, "strip_x", "charge_SH", color="cluster_eff",
                          color_discrete_map=color_discrete_map)
@@ -166,9 +166,9 @@ class event_visualizer:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
             hit_ids = [-1]
-        data_pd_evt.loc["cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
+        data_pd_evt.loc[:, "cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
         color_discrete_map = {False: 'cyan', True: 'red'}
-        data_pd_evt.loc["time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
+        data_pd_evt.loc[:, "time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
 
         fig = px.scatter(data_pd_evt, "strip_y", "charge_SH", color="cluster_eff",
                          color_discrete_map=color_discrete_map)
