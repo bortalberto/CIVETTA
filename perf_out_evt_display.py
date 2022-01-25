@@ -96,12 +96,12 @@ class event_visualizer:
         fig2 = px.scatter(data_pd_evt, "strip_x", "time", color_discrete_sequence=["grey"])
         fig.update_traces(yaxis="y2")
         #     fig2.update_layout(name="time")
-        if len (fig.data) > 1:
+        if len(fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
-
-        fig2.data[-1].name = 'Time'
-        fig2.data[-1].showlegend = True
+        if len(fig2.data) > 0:
+            fig2.data[-1].name = 'Time'
+            fig2.data[-1].showlegend = True
         subfig.add_traces(fig.data)
         subfig.add_traces(fig2.data)
         subfig.update_xaxes(dict(
@@ -178,9 +178,9 @@ class event_visualizer:
         if len (fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
-
-        fig2.data[-1].name = 'Time'
-        fig2.data[-1].showlegend = True
+        if len(fig2.data)>0:
+            fig2.data[-1].name = 'Time'
+            fig2.data[-1].showlegend = True
         subfig.add_traces(fig.data)
         subfig.add_traces(fig2.data)
         subfig.update_xaxes(dict(
