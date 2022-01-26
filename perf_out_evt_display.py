@@ -566,7 +566,7 @@ class res_measure:
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
             popt_list, pcov_list, res_list, R_list, chi, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
             enemy_res_list.append(popt_list[2])
-            chi_list.append(chi)
+            chi_list.append(chi/deg_list)
             enemey_res_list.append(residual_list)
             pos_res_list.append(pos_list)
         return enemy_res_list, chi_list, enemey_res_list, pos_res_list
