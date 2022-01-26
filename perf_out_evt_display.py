@@ -100,27 +100,23 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     popt, chi_sqr = single_root_fit(data, [a_0, mean_0, sigma_0, c],
                                     lower_bound, upper_bound, sigma_def=sigma_def)
     pcov = 0
-    popt_list.append(popt)
-    pcov_list.append(pcov)
     yexp = perf.gaus(x, *popt[0:3]) + popt[3]
     ss_res = np.sum((y - yexp) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
-    res_list.append(y - yexp)
+    res=(y - yexp)
     r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
-    R_list.append(r2)
     #             print(scipy.stats.chisquare(y, yexp,len(x)-6-1))
 
     #             chi_list.append(scipy.stats.chisquare(y, yexp,len(x)-6-1))
     #             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
-    chi_list.append(chi_sqr)
 
-    deg_list.append(len(x) - 6 - 1)
+    deg=(len(x) - 4 - 1)
     #         yexp=doublegaus(x, *popt)
     #         y_exp_norm =1000*yexp/np.sum(yexp)
     #         print (np.sum(ynorm))
     #         print (np.sum(y_exp_norm))
     #         print (chisquare(ynorm,y_exp_norm, 6 ))
-    return popt_list, pcov_list, res_list, R_list, chi_list, deg_list
+    return popt, pcov, res, r2, chi_sqr, deg
 
 
 class event_visualizer:
@@ -575,4 +571,4 @@ class res_measure:
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
-            print(popt_list[1])
+            print(popt_list)
