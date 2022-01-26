@@ -282,6 +282,14 @@ def root_fit(data, p0, lower_bounds, upper_bounds):
 
 
 def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
+    """
+    Performs a gaussian double fit
+    :param tracks_pd:
+    :param view:
+    :param put: planar to be excluded from the fit
+    :param sigma_def:
+    :return:
+    """
     popt_list = []
     pcov_list = []
     res_list = []
