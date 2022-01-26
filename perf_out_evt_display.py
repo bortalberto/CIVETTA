@@ -431,7 +431,7 @@ class res_measure:
         self.cl_pds = {"x": cl_pd_x, "y": cl_pd_y}
 
     def plot_residuals(self, cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
-        data = cl_pd_res[f"res_{view}"].apply(lambda x: x[pl])
+        data = cl_pd_res[f"res_{view}"]
         sigma_0 = 0.2
         data = data[abs(data) < sigma_0]
         if data.shape[0] > 20000:
