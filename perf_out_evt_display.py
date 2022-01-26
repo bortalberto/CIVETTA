@@ -58,9 +58,11 @@ class event_visualizer:
         self.tracks_pd = tracks_pd
         self.put = put
         self.eff_pd = eff_pd
-        self.tracks_pd["prev_pos_put_x"] = self.tracks_pd["fit_x"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd["fit_x"].apply(
+        self.tracks_pd["prev_pos_put_x"] = self.tracks_pd["fit_x"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd[
+            "fit_x"].apply(
             lambda x: x[1])
-        self.tracks_pd["prev_pos_put_y"] = self.tracks_pd["fit_y"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd["fit_y"].apply(
+        self.tracks_pd["prev_pos_put_y"] = self.tracks_pd["fit_y"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd[
+            "fit_y"].apply(
             lambda x: x[1])
         self.correction = correction
         self.data_pd = hit_pd
@@ -87,14 +89,20 @@ class event_visualizer:
 
         if evt_for_eff and not efficient_x:
             this_evt_tracks_pd = self.tracks_pd[self.tracks_pd["count"] == event]
-            cluster_pd_1D_c = self.cluster_pd_1D[(self.cluster_pd_1D["count"] == event) & (self.cluster_pd_1D.planar == self.put)]
-            clusters = cluster_pd_1D_c.apply(lambda x: perf.apply_correction_eff(x, this_evt_tracks_pd.prev_pos_put_x.values[0], this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction), axis=1)
+            cluster_pd_1D_c = self.cluster_pd_1D[
+                (self.cluster_pd_1D["count"] == event) & (self.cluster_pd_1D.planar == self.put)]
+            clusters = cluster_pd_1D_c.apply(
+                lambda x: perf.apply_correction_eff(x, this_evt_tracks_pd.prev_pos_put_x.values[0],
+                                                    this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction),
+                axis=1)
             clusters["prev_pos_x_cm"] = this_evt_tracks_pd.prev_pos_put_x.values[0]
             clusters["prev_pos_y_cm"] = this_evt_tracks_pd.prev_pos_put_y.values[0]
-            this_evt_cluster = clusters.iloc[(clusters['cl_pos_x_cm'] - this_evt_tracks_pd.prev_pos_put_x.values[0]).abs().argsort()[:1]]
+            this_evt_cluster = clusters.iloc[
+                (clusters['cl_pos_x_cm'] - this_evt_tracks_pd.prev_pos_put_x.values[0]).abs().argsort()[:1]]
 
-        data_pd_evt = self.data_pd[(self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_x"] > 0) & (
-                self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
+        data_pd_evt = self.data_pd[
+            (self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_x"] > 0) & (
+                    self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
@@ -131,7 +139,8 @@ class event_visualizer:
             side="right"
         ), secondary_y=False)
         if evt_for_eff:
-            pos_x = de_correct_process(this_evt_cluster.cl_pos_x_cm.values[0], this_evt_tracks_pd.prev_pos_put_y.values[0],
+            pos_x = de_correct_process(this_evt_cluster.cl_pos_x_cm.values[0],
+                                       this_evt_tracks_pd.prev_pos_put_y.values[0],
                                        self.correction, self.put)
             pos_x_prev = de_correct_process(this_evt_tracks_pd.prev_pos_put_x.values[0],
                                             this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction, self.put)
@@ -166,14 +175,20 @@ class event_visualizer:
 
         if evt_for_eff and not efficient_y:
             this_evt_tracks_pd = self.tracks_pd[self.tracks_pd["count"] == event]
-            cluster_pd_1D_c = self.cluster_pd_1D[(self.cluster_pd_1D["count"] == event) & (self.cluster_pd_1D.planar == self.put)]
-            clusters = cluster_pd_1D_c.apply(lambda x: perf.apply_correction_eff(x, this_evt_tracks_pd.prev_pos_put_x.values[0], this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction), axis=1)
+            cluster_pd_1D_c = self.cluster_pd_1D[
+                (self.cluster_pd_1D["count"] == event) & (self.cluster_pd_1D.planar == self.put)]
+            clusters = cluster_pd_1D_c.apply(
+                lambda x: perf.apply_correction_eff(x, this_evt_tracks_pd.prev_pos_put_x.values[0],
+                                                    this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction),
+                axis=1)
             clusters["prev_pos_x_cm"] = this_evt_tracks_pd.prev_pos_put_x.values[0]
             clusters["prev_pos_y_cm"] = this_evt_tracks_pd.prev_pos_put_y.values[0]
-            this_evt_cluster = clusters.iloc[(clusters['cl_pos_y_cm'] - this_evt_tracks_pd.prev_pos_put_y.values[0]).abs().argsort()[:1]]
+            this_evt_cluster = clusters.iloc[
+                (clusters['cl_pos_y_cm'] - this_evt_tracks_pd.prev_pos_put_y.values[0]).abs().argsort()[:1]]
 
-        data_pd_evt = self.data_pd[(self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_y"] > 0) & (
-                self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
+        data_pd_evt = self.data_pd[
+            (self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_y"] > 0) & (
+                    self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
@@ -210,7 +225,8 @@ class event_visualizer:
             side="right"
         ), secondary_y=False)
         if evt_for_eff:
-            pos_x = de_correct_process(this_evt_tracks_pd.prev_pos_put_x.values[0], this_evt_cluster.cl_pos_y_cm.values[0],
+            pos_x = de_correct_process(this_evt_tracks_pd.prev_pos_put_x.values[0],
+                                       this_evt_cluster.cl_pos_y_cm.values[0],
                                        self.correction, self.put)
             pos_x_prev = de_correct_process(this_evt_tracks_pd.prev_pos_put_x.values[0],
                                             this_evt_tracks_pd.prev_pos_put_y.values[0], self.correction, self.put)
@@ -260,39 +276,56 @@ class eff_calculation:
         for put in range(0, 4):
             print(f"\n---\nPlanar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
-            eff_pd.loc[:,"pos_x_pl"], eff_pd.loc[:,"pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
+            eff_pd.loc[:, "pos_x_pl"], eff_pd.loc[:, "pos_y_pl"] = zip(
+                *eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
             eff_pd_c = eff_pd
 
-            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
-            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            k = eff_pd_c[
+                (eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
+                            eff_pd_c.pos_y_pl < 8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
+                        eff_pd_c.pos_y_pl < 8)].count().eff_x
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
-            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_x > 0)].channel.count()) / (
+                                         self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
+                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
-            prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
+            prob_noise_eff_err = np.exp(rate_strip_avg) * error_rate_strip
             real_eff = (eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)
-            error_real_eff = ((eff_x_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
+            error_real_eff = ((eff_x_good_error / (1 - prob_noise_eff)) ** 2 + (
+                        prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
             print(f"---")
 
-            k = eff_pd_c[(eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8)].count().eff_y
-            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8)].count().eff_y
+            k = eff_pd_c[
+                (eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
+                            eff_pd_c.pos_x_pl < 8)].count().eff_y
+            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
+                        eff_pd_c.pos_x_pl < 8)].count().eff_y
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
-            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_y > 0)].channel.count()) / (
+                                         self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
-            prob_noise_eff_err = np.exp(rate_strip_avg)*error_rate_strip
+            prob_noise_eff_err = np.exp(rate_strip_avg) * error_rate_strip
             real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
-            error_real_eff = ((eff_y_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
+            error_real_eff = ((eff_y_good_error / (1 - prob_noise_eff)) ** 2 + (
+                        prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
             print(f"---")
@@ -300,38 +333,52 @@ class eff_calculation:
         print(f"AND eff")
         print(f"---")
 
-        for put in range(0,4):
+        for put in range(0, 4):
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
             print(f"Planar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
-            eff_pd.loc[:,"pos_x_pl"], eff_pd.loc[:,"pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
+            eff_pd.loc[:, "pos_x_pl"], eff_pd.loc[:, "pos_y_pl"] = zip(
+                *eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
 
             eff_pd_c = eff_pd
 
-            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
-            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (
+                        eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
+                        eff_pd_c.pos_y_pl < 8)].count().eff_x
             eff_and_good = k / n
-            eff_and_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+            eff_and_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (
+                        1 / 2)
 
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x>0)].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
-            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_x > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (
+                        self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
+                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_effx = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
-            prob_noise_eff_errx = np.exp(rate_strip_avg)*error_rate_strip
+            prob_noise_eff_errx = np.exp(rate_strip_avg) * error_rate_strip
 
-            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y>0)].channel.count()) / (self.hit_pd["count"].nunique() * (self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
-            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (self.hit_pd.strip_y > 0)].channel.count()) ** (1/2) ) / (self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (
+                        self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                        self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_effy = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
-            prob_noise_eff_erry = np.exp(rate_strip_avg)*error_rate_strip
+            prob_noise_eff_erry = np.exp(rate_strip_avg) * error_rate_strip
 
-            prob_noise_eff = prob_noise_effx + prob_noise_effy - prob_noise_effx*prob_noise_effy
-            prob_noise_eff_err = (((1 - prob_noise_effy) * prob_noise_eff_errx)**2 + ((1 - prob_noise_effx) * prob_noise_eff_erry)**2) ** (1/2)
+            prob_noise_eff = prob_noise_effx + prob_noise_effy - prob_noise_effx * prob_noise_effy
+            prob_noise_eff_err = (((1 - prob_noise_effy) * prob_noise_eff_errx) ** 2 + (
+                        (1 - prob_noise_effx) * prob_noise_eff_erry) ** 2) ** (1 / 2)
 
             real_eff = (eff_and_good - prob_noise_eff) / (1 - prob_noise_eff)
-            error_real_eff = ((eff_and_good_error/(1-prob_noise_eff))**2 + (prob_noise_eff_err/(1-prob_noise_eff**2))**2) ** (1/2)
+            error_real_eff = ((eff_and_good_error / (1 - prob_noise_eff)) ** 2 + (
+                        prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
 
             print(f"2D eff = {eff_and_good:.4f} +/- {eff_and_good_error:.4f}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
@@ -343,7 +390,87 @@ class res_measure:
     Class for the calculation of resolution
     """
 
-    def __init__(self):
-        pass
-    def calc_res(self):
-        return null
+    def __init__(self, cl_pd, tracks_pd, eff_pd, put):
+        """
+        :param cl_pd: match pd
+        :param tracks_pd:
+        :param eff_pd:
+        :param put:
+        """
+        self.put = put
+        eff_pd_c = eff_pd[
+            (eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7) & (eff_pd.eff_x) & (
+                eff_pd.eff_y)]  # Select efficient events in the good region
+        good_evt = eff_pd_c["count"].unique()
+
+        tracks_pd = tracks_pd[tracks_pd["count"].isin(good_evt)]  # Cut the row relative to other events
+        cl_pd = cl_pd[cl_pd["count"].isin(good_evt)]
+
+        tracks_pd.loc[:, "prev_pos_put_x"] = tracks_pd["fit_x"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd["fit_x"].apply(
+            lambda x: x[1])
+        tracks_pd.loc[:, "prev_pos_put_y"] = tracks_pd["fit_y"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd["fit_y"].apply(
+            lambda x: x[1]) # Calculate supposed position
+
+        duplicated_cl_event = cl_pd["count"].unique()[cl_pd.groupby("count").agg("size") > 2]  # Drop events with 2 efficient clusters
+        cl_pd = cl_pd[~cl_pd["count"].isin(duplicated_cl_event)]
+        tracks_pd = tracks_pd[~tracks_pd["count"].isin(duplicated_cl_event)]
+
+        tracks_pd = tracks_pd.sort_values("count").reset_index(drop=True)
+
+        cl_pd_x = cl_pd.loc[cl_pd.cl_pos_x.notna()].reset_index(drop=True)  # Divides the datatest between x and y and sort them
+        cl_pd_y = cl_pd.loc[cl_pd.cl_pos_y.notna()].reset_index(drop=True)
+        cl_pd_x = cl_pd_x.sort_values("count").reset_index(drop=True)
+        cl_pd_y = cl_pd_y.sort_values("count").reset_index(drop=True)
+
+        cl_pd_x.loc[:, "prev_pos_x_cm"] = tracks_pd.prev_pos_put_x
+        cl_pd_y.loc[:, "prev_pos_y_cm"] = tracks_pd.prev_pos_put_y
+
+        cl_pd_x.loc[:, "res_x"] = tracks_pd.prev_pos_put_x - cl_pd_x.loc[:, "cl_pos_x_cm"]
+        cl_pd_y.loc[:, "res_y"] = tracks_pd.prev_pos_put_y - cl_pd_y.loc[:, "cl_pos_y_cm"]
+
+        self.cl_pds = {"x": cl_pd_x, "y": cl_pd_y}
+
+    def plot_residuals(self, cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
+        data = cl_pd_res[f"res_{view}"].apply(lambda x: x[pl])
+        sigma_0 = 0.2
+        data = data[abs(data) < sigma_0]
+        if data.shape[0] > 20000:
+            nbins = 1000
+        else:
+            nbins = 200
+        y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
+        x = (x[1:] + x[:-1]) / 2
+        x = np.insert(x, 0, -0.2)
+        y = np.insert(y, 0, 0)
+        popt = popt_list[pl]
+        plt.figure(figsize=(10, 6))
+        plt.plot(x, y, 'b*', label='data')
+        x = np.arange(np.min(x), np.max(x), 0.0002)
+        plt.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')
+        plt.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
+        plt.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
+        plt.grid()
+        # plt.legend()
+        # plt.title('Fig. 3 - Fit for Time Cons§tant')
+        plt.ylabel('#')
+        plt.xlabel('Residual [cm]')
+        # plt.ion()
+        # plt.show()
+        plt.title(f"Fit view {view}, planar{pl}")
+        plt.text(y=np.max(y) * 0.7, x=np.argmax(x) - 0.5,
+                 s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
+                   f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
+                   f"\n Chi_sqrt={chi_list[pl]:.3e}, Chi_sqrt/NDoF = {chi_list[pl] / deg_list[pl]:.3e}",
+                 fontsize="small")
+        plt.xlim([np.min(x), np.max(x)])
+        #     if put==pl:
+        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
+        #     else:
+        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
+
+        return plt
+
+    def calc_res(self, view):
+        cl_pd = self.cl_pds["view"]
+        popt_list, pcov_list, res_list, R_list, chi_list, deg_list = perf.double_gaus_fit_root(
+            pd.DataFrames(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
