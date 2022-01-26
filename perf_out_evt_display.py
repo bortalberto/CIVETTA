@@ -462,7 +462,7 @@ class res_measure:
                    f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
                    f"\n Chi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
                  fontsize="small")
-        ax.xlim([np.min(x), np.max(x)])
+        ax.set_xlim([np.min(x), np.max(x)])
         #     if put==pl:
         #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
         #     else:
