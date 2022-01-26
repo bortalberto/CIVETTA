@@ -45,6 +45,84 @@ def de_correct_process_pd(row, corr):
     return pos_x, pos_y
 
 
+def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
+    nbins = 200
+    mean = np.mean(data.values.astype(np.float32))
+    data = {"res": data.values.astype(np.float32)}
+    rdf = R.RDF.MakeNumpyDataFrame(data)
+    amodel = R.RDF.TH1DModel("h1", "h1", nbins, mean - sigma_def, mean + sigma_def)
+    h1 = rdf.Histo1D(amodel, "res")
+    func = R.TF1("func", "gaus(0) +[3]", mean - sigma_def, mean + sigma_def, 4)
+    a_0, mean_0, sigma_0, c = p0
+    func.SetParameters(a_0, mean_0, sigma_0, c)
+    for n, limits in enumerate(zip(lower_bounds, upper_bounds)):
+        func.SetParLimits(n, limits[0], limits[1])
+    gaussFit = h1.Fit(func, "BQ")
+    pars = func.GetParameters()
+    popt = [pars[i] for i in range(0, 7)]
+    chi2 = func.GetChisquare()
+    ndof = func.GetNDF()
+    return popt, chi2
+
+
+def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
+    popt_list = []
+    pcov_list = []
+    res_list = []
+    R_list = []
+    chi_list = []
+    deg_list = []
+
+    data = cl_pd_res[f"res"]
+    data = data[abs(data - np.mean(data)) < sigma_def]
+    nbins = 200
+    y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
+
+    x = (x[1:] + x[:-1]) / 2
+    x = np.insert(x, 0, -0.2)
+    y = np.insert(y, 0, 0)
+    #             x=x[4000:6000]
+    #             y=y[4000:6000]
+    mean_1 = x[np.argmax(y)]
+    mean_0 = x[np.argmax(y)]
+    a_0 = np.max(y)
+    a_1 = np.max(y) / 10
+    sigma_0 = np.std(data)
+    sigma_1 = np.std(data) * 2
+    c = 0
+    #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
+    #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
+    #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
+
+    lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
+    upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
+
+    popt, chi_sqr = single_root_fit(data, [a_0, mean_0, sigma_0, c],
+                                    lower_bound, upper_bound, sigma_def=sigma_def)
+    pcov = 0
+    popt_list.append(popt)
+    pcov_list.append(pcov)
+    yexp = perf.gaus(x, *popt)
+    ss_res = np.sum((y - yexp) ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    res_list.append(y - yexp)
+    r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
+    R_list.append(r2)
+    #             print(scipy.stats.chisquare(y, yexp,len(x)-6-1))
+
+    #             chi_list.append(scipy.stats.chisquare(y, yexp,len(x)-6-1))
+    #             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
+    chi_list.append(chi_sqr)
+
+    deg_list.append(len(x) - 6 - 1)
+    #         yexp=doublegaus(x, *popt)
+    #         y_exp_norm =1000*yexp/np.sum(yexp)
+    #         print (np.sum(ynorm))
+    #         print (np.sum(y_exp_norm))
+    #         print (chisquare(ynorm,y_exp_norm, 6 ))
+    return popt_list, pcov_list, res_list, R_list, chi_list, deg_list
+
+
 class event_visualizer:
     """
     Class to manage the event visualizer without pre-elaborate the data each time
@@ -282,50 +360,50 @@ class eff_calculation:
 
             k = eff_pd_c[
                 (eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
-                            eff_pd_c.pos_y_pl < 8)].count().eff_x
-            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
                         eff_pd_c.pos_y_pl < 8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
+                    eff_pd_c.pos_y_pl < 8)].count().eff_x
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_x > 0)].channel.count()) / (
-                                         self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_x > 0)].channel.count()) / (
+                                     self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
-                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
+                                       self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
             prob_noise_eff_err = np.exp(rate_strip_avg) * error_rate_strip
             real_eff = (eff_x_good - prob_noise_eff) / (1 - prob_noise_eff)
             error_real_eff = ((eff_x_good_error / (1 - prob_noise_eff)) ** 2 + (
-                        prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
+                    prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
             print(f"---")
 
             k = eff_pd_c[
                 (eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
-                            eff_pd_c.pos_x_pl < 8)].count().eff_y
-            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
                         eff_pd_c.pos_x_pl < 8)].count().eff_y
+            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
+                    eff_pd_c.pos_x_pl < 8)].count().eff_y
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_y > 0)].channel.count()) / (
-                                         self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_y > 0)].channel.count()) / (
+                                     self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
-                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                                       self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
             prob_noise_eff_err = np.exp(rate_strip_avg) * error_rate_strip
             real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
             error_real_eff = ((eff_y_good_error / (1 - prob_noise_eff)) ** 2 + (
-                        prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
+                    prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
             print(f"---")
@@ -343,30 +421,30 @@ class eff_calculation:
             eff_pd_c = eff_pd
 
             k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (
-                        eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
+                    eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
             n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
-                        eff_pd_c.pos_y_pl < 8)].count().eff_x
+                    eff_pd_c.pos_y_pl < 8)].count().eff_x
             eff_and_good = k / n
             eff_and_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (
-                        1 / 2)
+                    1 / 2)
 
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (
-                        self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_x > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (
+                    self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
-                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
+                                       self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_effx = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650 * 2)
             prob_noise_eff_errx = np.exp(rate_strip_avg) * error_rate_strip
 
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (
-                        self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_y > 0)].channel.count()) / (self.hit_pd["count"].nunique() * (
+                    self.hit_pd["l1ts_min_tcoarse"].max() - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                        self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
-                                           self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+                    self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                                       self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
             prob_noise_effy = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
@@ -374,11 +452,11 @@ class eff_calculation:
 
             prob_noise_eff = prob_noise_effx + prob_noise_effy - prob_noise_effx * prob_noise_effy
             prob_noise_eff_err = (((1 - prob_noise_effy) * prob_noise_eff_errx) ** 2 + (
-                        (1 - prob_noise_effx) * prob_noise_eff_erry) ** 2) ** (1 / 2)
+                    (1 - prob_noise_effx) * prob_noise_eff_erry) ** 2) ** (1 / 2)
 
             real_eff = (eff_and_good - prob_noise_eff) / (1 - prob_noise_eff)
             error_real_eff = ((eff_and_good_error / (1 - prob_noise_eff)) ** 2 + (
-                        prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
+                    prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
 
             print(f"2D eff = {eff_and_good:.4f} +/- {eff_and_good_error:.4f}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
@@ -397,19 +475,19 @@ class res_measure:
         :param eff_pd:
         :param put:
         """
-        self.cl_pds={}
-        for put in range (0,4):
+        self.cl_pds = {}
+        for put in range(0, 4):
             cl_pd_x, cl_pd_y = self.generate_cl_res_pd(eff_pd, tracks_pd, cl_pd, put)
             self.cl_pds[f"{put}x"] = cl_pd_x
             self.cl_pds[f"{put}y"] = cl_pd_y
 
-    def generate_cl_res_pd(self, eff_pd, tracks_pd, cl_pd , put):
+    def generate_cl_res_pd(self, eff_pd, tracks_pd, cl_pd, put):
         """
         Generates the 2 pd to fit resisualds
         """
         eff_pd_c = eff_pd[
             (eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7) & (eff_pd.eff_x) & (
-                eff_pd.eff_y) & (eff_pd.PUT==put)]  # Select efficient events in the good region
+                eff_pd.eff_y) & (eff_pd.PUT == put)]  # Select efficient events in the good region
         good_evt = eff_pd_c["count"].unique()
         tracks_pd = tracks_pd[put]
         cl_pd = cl_pd[put]
@@ -468,21 +546,34 @@ class res_measure:
         # plt.show()
         ax.set_title(f"Fit view {view}, planar{pl}")
         ax.text(y=np.max(y) * 0.7, x=0 + popt[2],
-                 s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
-                   f"\nNorm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
-                   f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
-                 fontsize="small")
+                s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
+                  f"\nNorm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
+                  f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
+                fontsize="small")
         ax.set_xlim([np.min(x), np.max(x)])
         #     if put==pl:
         #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
         #     else:
         #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
 
-        return f,ax
+        return f, ax
 
-    def calc_res(self,planar, view):
+    def calc_res(self, planar, view):
         cl_pd = self.cl_pds[f"{planar}{view}"]
         popt_list, pcov_list, res_list, R_list, chi_list, deg_list = perf.double_gaus_fit_root(
             pd.DataFrame(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
         return popt_list[0], pcov_list[0], res_list[0], R_list[0], chi_list[0], deg_list[0]
 
+    def calc_enemy(self, view):
+        pd_list = []
+        for key in self.cl_pds:
+            pd_list.append(self.cl_pds[key])
+        cluster_pd_1D_match = pd.concat(pd_list)
+        cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
+
+        for pls in [(0, 1), (1, 2), (2, 3)]:
+            complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in {pls}]))
+            cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match["count"].isin(complete_evt)].reset_index()
+            residual_list = cluster_pd_1D_match.groupby("count", axis=0).progress_apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
+            popt_list, pcov_list, res_list, R_list, chi_list, deg_list = single_gaus_fit_root(pd.DataFrame({"res": residual_list}), sigma_def=0.2)
+            print(popt_list[1])
