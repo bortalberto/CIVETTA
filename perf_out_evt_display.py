@@ -403,7 +403,7 @@ class res_measure:
             self.cl_pds[f"{put}x"] = cl_pd_x
             self.cl_pds[f"{put}y"] = cl_pd_y
 
-    def generate_cl_res_pd(self, eff_pd, cl_pd, tracks_pd, put):
+    def generate_cl_res_pd(self, eff_pd, tracks_pd, cl_pd , put):
         """
         Generates the 2 pd to fit resisualds
         """
