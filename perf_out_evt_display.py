@@ -571,7 +571,7 @@ class res_measure:
         cluster_pd_1D_match = pd.concat(pd_list)
         cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
 
-        for pls in [(0, 1), (1, 2), (2, 3)]:
+        for pls in tqdm([(0, 1), (1, 2), (2, 3)], desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in {pls}]))
             cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match["count"].isin(complete_evt)].reset_index()
             residual_list = cluster_pd_1D_match.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
