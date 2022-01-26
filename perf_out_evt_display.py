@@ -471,6 +471,6 @@ class res_measure:
         return plt
 
     def calc_res(self, view):
-        cl_pd = self.cl_pds["view"]
+        cl_pd = self.cl_pds[view]
         popt_list, pcov_list, res_list, R_list, chi_list, deg_list = perf.double_gaus_fit_root(
             pd.DataFrames(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
