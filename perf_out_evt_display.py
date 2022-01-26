@@ -411,9 +411,11 @@ class res_measure:
             (eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7) & (eff_pd.eff_x) & (
                 eff_pd.eff_y)]  # Select efficient events in the good region
         good_evt = eff_pd_c["count"].unique()
+        tracks_pd = tracks_pd[put]
+        cl_pd = cl_pd[put]
 
-        tracks_pd = tracks_pd[tracks_pd["count"].isin(good_evt)  & (tracks_pd.planar == put)]  # Cut the row relative to other events
-        cl_pd = cl_pd[(cl_pd["count"].isin(good_evt)) & (cl_pd.planar == put)]
+        tracks_pd = tracks_pd[tracks_pd["count"].isin(good_evt)]  # Cut the row relative to other events
+        cl_pd = cl_pd[(cl_pd["count"].isin(good_evt))]
 
         tracks_pd.loc[:, "prev_pos_put_x"] = tracks_pd["fit_x"].apply(lambda x: x[0]) * put * 10 + tracks_pd["fit_x"].apply(
             lambda x: x[1])
