@@ -66,13 +66,6 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
 
 
 def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
-    popt_list = []
-    pcov_list = []
-    res_list = []
-    R_list = []
-    chi_list = []
-    deg_list = []
-
     data = cl_pd_res
     data = data[abs(data - np.mean(data)) < sigma_def]
     nbins = 200
@@ -83,12 +76,9 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     y = np.insert(y, 0, 0)
     #             x=x[4000:6000]
     #             y=y[4000:6000]
-    mean_1 = x[np.argmax(y)]
     mean_0 = x[np.argmax(y)]
     a_0 = np.max(y)
-    a_1 = np.max(y) / 10
     sigma_0 = np.std(data)
-    sigma_1 = np.std(data) * 2
     c = 0
     #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
     #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
@@ -566,9 +556,10 @@ class res_measure:
             pd_list.append(self.cl_pds[key])
         cluster_pd_1D_match = pd.concat(pd_list)
         cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
-
+        enemy_res_list=[]
         for pls in tqdm([(0, 1), (1, 2), (2, 3)], desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
-            print(popt_list)
+            enemy_res_list.append(popt_list[2])
+        return enemy_res_list
