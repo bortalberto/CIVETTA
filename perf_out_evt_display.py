@@ -102,7 +102,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     pcov = 0
     popt_list.append(popt)
     pcov_list.append(pcov)
-    yexp = perf.gaus(x, *popt[0:3]) + popt[4]
+    yexp = perf.gaus(x, *popt[0:3]) + popt[3]
     ss_res = np.sum((y - yexp) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
     res_list.append(y - yexp)
