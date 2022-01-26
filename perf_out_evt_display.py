@@ -557,9 +557,11 @@ class res_measure:
         cluster_pd_1D_match = pd.concat(pd_list)
         cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
         enemy_res_list=[]
+        chi_list=[]
         for pls in tqdm([(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)], desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
-            popt_list, pcov_list, res_list, R_list, chi_list, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
+            popt_list, pcov_list, res_list, R_list, chi, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
             enemy_res_list.append(popt_list[2])
-        return enemy_res_list
+            chi_list.append(chi)
+        return enemy_res_list, chi_list
