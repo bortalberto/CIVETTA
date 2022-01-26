@@ -457,7 +457,7 @@ class res_measure:
         # plt.ion()
         # plt.show()
         ax.set_title(f"Fit view {view}, planar{pl}")
-        ax.text(y=np.max(y) * 0.7, x=np.argmax(x) - 0.5,
+        ax.text(y=np.max(y) * 0.7, x=np.argmax(y) -0.5,
                  s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
                    f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
                    f"\n Chi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
