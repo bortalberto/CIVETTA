@@ -409,7 +409,7 @@ class res_measure:
         """
         eff_pd_c = eff_pd[
             (eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7) & (eff_pd.eff_x) & (
-                eff_pd.eff_y)]  # Select efficient events in the good region
+                eff_pd.eff_y) & (eff_pd.PUT==put)]  # Select efficient events in the good region
         good_evt = eff_pd_c["count"].unique()
         tracks_pd = tracks_pd[put]
         cl_pd = cl_pd[put]
