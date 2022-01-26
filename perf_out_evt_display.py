@@ -443,7 +443,7 @@ class res_measure:
         x = np.insert(x, 0, -0.2)
         y = np.insert(y, 0, 0)
         popt = popt_list
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(8, 4))
         plt.plot(x, y, 'b*', label='data')
         x = np.arange(np.min(x), np.max(x), 0.0002)
         plt.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')
