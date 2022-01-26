@@ -390,26 +390,35 @@ class res_measure:
     Class for the calculation of resolution
     """
 
-    def __init__(self, cl_pd, tracks_pd, eff_pd, put):
+    def __init__(self, cl_pd, tracks_pd, eff_pd):
         """
         :param cl_pd: match pd
         :param tracks_pd:
         :param eff_pd:
         :param put:
         """
-        self.put = put
+        self.cl_pds={}
+        for put in range (0,4):
+            cl_pd_x, cl_pd_y = self.generate_cl_res_pd(eff_pd, tracks_pd, cl_pd, put)
+            self.cl_pds[f"{put}x"] = cl_pd_x
+            self.cl_pds[f"{put}y"] = cl_pd_y
+
+    def generate_cl_res_pd(self, eff_pd, cl_pd, tracks_pd, put):
+        """
+        Generates the 2 pd to fit resisualds
+        """
         eff_pd_c = eff_pd[
             (eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7) & (eff_pd.eff_x) & (
                 eff_pd.eff_y)]  # Select efficient events in the good region
         good_evt = eff_pd_c["count"].unique()
 
         tracks_pd = tracks_pd[tracks_pd["count"].isin(good_evt)]  # Cut the row relative to other events
-        cl_pd = cl_pd[cl_pd["count"].isin(good_evt)]
+        cl_pd = cl_pd[(cl_pd["count"].isin(good_evt)) & (cl_pd.planar == put)]
 
-        tracks_pd.loc[:, "prev_pos_put_x"] = tracks_pd["fit_x"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd["fit_x"].apply(
+        tracks_pd.loc[:, "prev_pos_put_x"] = tracks_pd["fit_x"].apply(lambda x: x[0]) * put * 10 + tracks_pd["fit_x"].apply(
             lambda x: x[1])
-        tracks_pd.loc[:, "prev_pos_put_y"] = tracks_pd["fit_y"].apply(lambda x: x[0]) * self.put * 10 + tracks_pd["fit_y"].apply(
-            lambda x: x[1]) # Calculate supposed position
+        tracks_pd.loc[:, "prev_pos_put_y"] = tracks_pd["fit_y"].apply(lambda x: x[0]) * put * 10 + tracks_pd["fit_y"].apply(
+            lambda x: x[1])  # Calculate supposed position
 
         duplicated_cl_event = cl_pd["count"].unique()[cl_pd.groupby("count").agg("size") > 2]  # Drop events with 2 efficient clusters
         cl_pd = cl_pd[~cl_pd["count"].isin(duplicated_cl_event)]
@@ -427,8 +436,7 @@ class res_measure:
 
         cl_pd_x.loc[:, "res_x"] = tracks_pd.prev_pos_put_x - cl_pd_x.loc[:, "cl_pos_x_cm"]
         cl_pd_y.loc[:, "res_y"] = tracks_pd.prev_pos_put_y - cl_pd_y.loc[:, "cl_pos_y_cm"]
-
-        self.cl_pds = {"x": cl_pd_x, "y": cl_pd_y}
+        return cl_pd_x, cl_pd_y
 
     def plot_residuals(self, cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
         data = cl_pd_res[f"res_{view}"]
@@ -459,8 +467,8 @@ class res_measure:
         ax.set_title(f"Fit view {view}, planar{pl}")
         ax.text(y=np.max(y) * 0.7, x=0 +0.1,
                  s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
-                   f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
-                   f"\n Chi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
+                   f"\nNorm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
+                   f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
                  fontsize="small")
         ax.set_xlim([np.min(x), np.max(x)])
         #     if put==pl:
@@ -470,8 +478,8 @@ class res_measure:
 
         return f,ax
 
-    def calc_res(self, view):
-        cl_pd = self.cl_pds[view]
+    def calc_res(self,planar, view):
+        cl_pd = self.cl_pds[f"{planar}{view}"]
         popt_list, pcov_list, res_list, R_list, chi_list, deg_list = perf.double_gaus_fit_root(
             pd.DataFrame(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
         return popt_list[0], pcov_list[0], res_list[0], R_list[0], chi_list[0], deg_list[0]
