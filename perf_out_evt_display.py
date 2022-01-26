@@ -574,6 +574,6 @@ class res_measure:
         for pls in [(0, 1), (1, 2), (2, 3)]:
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in {pls}]))
             cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match["count"].isin(complete_evt)].reset_index()
-            residual_list = cluster_pd_1D_match.groupby("count", axis=0).progress_apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
+            residual_list = cluster_pd_1D_match.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = single_gaus_fit_root(pd.DataFrame({"res": residual_list}), sigma_def=0.2)
             print(popt_list[1])
