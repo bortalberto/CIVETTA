@@ -468,7 +468,7 @@ class res_measure:
         #     else:
         #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
 
-        return ax
+        return f,ax
 
     def calc_res(self, view):
         cl_pd = self.cl_pds[view]
