@@ -574,8 +574,5 @@ class res_measure:
         for pls in tqdm([(0, 1), (1, 2), (2, 3)], desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
-            print (residual_list)
-            return residual_list
-
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
             print(popt_list[1])
