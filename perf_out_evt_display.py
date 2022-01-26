@@ -442,7 +442,7 @@ class res_measure:
         x = (x[1:] + x[:-1]) / 2
         x = np.insert(x, 0, -0.2)
         y = np.insert(y, 0, 0)
-        popt = popt_list[pl]
+        popt = popt_list
         plt.figure(figsize=(10, 6))
         plt.plot(x, y, 'b*', label='data')
         x = np.arange(np.min(x), np.max(x), 0.0002)
@@ -458,9 +458,9 @@ class res_measure:
         # plt.show()
         plt.title(f"Fit view {view}, planar{pl}")
         plt.text(y=np.max(y) * 0.7, x=np.argmax(x) - 0.5,
-                 s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
+                 s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
                    f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
-                   f"\n Chi_sqrt={chi_list[pl]:.3e}, Chi_sqrt/NDoF = {chi_list[pl] / deg_list[pl]:.3e}",
+                   f"\n Chi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
                  fontsize="small")
         plt.xlim([np.min(x), np.max(x)])
         #     if put==pl:
