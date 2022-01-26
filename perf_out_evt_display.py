@@ -443,32 +443,32 @@ class res_measure:
         x = np.insert(x, 0, -0.2)
         y = np.insert(y, 0, 0)
         popt = popt_list
-        plt.figure(figsize=(8, 4))
-        plt.plot(x, y, 'b*', label='data')
+        f, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(x, y, 'b*', label='data')
         x = np.arange(np.min(x), np.max(x), 0.0002)
-        plt.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')
-        plt.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
-        plt.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
-        plt.grid()
+        ax.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')
+        ax.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
+        ax.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
+        ax.grid()
         # plt.legend()
         # plt.title('Fig. 3 - Fit for Time Cons§tant')
-        plt.ylabel('#')
-        plt.xlabel('Residual [cm]')
+        ax.ylabel('#')
+        ax.xlabel('Residual [cm]')
         # plt.ion()
         # plt.show()
-        plt.title(f"Fit view {view}, planar{pl}")
-        plt.text(y=np.max(y) * 0.7, x=np.argmax(x) - 0.5,
+        ax.title(f"Fit view {view}, planar{pl}")
+        ax.text(y=np.max(y) * 0.7, x=np.argmax(x) - 0.5,
                  s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
                    f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
                    f"\n Chi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
                  fontsize="small")
-        plt.xlim([np.min(x), np.max(x)])
+        ax.xlim([np.min(x), np.max(x)])
         #     if put==pl:
         #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
         #     else:
         #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
 
-        return plt
+        return ax
 
     def calc_res(self, view):
         cl_pd = self.cl_pds[view]
