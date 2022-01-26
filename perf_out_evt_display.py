@@ -99,11 +99,10 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
 
     popt, chi_sqr = single_root_fit(data, [a_0, mean_0, sigma_0, c],
                                     lower_bound, upper_bound, sigma_def=sigma_def)
-    print (popt)
     pcov = 0
     popt_list.append(popt)
     pcov_list.append(pcov)
-    yexp = perf.gaus(x, *popt)
+    yexp = perf.gaus(x, *popt[0:3]) + popt[4]
     ss_res = np.sum((y - yexp) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
     res_list.append(y - yexp)
