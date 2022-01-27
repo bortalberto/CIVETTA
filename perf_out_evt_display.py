@@ -59,7 +59,7 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
         func.SetParLimits(n, limits[0], limits[1])
     gaussFit = h1.Fit(func, "BQ")
     pars = func.GetParameters()
-    errors = func.ParErrors()
+    errors = func.GetParErrors()
     error = [ errors[1] for i in range (0,4)]
     popt = [pars[i] for i in range(0, 4)]
     chi2 = func.GetChisquare()
