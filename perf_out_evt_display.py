@@ -69,6 +69,7 @@ def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list
         data = data[abs(data - np.mean(data)) < sigma_def]
         nbins = 200
         y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
+        print(np.max(y))
         x = (x[1:] + x[:-1]) / 2
         x = np.insert(x, 0, -0.2)
         y = np.insert(y, 0, 0)
@@ -105,6 +106,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     data = data[abs(data - np.mean(data)) < sigma_def]
     nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
+    print(np.max(y))
     x = (x[1:] + x[:-1]) / 2
     x = np.insert(x, 0, -0.2)
     y = np.insert(y, 0, 0)
