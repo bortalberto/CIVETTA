@@ -70,8 +70,8 @@ def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list
         nbins = 200
         y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
         x = (x[1:] + x[:-1]) / 2
-        x = np.insert(x, 0, -0.2)
-        y = np.insert(y, 0, 0)
+        # x = np.insert(x, 0, -0.2)
+        # y = np.insert(y, 0, 0)
         popt = popt_list
         f, ax = plt.subplots(figsize=(10, 6))
         ax.plot(x, y, 'b*', label='data')
@@ -106,8 +106,8 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
     x = (x[1:] + x[:-1]) / 2
-    x = np.insert(x, 0, -0.2)
-    y = np.insert(y, 0, 0)
+    # x = np.insert(x, 0, -0.2)
+    # y = np.insert(y, 0, 0)
     #             x=x[4000:6000]
     #             y=y[4000:6000]
     mean_0 = x[np.argmax(y)]
@@ -548,8 +548,8 @@ class res_measure:
             nbins = 200
         y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
         x = (x[1:] + x[:-1]) / 2
-        x = np.insert(x, 0, -0.2)
-        y = np.insert(y, 0, 0)
+        # x = np.insert(x, 0, -0.2)
+        # y = np.insert(y, 0, 0)
         popt = popt_list
         f, ax = plt.subplots(figsize=(10, 6))
         ax.plot(x, y, 'b*', label='data')

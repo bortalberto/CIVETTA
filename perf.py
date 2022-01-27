@@ -315,8 +315,8 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
             y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
 
             x = (x[1:] + x[:-1]) / 2
-            x = np.insert(x,0,-0.2)
-            y = np.insert(y,0,0)
+            # x = np.insert(x,0,-0.2)
+            # y = np.insert(y,0,0)
             #             x=x[4000:6000]
             #             y=y[4000:6000]
             mean_1 =  x[np.argmax(y)]
