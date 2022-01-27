@@ -64,6 +64,41 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
     ndof = func.GetNDF()
     return popt, chi2
 
+def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, sigma_def=0.2):
+        data = cl_pd_res
+        data = data[abs(data - np.mean(data)) < sigma_def]
+        nbins = 200
+        y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
+        x = (x[1:] + x[:-1]) / 2
+        x = np.insert(x, 0, -0.2)
+        y = np.insert(y, 0, 0)
+        popt = popt_list
+        f, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(x, y, 'b*', label='data')
+        x = np.arange(np.min(x), np.max(x), 0.0002)
+        ax.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')+popt[3]
+        # ax.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
+        # ax.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
+        ax.grid()
+        # plt.legend()
+        # plt.title('Fig. 3 - Fit for Time Cons§tant')
+        ax.set_ylabel('#')
+        ax.set_xlabel('Residual [cm]')
+        # plt.ion()
+        # plt.show()
+        ax.set_title(f"Fit view {view}, planar{pl}")
+        ax.text(y=np.max(y) * 0.7, x=0 + popt[2],
+                s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
+                  f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
+                fontsize="small")
+        ax.set_xlim([np.min(x), np.max(x)])
+        #     if put==pl:
+        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
+        #     else:
+        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
+
+        return f, ax
+
 
 def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     data = cl_pd_res
@@ -100,7 +135,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     #             chi_list.append(scipy.stats.chisquare(y, yexp,len(x)-6-1))
     #             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
 
-    deg=(len(x) - 4 - 1)
+    deg = (len(x) - 4 - 1)
     #         yexp=doublegaus(x, *popt)
     #         y_exp_norm =1000*yexp/np.sum(yexp)
     #         print (np.sum(ynorm))
