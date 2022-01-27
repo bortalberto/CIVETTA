@@ -116,8 +116,9 @@ class runner:
         pd_list = []
         for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
             pd_list.append(pd.read_pickle(filename, compression="gzip"))
-        subrun_pd = pd.concat(pd_list, ignore_index=True)
-        subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
+        if len(pd_list)>0:
+            subrun_pd = pd.concat(pd_list, ignore_index=True)
+            subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
 
     def merge_dec (self):
         """
