@@ -112,6 +112,12 @@ class runner:
         input_list=[]
         for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_dat/RUN_{}/SubRUN_*_GEMROC_*_TM.dat".format(self.run_number), with_matches=True):
             input_list.append((filename, int(subrun), int(gemroc)))
+    def merg_dec_func(self, subrun ):
+        pd_list = []
+        for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
+            pd_list.append(pd.read_pickle(filename, compression="gzip"))
+        subrun_pd = pd.concat(pd_list, ignore_index=True)
+        subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
 
     def merge_dec (self):
         """
@@ -137,12 +143,17 @@ class runner:
             if not self.silent:
                 print ("Merging files")
 
-            for subrun in tqdm(set(subrun_list), disable=self.silent):
-                pd_list = []
-                for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
-                    pd_list.append(pd.read_pickle(filename, compression="gzip"))
-                subrun_pd=pd.concat(pd_list,ignore_index=True)
-                subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
+            if len(subrun_list) > 0:
+                with Pool(processes=self.cpu_to_use) as pool:
+                    with tqdm (total = len (subrun_list), disable=self.silent) as pbar:
+                        for i, _ in enumerate (pool.imap_unordered(self.merg_dec_func, subrun_list)):
+                            pbar.update()
+            # for subrun in tqdm(set(subrun_list), disable=self.silent):
+            #     pd_list = []
+            #     for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
+            #         pd_list.append(pd.read_pickle(filename, compression="gzip"))
+            #     subrun_pd=pd.concat(pd_list,ignore_index=True)
+            #     subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
 
 
         if self.purge:
