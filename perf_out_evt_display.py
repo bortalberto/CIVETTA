@@ -59,10 +59,12 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
         func.SetParLimits(n, limits[0], limits[1])
     gaussFit = h1.Fit(func, "BQ")
     pars = func.GetParameters()
+    errors = func.ParErrors()
+    error = [ errors[1] for i in range (0,4)]
     popt = [pars[i] for i in range(0, 4)]
     chi2 = func.GetChisquare()
     ndof = func.GetNDF()
-    return popt, chi2
+    return popt, chi2, error, ndof
 
 def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, sigma_def=0.2):
         data = cl_pd_res
@@ -121,7 +123,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
     upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
 
-    popt, chi_sqr = single_root_fit(data, [a_0, mean_0, sigma_0, c],
+    popt, chi_sqr, error, ndof = single_root_fit(data, [a_0, mean_0, sigma_0, c],
                                     lower_bound, upper_bound, sigma_def=sigma_def)
     pcov = 0
     yexp = perf.gaus(x, *popt[0:3]) + popt[3]
@@ -134,13 +136,13 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     #             chi_list.append(scipy.stats.chisquare(y, yexp,len(x)-6-1))
     #             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
 
-    deg = (len(x) - 4 - 1)
+    deg = ndof
     #         yexp=doublegaus(x, *popt)
     #         y_exp_norm =1000*yexp/np.sum(yexp)
     #         print (np.sum(ynorm))
     #         print (np.sum(y_exp_norm))
     #         print (chisquare(ynorm,y_exp_norm, 6 ))
-    return popt, pcov, res, r2, chi_sqr, deg
+    return popt, pcov, res, r2, chi_sqr, deg, error
 
 
 class event_visualizer:
@@ -594,13 +596,15 @@ class res_measure:
         chi_list = []
         enemey_res_list = []
         pos_res_list = []
+        error_list = []
         for pls in tqdm([(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)], desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
-            popt_list, pcov_list, res_list, R_list, chi, deg_list = single_gaus_fit_root(residual_list, sigma_def=0.2)
+            popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(residual_list, sigma_def=0.2)
             enemy_res_list.append(popt_list[2])
+            error_list.append(popt_list[2])
             chi_list.append(chi/deg_list)
             enemey_res_list.append(residual_list)
             pos_res_list.append(pos_list)
-        return enemy_res_list, chi_list, enemey_res_list, pos_res_list
+        return enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list
