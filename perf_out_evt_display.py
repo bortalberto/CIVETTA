@@ -60,7 +60,7 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
     gaussFit = h1.Fit(func, "BQ")
     pars = func.GetParameters()
     errors = func.GetParErrors()
-    error = [ errors[1] for i in range (0,4)]
+    error = [ errors[i] for i in range (0,4)]
     popt = [pars[i] for i in range(0, 4)]
     chi2 = func.GetChisquare()
     ndof = func.GetNDF()
@@ -603,7 +603,7 @@ class res_measure:
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(residual_list, sigma_def=0.2)
             enemy_res_list.append(popt_list[2])
-            error_list.append(popt_list[2])
+            error_list.append(error[2])
             chi_list.append(chi/deg_list)
             enemey_res_list.append(residual_list)
             pos_res_list.append(pos_list)
