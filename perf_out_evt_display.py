@@ -76,7 +76,7 @@ def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list
         f, ax = plt.subplots(figsize=(10, 6))
         ax.plot(x, y, 'b*', label='data')
         x = np.arange(np.min(x), np.max(x), 0.0002)
-        ax.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')+popt[3]
+        ax.plot(x, perf.gaus(x, *popt[0:3]) + popt[3] , 'c-', label='fit 0')
         # ax.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
         # ax.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
         ax.grid()
