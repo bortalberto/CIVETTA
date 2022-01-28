@@ -306,8 +306,6 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
             deg_list.append(1)
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
-            if np.std(data)*2>sigma_def:
-                sigma_def = np.std(data)*2
             sigma_0=sigma_def
             data = data[abs(data) < sigma_0]
             if data.shape[0]>20000:
@@ -434,8 +432,8 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
         nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
     x = (x[1:] + x[:-1]) / 2
-    x = np.insert(x, 0, -0.2)
-    y = np.insert(y, 0, 0)
+    # x = np.insert(x, 0, -0.2)
+    # y = np.insert(y, 0, 0)
     popt = popt_list[pl]
     plt.figure(figsize=(10, 6))
     plt.plot(x, y, 'b*', label='data')
@@ -471,7 +469,7 @@ def estimate_sigma_def(tracks_pd):
         for pl in range (0,4):
             std_list.append(tracks_pd[f"res_{view}"].apply(lambda x: x[pl]).std())
     if np.max(std_list) > 0.2:
-        return np.max(std_list)
+        return np.max(std_list)*2
     else:
         return 0.2
 
