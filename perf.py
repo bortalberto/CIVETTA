@@ -259,16 +259,13 @@ def gaus(x, a, x0, sigma):
 
 
 
-def root_fit(data, p0, lower_bounds, upper_bounds):
-    if data.shape[0]>20000:
-        nbins=1000
-    else:
-        nbins=200
+def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
+    nbins=200
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
-    amodel=R.RDF.TH1DModel("h1","h1",nbins,-0.2,0.2)
+    amodel=R.RDF.TH1DModel("h1","h1",nbins,-sigma_def,sigma_def)
     h1 = rdf.Histo1D(amodel,"res")
-    func=R.TF1("func", "gaus(0) + gaus(3) +[6]", -0.2,0.2,6)
+    func=R.TF1("func", "gaus(0) + gaus(3) +[6]", -sigma_def,sigma_def,6)
     a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c = p0
     func.SetParameters(a_0,mean_0,sigma_0,a_1,mean_1,sigma_1, c)
     for n, limits in enumerate(zip(lower_bounds,upper_bounds)):
@@ -308,10 +305,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             sigma_0=sigma_def
             data = data[abs(data) < sigma_0]
-            if data.shape[0]>20000:
-                nbins=1000
-            else:
-                nbins=200
+            nbins=200
             y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
 
             x = (x[1:] + x[:-1]) / 2
@@ -333,7 +327,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
             lower_bound=[np.max(y)/4*3,x[np.argmax(y)]-0.01,0,               0,x[np.argmax(y)]-0.01,0,     0]
             upper_bound=[np.max(y)    ,x[np.argmax(y)]+0.01,sigma_0+5,       np.max(y)/4,x[np.argmax(y)]+0.01,sigma_0*5,     200]
 
-            popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound )
+            popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound, sigma_def )
             pcov=0
             popt_list.append(popt)
             pcov_list.append(pcov)
@@ -426,10 +420,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     sigma_0 = sigma_def
     data = data[abs(data) < sigma_0]
-    if data.shape[0] > 20000:
-        nbins = 1000
-    else:
-        nbins = 200
+    nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
