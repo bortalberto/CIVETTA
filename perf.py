@@ -613,7 +613,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         popt_list_put_x=popt_list
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
 
-        if any([R < 0.6 for R in R_list]):
+        if any([R < 0.1 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
 
@@ -628,7 +628,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 
 
         plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
-        if any([R < 0.6 for R in R_list]):
+        if any([R < 0.1 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
 
@@ -661,7 +661,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
                     (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
                     ]
-            if any([R < 0.6 for R in R_list]):
+            if any([R < 0.1 for R in R_list]):
                 logger.write_log(
                     f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
                 raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
