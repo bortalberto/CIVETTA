@@ -469,7 +469,7 @@ def estimate_sigma_def(tracks_pd):
     std_list=[]
     for view in ("x","y"):
         for pl in range (0,4):
-            std_list.append(tracks_pd[f"res{view}"].apply(lambda x: x[pl]).std())
+            std_list.append(tracks_pd[f"res_{view}"].apply(lambda x: x[pl]).std())
     if np.max(std_list) > 0.2:
         return np.max(std_list)
     else:
