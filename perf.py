@@ -324,8 +324,8 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
 #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
 #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
 
-            lower_bound=[np.max(y)/4*3,x[np.argmax(y)]-sigma_0/20,0,               0,x[np.argmax(y)]-sigma_0/20,         0,     0]
-            upper_bound=[np.max(y)    ,x[np.argmax(y)]+sigma_0/20,sigma_0+5,       np.max(y)/4,x[np.argmax(y)]+sigma_0/20,sigma_0*5,     200]
+            lower_bound=[np.max(y)/4*3,x[np.argmax(y)]-sigma_0/10,0,               0,x[np.argmax(y)]-sigma_0/10,         0,     0]
+            upper_bound=[np.max(y)    ,x[np.argmax(y)]+sigma_0/10,sigma_0*5,       np.max(y)/4,x[np.argmax(y)]+sigma_0/10,sigma_0*5,     200]
 
             popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound, sigma_def )
             pcov=0
