@@ -126,7 +126,7 @@ if __name__=="__main__":
     parser.add_argument('-sT','--sigmas_trackers', help='Sigma trackers', type=float, default=1)
     parser.add_argument('-chi','--chi_sqared', help='Use chi squared cut on trackers',action="store_true")
     parser.add_argument('-sD','--sigmas_DUT', help='Sigma DUT', type=int, default=5)
-    parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int, default=-1)
+    parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int, default=-2)
     parser.add_argument('-mt','--multi_tracks_suppresion', help='Activate suppression of multi tracks events',action="store_true")
     parser.add_argument('-ht','--hit_efficiency', help='Calculate efficiency with hits',action="store_true")
 
