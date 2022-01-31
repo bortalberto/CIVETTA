@@ -188,7 +188,6 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
     upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
 
-    sigma_def=estimate_sigma_def(data)
     popt, chi_sqr, error, ndof = single_root_fit(data, [a_0, mean_0, sigma_0, c],
                                     lower_bound, upper_bound, sigma_def=sigma_def)
     pcov = 0
