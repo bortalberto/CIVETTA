@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import glob
 from scipy.optimize import curve_fit
 import scipy.integrate
+from scipy.stats import zscore
 import ROOT as R
 import  sys
 import configparser
@@ -352,51 +353,51 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
     #         print (chisquare(ynorm,y_exp_norm, 6 ))
     return popt_list, pcov_list, res_list, R_list, chi_list, deg_list
 
-def double_gaus_fit(tracks_pd, view="x", put=-1):
-    popt_list = []
-    pcov_list = []
-    res_list = []
-    R_list = []
-
-    for pl in range(0, 4):
-        if pl==put:
-            popt_list.append(0)
-            pcov_list.append(0)
-            res_list.append(0)
-            R_list.append(1)
-        else:
-            data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
-            sigma_0 = np.std(data)
-            if sigma_0<0.2:
-                sigma_0=0.2
-            data = data[abs(data) < sigma_0]
-            sigma_0 = np.std(data)
-            y, x = np.histogram(data, bins=1000)
-            if y.max<200:
-                y, x = np.histogram(data, bins=50)
-            mean_1 = x[np.argmax(y)]
-            mean_0 = x[np.argmax(y)]
-            a_0 = np.max(y)
-            a_1 = np.max(y) / 5
-            sigma_1 = sigma_0 * 3
-            x = (x[1:] + x[:-1]) / 2
-            upper_bound=[np.inf, 0.1, 1, np.inf,0.1,2,0]
-            lower_bound=[0,-0.1,0,0,-0.1,0,np.mean(y)]
-            popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, 0], bounds=(lower_bound, upper_bound))
-            popt_list.append(popt)
-            pcov_list.append(pcov)
-            yexp = doublegaus(x, *popt)
-            ss_res = np.sum((y - yexp) ** 2)
-            ss_tot = np.sum((y - np.mean(y)) ** 2)
-            res_list.append(y - yexp)
-            r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
-            R_list.append(r2)
-    #         yexp=doublegaus(x, *popt)
-    #         y_exp_norm =1000*yexp/np.sum(yexp)
-    #         print (np.sum(ynorm))
-    #         print (np.sum(y_exp_norm))
-    #         print (chisquare(ynorm,y_exp_norm, 6 ))
-    return popt_list, pcov_list, res_list, R_list
+# def double_gaus_fit(tracks_pd, view="x", put=-1):
+#     popt_list = []
+#     pcov_list = []
+#     res_list = []
+#     R_list = []
+#
+#     for pl in range(0, 4):
+#         if pl==put:
+#             popt_list.append(0)
+#             pcov_list.append(0)
+#             res_list.append(0)
+#             R_list.append(1)
+#         else:
+#             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
+#             sigma_0 = np.std(data)
+#             if sigma_0<0.2:
+#                 sigma_0=0.2
+#             data = data[abs(data) < sigma_0]
+#             sigma_0 = np.std(data)
+#             y, x = np.histogram(data, bins=1000)
+#             if y.max<200:
+#                 y, x = np.histogram(data, bins=50)
+#             mean_1 = x[np.argmax(y)]
+#             mean_0 = x[np.argmax(y)]
+#             a_0 = np.max(y)
+#             a_1 = np.max(y) / 5
+#             sigma_1 = sigma_0 * 3
+#             x = (x[1:] + x[:-1]) / 2
+#             upper_bound=[np.inf, 0.1, 1, np.inf,0.1,2,0]
+#             lower_bound=[0,-0.1,0,0,-0.1,0,np.mean(y)]
+#             popt, pcov = curve_fit(doublegaus, x, y, p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, 0], bounds=(lower_bound, upper_bound))
+#             popt_list.append(popt)
+#             pcov_list.append(pcov)
+#             yexp = doublegaus(x, *popt)
+#             ss_res = np.sum((y - yexp) ** 2)
+#             ss_tot = np.sum((y - np.mean(y)) ** 2)
+#             res_list.append(y - yexp)
+#             r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
+#             R_list.append(r2)
+#     #         yexp=doublegaus(x, *popt)
+#     #         y_exp_norm =1000*yexp/np.sum(yexp)
+#     #         print (np.sum(ynorm))
+#     #         print (np.sum(y_exp_norm))
+#     #         print (chisquare(ynorm,y_exp_norm, 6 ))
+#     return popt_list, pcov_list, res_list, R_list
 
 def load_nearest_correction(path,run_number, logger=None):
     path_list = glob.glob(os.path.join(path,"*"))
@@ -458,8 +459,10 @@ def estimate_sigma_def(tracks_pd):
     std_list=[]
     for view in ("x","y"):
         for pl in range (0,4):
-            std_list.append(tracks_pd[f"res_{view}"].apply(lambda x: x[pl]).std())
-    print (std_list)
+            this_view_res = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
+            z_scores = zscore(this_view_res)
+
+            std_list.append(np.std(this_view_res[np.abs(z_scores)<1]))
     return np.max(std_list)
 
 
@@ -605,7 +608,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
         view = "x"
-        sigma_set=estimate_sigma_def(tracks_pd_res)
+        sigma_set = estimate_sigma_def(tracks_pd_res)
         popt_list, pcov_list, res_list, R_list,chi_list, deg_list = double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
         print (len(popt_list), len(pcov_list), len(res_list), len(R_list),len(chi_list), len(deg_list))
         put_mean_x = ((popt_list[put][1] * popt_list[put][0] * popt_list[put][2]) + (popt_list[put][4] * popt_list[put][3] * popt_list[put][5])) / (popt_list[put][0] * popt_list[put][2] + popt_list[put][3] * popt_list[put][5])
