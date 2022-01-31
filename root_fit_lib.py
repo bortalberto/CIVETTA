@@ -32,7 +32,7 @@ def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
     return popt, chi2
 
 
-def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
+def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=range(0,4)):
     """
     Performs a gaussian double fit
     :param tracks_pd:
@@ -47,7 +47,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
     R_list = []
     chi_list = []
     deg_list = []
-    for pl in range(0, 4):
+    for pl in pl_list:
         if pl==put:
             popt_list.append(0)
             pcov_list.append(0)
