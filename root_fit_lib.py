@@ -58,6 +58,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             sigma_def = estimate_sigma_def(data)
+            print (sigma_def)
             data = data[abs(data) < sigma_def]
             nbins=200
             y, x = np.histogram(data, bins=nbins, range=[-sigma_def,sigma_def])
@@ -78,11 +79,13 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
 #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
 #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
 
-            lower_bound=[np.max(y)/5*4,x[np.argmax(y)]-sigma_0/10,0,               0,x[np.argmax(y)]-sigma_0/10,         0,     0]
-            upper_bound=[np.max(y)    ,x[np.argmax(y)]+sigma_0/10,sigma_0,       np.max(y)/5,x[np.argmax(y)]+sigma_0/10,sigma_def,     200]
+            lower_bound=[np.max(y)/5*4,x[np.argmax(y)]-sigma_0/3,0,               0,x[np.argmax(y)]-sigma_0/3,         0,     0]
+            upper_bound=[np.max(y)    ,x[np.argmax(y)]+sigma_0/3,sigma_0,       np.max(y)/5,x[np.argmax(y)]+sigma_0/3,sigma_def,     200]
+            print(pl)
             print(lower_bound)
-            print (upper_bound)
             print ([a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c])
+            print (upper_bound)
+            print ("---")
             popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound, sigma_def )
             pcov=0
             popt_list.append(popt)
