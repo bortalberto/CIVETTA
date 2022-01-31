@@ -682,7 +682,7 @@ def extract_eff_and_res(run, data_folder):
 
     elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
     ## Builds the folders
-    if not os.path.isdir(elab_folder) :
+    if not os.path.isdir(elab_folder):
         os.mkdir(elab_folder)
 
     eff_calc = eff_calculation(eff_pd, hit_pd=hit_pd, log_path=log_file, correction=correction, outpath=elab_folder)

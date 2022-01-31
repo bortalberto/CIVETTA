@@ -39,7 +39,7 @@ class runner:
         perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
 
     def save_eff(self):
-        perfo.extract_eff_and_res(self.data_folder, self.run, )
+        perfo.extract_eff_and_res(self.run_number, self.data_folder, )
 
 ##############################################################################################
 ##																							##
@@ -121,8 +121,8 @@ def main(run, **kwargs):
 
     if "perf" in (op_list):
         main_runner.eval_perf(args.performance)
-    if "save_eff" in (op_list)
-        main_runner
+    if "save_eff" in (op_list):
+        main_runner.save_eff()
     if "save_events" in (op_list):
         main_runner.save_events(args.save_events[0], args.save_events[1])
 
