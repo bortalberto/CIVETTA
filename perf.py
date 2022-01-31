@@ -320,7 +320,7 @@ def estimate_sigma_def(tracks_pd):
             z_scores = zscore(this_view_res)
             std = np.std(this_view_res[np.abs(z_scores) < 2])
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(this_view_res[np.abs(z_scores) < 2], std)
-            sigma_list.append(popt_list[2]*2)
+            sigma_list.append(popt_list[2]*4)
     print (sigma_list)
     return np.max(sigma_list)
 
