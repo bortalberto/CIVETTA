@@ -35,6 +35,8 @@ class runner:
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
                         nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
 
+    def save_events(self, put, nevents):
+        perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
 
 ##############################################################################################
 ##																							##
@@ -72,6 +74,8 @@ def main(run, **kwargs):
         print (f"Data_folder : {data_folder}")
         if args.performance:
             print("         -Performance evaluation")
+        if args.save_events:
+            print("         -Saving events")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
         print ("#############################################################")
@@ -103,6 +107,7 @@ def main(run, **kwargs):
         print ("Efficiency on hits")
     if args.save_events:
         print (args.save_events)
+        op_list.append("save_events")
     if len (op_list)>0:
         main_runner = runner(data_folder, run, **options)
     else:
@@ -111,6 +116,8 @@ def main(run, **kwargs):
 
     if "perf" in (op_list):
         main_runner.eval_perf(args.performance)
+    if "save_events" in (op_list):
+        main_runner.save_events(args.save_events[0], args.save_events[1])
 
 
 
