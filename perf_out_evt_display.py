@@ -520,9 +520,9 @@ class res_measure:
         f, ax = plt.subplots(figsize=(10, 6))
         ax.plot(x, y, 'b*', label='data')
         x = np.arange(np.min(x), np.max(x), 0.0002)
-        ax.plot(x, perf.gaus(x, *popt[0:3]), 'c-', label='fit 0')
-        ax.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
-        ax.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
+        ax.plot(x, r_fit.gaus(x, *popt[0:3]), 'c-', label='fit 0')
+        ax.plot(x, r_fit.gaus(x, *popt[3:6]), 'g-', label='fit 1')
+        ax.plot(x, r_fit.doublegaus(x, *popt), 'r-', label='fit cumulative')
         ax.grid()
         # plt.legend()
         # plt.title('Fig. 3 - Fit for Time Cons§tant')
@@ -546,7 +546,7 @@ class res_measure:
 
     def calc_res(self, planar, view):
         cl_pd = self.cl_pds[f"{planar}{view}"]
-        popt_list, pcov_list, res_list, R_list, chi_list, deg_list = perf.double_gaus_fit_root(
+        popt_list, pcov_list, res_list, R_list, chi_list, deg_list = r_fit.double_gaus_fit_root(
             pd.DataFrame(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
         return popt_list[0], pcov_list[0], res_list[0], R_list[0], chi_list[0], deg_list[0]
 
