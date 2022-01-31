@@ -313,13 +313,16 @@ def load_correction(path, run_number):
 
 
 def estimate_sigma_def(tracks_pd):
-    std_list=[]
+    sigma_list=[]
     for view in ("x","y"):
         for pl in range (0,4):
             this_view_res = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             z_scores = zscore(this_view_res)
-            std_list.append(np.std(this_view_res[np.abs(z_scores)<1]))
-    return np.max(std_list)
+            std = np.std(this_view_res[np.abs(z_scores) < 2])
+            popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(this_view_res[np.abs(z_scores) < 2], std)
+            sigma_list.append(popt_list[2]*2)
+    print (sigma_list)
+    return np.max(sigma_list)
 
 
 
