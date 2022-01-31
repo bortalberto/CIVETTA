@@ -253,5 +253,5 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
 def estimate_sigma_def(data):
     z_scores = zscore(data)
     std = np.std(data[np.abs(z_scores) < 2])
-    popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(this_view_res[np.abs(z_scores) < 2], std*2)
+    popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data[np.abs(z_scores) < 2], std*2)
     return (popt_list[2]*5)
