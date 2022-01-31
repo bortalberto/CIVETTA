@@ -130,7 +130,7 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
 
 def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, sigma_def=0.2):
         data = cl_pd_res
-        sigma_def = estimate_sigma_def(data)
+        # sigma_def = estimate_sigma_def(data)
 
         data = data[abs(data - np.mean(data)) < sigma_def]
         nbins = 200
@@ -251,7 +251,7 @@ def estimate_sigma_def(data):
     z_scores = zscore(data)
     std = np.std(data[np.abs(z_scores) < 2])
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data[np.abs(z_scores) < 2], std*2)
-    f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, 0.1)
+    f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*2)
     f.savefig("/media/disk2T/VM_work_zone/data/perf_out/566/res_fit/prova.png")
     print (popt_list[2]*6)
     return (popt_list[2]*6)
