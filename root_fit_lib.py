@@ -16,8 +16,6 @@ def gaus(x, a, x0, sigma):
 def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
     nbins=200
     data={"res":data.values.astype(np.float32) }
-    y, x = np.histogram(data, bins=nbins, range=[-sigma_def, sigma_def])
-
     rdf = R.RDF.MakeNumpyDataFrame(data)
     amodel=R.RDF.TH1DModel("h1","h1",nbins,-sigma_def,sigma_def)
     h1 = rdf.Histo1D(amodel,"res")
