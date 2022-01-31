@@ -1,7 +1,7 @@
 import ROOT as R
 import numpy as np
 import matplotlib.pyplot as plt
-
+import os
 
 def doublegaus(x, a_0, x0_0, sigma_0, a_1, x0_1, sigma_1, c):
     return gaus(x, a_0, x0_0, sigma_0) + gaus(x, a_1, x0_1, sigma_1) + c
