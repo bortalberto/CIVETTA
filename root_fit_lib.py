@@ -241,7 +241,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     # plt.ion()
     # plt.show()
     plt.title(f"Fit view {view}, DUT= {put}, planar{pl}")
-    plt.text(y=np.max(y)*0.7, x=put_mean-6.99*put_sigma, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um"
+    plt.text(y=np.max(y)*0.7, x=np.min(x)+0.01, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um"
                                                            f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um"
                                                            f"\n Chi_sqrt={chi_list[pl]:.3e}, Chi_sqrt/NDoF = {chi_list[pl]/deg_list[pl]:.3e}", fontsize="small")
     plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
