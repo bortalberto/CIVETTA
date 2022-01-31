@@ -624,16 +624,16 @@ def save_html_event(fig, save_path):
 
 def save_evt_display(run, data_folder, planar, nevents):
     print (f"Saving events, run {run}, planar{planar}\n")
-    os.path.join(data_folder, "/perf_out/", run, )
-    correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
+    os.path.join(data_folder, "/perf_out/", f"{run}", )
+    correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), f"{run}")  # Load the alignment correction
     ## Loads the datafram for the selected planar
-    cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", run, "cluster_pd_1D.pickle.gzip"), compression="gzip")
-    data_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", run, "hit_data.pickle.gzip"), compression="gzip")
+    cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D.pickle.gzip"), compression="gzip")
+    data_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
     cluster_pd_1D_match = pd.read_pickle(os.path.join(data_folder,"perf_out",f"match_cl_{planar}.gzip" ), compression="gzip")
     trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out",f"tracks_pd_{planar}.gzip" ), compression="gzip")
     eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out",f"eff_pd_{planar}.gzip" ), compression="gzip")
 
-    elab_folder= os.path.join(data_folder, "elaborated_output", run)
+    elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
     ## Builds the folders
     if not os.path.isdir(elab_folder) :
         os.mkdir(elab_folder)
