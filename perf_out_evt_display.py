@@ -19,7 +19,7 @@ import configparser
 import perf
 from plotly.subplots import make_subplots
 from scipy.stats import poisson
-
+import root_fit_lib as r_fit
 
 def de_correct_process(pos_x, pos_y, corr, planar):
     rev_corr = corr[::-1]
@@ -45,104 +45,6 @@ def de_correct_process_pd(row, corr):
     return pos_x, pos_y
 
 
-def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
-    nbins = 200
-    mean = np.mean(data.values.astype(np.float32))
-    data = {"res": data.values.astype(np.float32)}
-    rdf = R.RDF.MakeNumpyDataFrame(data)
-    amodel = R.RDF.TH1DModel("h1", "h1", nbins, mean - sigma_def, mean + sigma_def)
-    h1 = rdf.Histo1D(amodel, "res")
-    func = R.TF1("func", "gaus(0) +[3]", mean - sigma_def, mean + sigma_def, 4)
-    a_0, mean_0, sigma_0, c = p0
-    func.SetParameters(a_0, mean_0, sigma_0, c)
-    for n, limits in enumerate(zip(lower_bounds, upper_bounds)):
-        func.SetParLimits(n, limits[0], limits[1])
-    gaussFit = h1.Fit(func, "BQ")
-    pars = func.GetParameters()
-    errors = func.GetParErrors()
-    error = [ errors[i] for i in range (0,4)]
-    popt = [pars[i] for i in range(0, 4)]
-    chi2 = func.GetChisquare()
-    ndof = func.GetNDF()
-    return popt, chi2, error, ndof
-
-def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, sigma_def=0.2):
-        data = cl_pd_res
-        data = data[abs(data - np.mean(data)) < sigma_def]
-        nbins = 200
-        y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
-        x = (x[1:] + x[:-1]) / 2
-        # x = np.insert(x, 0, -0.2)
-        # y = np.insert(y, 0, 0)
-        popt = popt_list
-        f, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(x, y, 'b*', label='data')
-        x = np.arange(np.min(x), np.max(x), 0.0002)
-        ax.plot(x, perf.gaus(x, *popt[0:3]) + popt[3] , 'c-', label='fit 0')
-        # ax.plot(x, perf.gaus(x, *popt[3:6]), 'g-', label='fit 1')
-        # ax.plot(x, perf.doublegaus(x, *popt), 'r-', label='fit cumulative')
-        ax.grid()
-        # plt.legend()
-        # plt.title('Fig. 3 - Fit for Time Cons§tant')
-        ax.set_ylabel('#')
-        ax.set_xlabel('Residual [cm]')
-        # plt.ion()
-        # plt.show()
-        ax.set_title(f"Fit view {view}, planar{pl}")
-        ax.text(y=np.max(y) * 0.7, x=0 + popt[2],
-                s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
-                  f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
-                fontsize="small")
-        ax.set_xlim([np.min(x), np.max(x)])
-        #     if put==pl:
-        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
-        #     else:
-        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
-
-        return f, ax
-
-
-def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
-    data = cl_pd_res
-    data = data[abs(data - np.mean(data)) < sigma_def]
-    nbins = 200
-    y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
-    x = (x[1:] + x[:-1]) / 2
-    # x = np.insert(x, 0, -0.2)
-    # y = np.insert(y, 0, 0)
-    #             x=x[4000:6000]
-    #             y=y[4000:6000]
-    mean_0 = x[np.argmax(y)]
-    a_0 = np.max(y)
-    sigma_0 = np.std(data)
-    c = 0
-    #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
-    #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
-    #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
-
-    lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
-    upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
-
-    popt, chi_sqr, error, ndof = single_root_fit(data, [a_0, mean_0, sigma_0, c],
-                                    lower_bound, upper_bound, sigma_def=sigma_def)
-    pcov = 0
-    yexp = perf.gaus(x, *popt[0:3]) + popt[3]
-    ss_res = np.sum((y - yexp) ** 2)
-    ss_tot = np.sum((y - np.mean(y)) ** 2)
-    res=(y - yexp)
-    r2 = 1 - (ss_res / ss_tot)  # ynorm= 1000*y/np.sum(y)
-    #             print(scipy.stats.chisquare(y, yexp,len(x)-6-1))
-
-    #             chi_list.append(scipy.stats.chisquare(y, yexp,len(x)-6-1))
-    #             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
-
-    deg = ndof
-    #         yexp=doublegaus(x, *popt)
-    #         y_exp_norm =1000*yexp/np.sum(yexp)
-    #         print (np.sum(ynorm))
-    #         print (np.sum(y_exp_norm))
-    #         print (chisquare(ynorm,y_exp_norm, 6 ))
-    return popt, pcov, res, r2, chi_sqr, deg, error
 
 
 class event_visualizer:
@@ -663,7 +565,7 @@ class res_measure:
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
-            popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(residual_list, sigma_def=0.2)
+            popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=0.2)
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
             chi_list.append(chi/deg_list)
