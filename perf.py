@@ -562,7 +562,7 @@ def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections
     return match_clusters, eff_pd, eff_x, eff_y, tot_ev
 
 class log_writer():
-    def __init__(self, path, run, log_name="logflie"):
+    def __init__(self, path, run, log_name="logfile"):
         self.path = path
         self.run = run
         self.log_name=log_name
