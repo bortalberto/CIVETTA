@@ -113,7 +113,6 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
     mean = np.mean(data.values.astype(np.float32))
     data = {"res": data.values.astype(np.float32)}
     rdf = R.RDF.MakeNumpyDataFrame(data)
-    sigma_def = estimate_sigma_def(data)
     amodel = R.RDF.TH1DModel("h1", "h1", nbins, mean - sigma_def, mean + sigma_def)
     h1 = rdf.Histo1D(amodel, "res")
     func = R.TF1("func", "gaus(0) +[3]", mean - sigma_def, mean + sigma_def, 4)
@@ -190,6 +189,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
     upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
 
+    sigma_def=estimate_sigma_def(data)
     popt, chi_sqr, error, ndof = single_root_fit(data, [a_0, mean_0, sigma_0, c],
                                     lower_bound, upper_bound, sigma_def=sigma_def)
     pcov = 0
