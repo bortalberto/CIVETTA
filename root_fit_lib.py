@@ -71,7 +71,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             mean_0 =  x[np.argmax(y)]
             a_0 = np.max(y)
             a_1 = np.max(y) / 10
-            sigma_0 = sigma_def/7
+            sigma_0 = sigma_def/10
             sigma_1 = sigma_0
             c=0
 #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
@@ -255,7 +255,7 @@ def estimate_sigma_def(data):
     z_scores = zscore(data)
     std = np.std(data[np.abs(z_scores) < 2])
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data[np.abs(z_scores) < 2], std*2)
-    f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*2)
+    # f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*2)
     # f.savefig("/media/disk2T/VM_work_zone/data/perf_out/566/res_fit/prova.png")
     # print (popt_list[2]*7)
-    return (popt_list[2]*7)
+    return (popt_list[2]*10)
