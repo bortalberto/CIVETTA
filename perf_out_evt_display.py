@@ -465,8 +465,8 @@ class eff_calculation:
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg_y = rate_strip_avg_y * time_win
             error_rate_strip_y = error_rate_strip_y * time_win
-            prob_noise_eff_y = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
-            prob_noise_eff_err_y = np.exp(rate_strip_avg) * error_rate_strip
+            prob_noise_eff_y = 1 - (poisson.pmf(k=0, mu=rate_strip_avg_y)) ** round(tol_y[put] * 2 / 0.0650)
+            prob_noise_eff_err_y = np.exp(rate_strip_avg_y) * error_rate_strip_y
             ## X
             rate_strip_avg_x = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_x > 0)].channel.count()) / (
@@ -476,8 +476,8 @@ class eff_calculation:
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg_x = rate_strip_avg_x * time_win
             error_rate_strip_x = error_rate_strip_x * time_win
-            prob_noise_eff_x = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650)
-            prob_noise_eff_err_x = np.exp(rate_strip_avg) * error_rate_strip
+            prob_noise_eff_x = 1 - (poisson.pmf(k=0, mu=rate_strip_avg_x)) ** round(tol_x[put] * 2 / 0.0650)
+            prob_noise_eff_err_x = np.exp(rate_strip_avg_x) * error_rate_strip_x
 
             prob_noise_eff = prob_noise_eff_x * prob_noise_eff_y
             prob_noise_eff_err = ((prob_noise_eff_x * prob_noise_eff_err_y)**2 + (prob_noise_eff_y * prob_noise_eff_err_x)**2) ** (1/2)
