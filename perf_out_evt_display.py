@@ -422,7 +422,7 @@ class eff_calculation:
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
-            logger.write_log(f"X: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
 
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_y > 0)].channel.count()) / (
@@ -446,6 +446,53 @@ class eff_calculation:
 
             print(f"---")
             print(f"AND eff")
+            logger.write_log(f"AND eff")
+            k = eff_pd_c[
+                (eff_pd_c.eff_y) &  (eff_pd_c.eff_x) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
+                        eff_pd_c.pos_x_pl < 8)].count().eff_y
+            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
+                    eff_pd_c.pos_x_pl < 8)].count().eff_y
+            eff_y_good = k / n
+            eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
+            print(f"AND: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            logger.write_log(f"AND: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            ## Y
+            rate_strip_avg_y = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                    self.hit_pd.strip_y > 0)].channel.count()) / (
+                                     self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip_y = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                    self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                                       self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            rate_strip_avg_y = rate_strip_avg_y * time_win
+            error_rate_strip_y = error_rate_strip_y * time_win
+            prob_noise_eff_y = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
+            prob_noise_eff_err_y = np.exp(rate_strip_avg) * error_rate_strip
+            ## X
+            rate_strip_avg_x = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                    self.hit_pd.strip_x > 0)].channel.count()) / (
+                                     self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            error_rate_strip_x = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
+                    self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
+                                       self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            rate_strip_avg_x = rate_strip_avg_x * time_win
+            error_rate_strip_x = error_rate_strip_x * time_win
+            prob_noise_eff_x = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_x[put] * 2 / 0.0650)
+            prob_noise_eff_err_x = np.exp(rate_strip_avg) * error_rate_strip
+
+            prob_noise_eff = prob_noise_eff_x * prob_noise_eff_y
+            prob_noise_eff_err = ((prob_noise_eff_x * prob_noise_eff_err_y)**2 + (prob_noise_eff_y * prob_noise_eff_err_x)**2) ** (1/2)
+
+            real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
+            error_real_eff = ((eff_y_good_error / (1 - prob_noise_eff)) ** 2 + (
+                    prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
+            print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
+            logger.write_log(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
+            print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
+            logger.write_log(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
+            print(f"---")
+            logger.write_log(f"---")
+
+
             print(f"---")
 
         for put in range(0, 4):
