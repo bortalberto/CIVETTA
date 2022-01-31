@@ -218,7 +218,10 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
     # y = np.insert(y, 0, 0)
-    popt = popt_list[pl]
+    if len (popt_list)>1:
+        popt = popt_list[pl]
+    else:
+        popt = popt_list[0]
     plt.figure(figsize=(10, 6))
     plt.plot(x, y, 'b*', label='data')
     x = np.arange(np.min(x),np.max(x), 0.0002)
