@@ -12,6 +12,7 @@ import pandas as pd
 import json
 import numpy as np
 import perf
+import perf_out_evt_display as perfo
 
 class runner:
     """
@@ -100,6 +101,8 @@ def main(run, **kwargs):
     if args.hit_efficiency:
         options["hit_efficiency"] = args.hit_efficiency
         print ("Efficiency on hits")
+    if args.save_events:
+        print (args.save_events)
     if len (op_list)>0:
         main_runner = runner(data_folder, run, **options)
     else:
@@ -126,6 +129,9 @@ if __name__=="__main__":
     parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int, default=-1)
     parser.add_argument('-mt','--multi_tracks_suppresion', help='Activate suppression of multi tracks events',action="store_true")
     parser.add_argument('-ht','--hit_efficiency', help='Calculate efficiency with hits',action="store_true")
+
+    ## Options about saving the output
+    parser.add_argument('-Se','--save_events', help='Save the html file of some events, specify the planar and the number of events',type=int, nargs=2)
 
 
     args = parser.parse_args()

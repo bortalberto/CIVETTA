@@ -355,11 +355,12 @@ class eff_calculation:
     Class to calculate the
     """
 
-    def __init__(self, eff_pd, hit_pd, log_path, correction):
+    def __init__(self, eff_pd, hit_pd, log_path, correction ,outpath):
         self.eff_pd = eff_pd
         self.hit_pd = hit_pd
         self.log_path = log_path
         self.correction = correction
+        self.outpath = outpath
 
     def calc_eff(self):
         """
@@ -608,3 +609,58 @@ class res_measure:
             enemey_res_list.append(residual_list)
             pos_res_list.append(pos_list)
         return enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list
+
+
+def save_html_event(fig, save_path):
+    """
+    Save the html file from an event figure
+    """
+    fig.update_layout(
+        width=750,
+        height=480
+    )
+    fig.write_html(save_path, include_plotlyjs="directory")
+
+
+def save_evt_display(run, data_folder, planar, nevents):
+    print (f"Saving events, run {run}, planar{planar}\n")
+    os.path.join(data_folder, "/perf_out/", run, )
+    correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
+    ## Loads the datafram for the selected planar
+    cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", run, "cluster_pd_1D.pickle.gzip"), compression="gzip")
+    data_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", run, "hit_data.pickle.gzip"), compression="gzip")
+    cluster_pd_1D_match = pd.read_pickle(os.path.join(data_folder,"perf_out",f"match_cl_{planar}.gzip" ), compression="gzip")
+    trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out",f"tracks_pd_{planar}.gzip" ), compression="gzip")
+    eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out",f"eff_pd_{planar}.gzip" ), compression="gzip")
+
+    elab_folder= os.path.join(data_folder, "elaborated_output", run)
+    ## Builds the folders
+    if not os.path.isdir(elab_folder) :
+        os.mkdir(elab_folder)
+
+    evt_folder_eff = os.path.join(elab_folder, "events_eff")
+    if not os.path.isdir(evt_folder_eff) :
+        os.mkdir(evt_folder_eff)
+
+    evt_folder_ineff = os.path.join(elab_folder, "events_ineff")
+    if not os.path.isdir(evt_folder_ineff):
+        os.mkdir(evt_folder_ineff)
+
+    displ= event_visualizer(cluster_pd_1D, cluster_pd_1D_match, trk_pd,data_pd, eff_pd, planar, correction)
+
+    eff_evt=eff_pd[(eff_pd.pos_x>4) & (eff_pd.pos_x<7) & (eff_pd.pos_y>4) & (eff_pd.pos_y<7) & (eff_pd.eff_x) & (eff_pd.eff_y)]["count"].unique()
+    ineff_evt=eff_pd[(eff_pd.pos_x>4) & (eff_pd.pos_x<7) & (eff_pd.pos_y>4) & (eff_pd.pos_y<7) & (~(eff_pd.eff_x) | ~(eff_pd.eff_y))]["count"].unique()
+
+    for i in range (0, nevents):
+        evt=np.random.choice(eff_evt)
+        fig_x, fig_y = displ.plot_evt(evt)
+        save_html_event(fig_x, os.path.join(evt_folder_eff, f"Evt_{evt}_planar_{planar}_x.html"))
+        save_html_event(fig_y, os.path.join(evt_folder_eff, f"Evt_{evt}_planar_{planar}_y.html"))
+
+        evt=np.random.choice(ineff_evt)
+        fig_x, fig_y = displ.plot_evt(evt)
+        save_html_event(fig_x, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_x.html"))
+        save_html_event(fig_y, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_y.html"))
+
+def extract_eff_and_res(run, data_folder):
+    trk_pd = pd.read_pickle(os.path.join(data_folder,"/perf_out/",run), compression="gzip")
