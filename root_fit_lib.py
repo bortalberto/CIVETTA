@@ -2,6 +2,7 @@ import ROOT as R
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from scipy.stats import zscore
 
 def doublegaus(x, a_0, x0_0, sigma_0, a_1, x0_1, sigma_1, c):
     return gaus(x, a_0, x0_0, sigma_0) + gaus(x, a_1, x0_1, sigma_1) + c
@@ -16,6 +17,7 @@ def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
     nbins=200
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
+    sigma_def = estimate_sigma_def(data)
     amodel=R.RDF.TH1DModel("h1","h1",nbins,-sigma_def,sigma_def)
     h1 = rdf.Histo1D(amodel,"res")
     func=R.TF1("func", "gaus(0) + gaus(3) +[6]", -sigma_def,sigma_def,6)
@@ -56,7 +58,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
             deg_list.append(1)
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
-            sigma_0=sigma_def
+            sigma_0 = estimate_sigma_def(data)
             data = data[abs(data) < sigma_0]
             nbins=200
             y, x = np.histogram(data, bins=nbins, range=[-sigma_0,sigma_0])
@@ -111,6 +113,7 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
     mean = np.mean(data.values.astype(np.float32))
     data = {"res": data.values.astype(np.float32)}
     rdf = R.RDF.MakeNumpyDataFrame(data)
+    sigma_def = estimate_sigma_def(data)
     amodel = R.RDF.TH1DModel("h1", "h1", nbins, mean - sigma_def, mean + sigma_def)
     h1 = rdf.Histo1D(amodel, "res")
     func = R.TF1("func", "gaus(0) +[3]", mean - sigma_def, mean + sigma_def, 4)
@@ -129,6 +132,8 @@ def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
 
 def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, sigma_def=0.2):
         data = cl_pd_res
+        sigma_def = estimate_sigma_def(data)
+
         data = data[abs(data - np.mean(data)) < sigma_def]
         nbins = 200
         y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
@@ -165,6 +170,7 @@ def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list
 
 def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     data = cl_pd_res
+    sigma_def = estimate_sigma_def(data)
     data = data[abs(data - np.mean(data)) < sigma_def]
     nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
@@ -208,7 +214,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
 
 def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list,sigma_def=0.2 ):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
-    sigma_0 = sigma_def
+    sigma_0 = estimate_sigma_def(data)
     data = data[abs(data) < sigma_0]
     nbins = 200
     y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
@@ -242,3 +248,10 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
 
     plt.close()
+
+
+def estimate_sigma_def(data):
+    z_scores = zscore(data)
+    std = np.std(data[np.abs(z_scores) < 2])
+    popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(this_view_res[np.abs(z_scores) < 2], std*2)
+    return (popt_list[2]*5)
