@@ -456,7 +456,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
         view = "x"
         sigma_set = 0.2
-        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set, pl_list=[put])
+        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
         # print (len(popt_list), len(pcov_list), len(res_list), len(R_list),len(chi_list), len(deg_list))
         put_mean_x = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
         put_sigma_x = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
@@ -469,7 +469,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
 
 
         view = "y"
-        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set, pl_list=[put])
+        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
         put_mean_y = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
         put_sigma_y = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
 
