@@ -629,9 +629,9 @@ def save_evt_display(run, data_folder, planar, nevents):
     ## Loads the datafram for the selected planar
     cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D.pickle.gzip"), compression="gzip")
     data_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
-    cluster_pd_1D_match = pd.read_pickle(os.path.join(data_folder,"perf_out",f"match_cl_{planar}.gzip" ), compression="gzip")
-    trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out",f"tracks_pd_{planar}.gzip" ), compression="gzip")
-    eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out",f"eff_pd_{planar}.gzip" ), compression="gzip")
+    cluster_pd_1D_match = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip")
+    trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
+    eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip")
 
     elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
     ## Builds the folders
