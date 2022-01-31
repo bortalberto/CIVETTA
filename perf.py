@@ -561,14 +561,15 @@ def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections
     return match_clusters, eff_pd, eff_x, eff_y, tot_ev
 
 class log_writer():
-    def __init__(self, path, run):
+    def __init__(self, path, run, log_name="logflie"):
         self.path = path
         self.run = run
-        with open(os.path.join(path, "logfile"), "w+") as logfile:
+        self.log_name=log_name
+        with open(os.path.join(path, self.log_name), "w+") as logfile:
             pass
 
     def write_log(self, text):
-        with open(os.path.join(str(self.path), "logfile"), "a") as logfile:
+        with open(os.path.join(str(self.path), self.log_name), "a") as logfile:
             logfile.write(text+"\n")
 
 def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False):

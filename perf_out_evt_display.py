@@ -165,7 +165,7 @@ class event_visualizer:
             "fit_y"].apply(
             lambda x: x[1])
         self.correction = correction
-        self.data_pd = hit_pd
+        self.hit_pd = hit_pd
         self.event_eff_list = self.eff_pd["count"].unique()
 
     def plot_evt(self, event):
@@ -200,26 +200,26 @@ class event_visualizer:
             this_evt_cluster = clusters.iloc[
                 (clusters['cl_pos_x_cm'] - this_evt_tracks_pd.prev_pos_put_x.values[0]).abs().argsort()[:1]]
 
-        data_pd_evt = self.data_pd[
-            (self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_x"] > 0) & (
-                    self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
+        hit_pd_evt = self.hit_pd[
+            (self.hit_pd["count"] == event) & (self.hit_pd["planar"] == self.put) & (self.hit_pd["strip_x"] > 0) & (
+                    self.hit_pd["l1ts_min_tcoarse"] > 1370) & (self.hit_pd["l1ts_min_tcoarse"] < 1440)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
             hit_ids = [-1]
-        data_pd_evt.loc[:, "cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
+        hit_pd_evt.loc[:, "cluster_eff"] = hit_pd_evt["hit_id"].isin(hit_ids)
         color_discrete_map = {False: 'cyan', True: 'red'}
-        data_pd_evt.loc[:, "time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
+        hit_pd_evt.loc[:, "time"] = (1569 - hit_pd_evt["l1ts_min_tcoarse"])
 
-        fig = px.scatter(data_pd_evt, "strip_x", "charge_SH", color="cluster_eff",
+        fig = px.scatter(hit_pd_evt, "strip_x", "charge_SH", color="cluster_eff",
                          color_discrete_map=color_discrete_map)
-        fig2 = px.scatter(data_pd_evt, "strip_x", "time", color_discrete_sequence=["grey"])
+        fig2 = px.scatter(hit_pd_evt, "strip_x", "time", color_discrete_sequence=["grey"])
         fig.update_traces(yaxis="y2")
         #     fig2.update_layout(name="time")
         if len(fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
-        if data_pd_evt.shape[0] > 0:
+        if hit_pd_evt.shape[0] > 0:
             fig2.data[-1].name = 'Time'
             fig2.data[-1].showlegend = True
         subfig.add_traces(fig.data)
@@ -286,26 +286,26 @@ class event_visualizer:
             this_evt_cluster = clusters.iloc[
                 (clusters['cl_pos_y_cm'] - this_evt_tracks_pd.prev_pos_put_y.values[0]).abs().argsort()[:1]]
 
-        data_pd_evt = self.data_pd[
-            (self.data_pd["count"] == event) & (self.data_pd["planar"] == self.put) & (self.data_pd["strip_y"] > 0) & (
-                    self.data_pd["l1ts_min_tcoarse"] > 1370) & (self.data_pd["l1ts_min_tcoarse"] < 1440)]
+        hit_pd_evt = self.hit_pd[
+            (self.hit_pd["count"] == event) & (self.hit_pd["planar"] == self.put) & (self.hit_pd["strip_y"] > 0) & (
+                    self.hit_pd["l1ts_min_tcoarse"] > 1370) & (self.hit_pd["l1ts_min_tcoarse"] < 1440)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
             hit_ids = [-1]
-        data_pd_evt.loc[:, "cluster_eff"] = data_pd_evt["hit_id"].isin(hit_ids)
+        hit_pd_evt.loc[:, "cluster_eff"] = hit_pd_evt["hit_id"].isin(hit_ids)
         color_discrete_map = {False: 'cyan', True: 'red'}
-        data_pd_evt.loc[:, "time"] = (1569 - data_pd_evt["l1ts_min_tcoarse"])
+        hit_pd_evt.loc[:, "time"] = (1569 - hit_pd_evt["l1ts_min_tcoarse"])
 
-        fig = px.scatter(data_pd_evt, "strip_y", "charge_SH", color="cluster_eff",
+        fig = px.scatter(hit_pd_evt, "strip_y", "charge_SH", color="cluster_eff",
                          color_discrete_map=color_discrete_map)
-        fig2 = px.scatter(data_pd_evt, "strip_y", "time", color_discrete_sequence=["grey"])
+        fig2 = px.scatter(hit_pd_evt, "strip_y", "time", color_discrete_sequence=["grey"])
         fig.update_traces(yaxis="y2")
         #     fig2.update_layout(name="time")
         if len(fig.data) > 1:
             fig.data[-1].name = 'Nearest cluster'
             fig.data[-2].name = 'Other hits'
-        if data_pd_evt.shape[0] > 0:
+        if hit_pd_evt.shape[0] > 0:
             fig2.data[-1].name = 'Time'
             fig2.data[-1].showlegend = True
         subfig.add_traces(fig.data)
@@ -355,8 +355,8 @@ class eff_calculation:
     Class to calculate the
     """
 
-    def __init__(self, eff_pd, hit_pd, log_path, correction ,outpath):
-        self.eff_pd = eff_pd
+    def __init__(self, eff_pd_joint, hit_pd, log_path, correction ,outpath):
+        self.eff_pd = eff_pd_joint
         self.hit_pd = hit_pd
         self.log_path = log_path
         self.correction = correction
@@ -373,9 +373,10 @@ class eff_calculation:
             view = "y"
             tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
         time_win = (1440 - 1370) * 6.25 * 1e-9
-
+        logger=perf.log_writer(self.outpath, 0, "efficiency.txt")
         for put in range(0, 4):
             print(f"\n---\nPlanar {put} ")
+            logger.write_log(f"\n---\nPlanar {put} \n")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
             eff_pd.loc[:, "pos_x_pl"], eff_pd.loc[:, "pos_y_pl"] = zip(
                 *eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
@@ -389,6 +390,7 @@ class eff_calculation:
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
+            logger.write_log("X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}\n")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_x > 0)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
@@ -403,8 +405,14 @@ class eff_calculation:
             error_real_eff = ((eff_x_good_error / (1 - prob_noise_eff)) ** 2 + (
                     prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
+            logger.write_log(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}\n")
+
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
+            logger.write_log(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}\n")
+
             print(f"---")
+            logger.write_log(f"---\n")
+
 
             k = eff_pd_c[
                 (eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
@@ -628,7 +636,7 @@ def save_evt_display(run, data_folder, planar, nevents):
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     ## Loads the datafram for the selected planar
     cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D.pickle.gzip"), compression="gzip")
-    data_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
+    hit_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
     cluster_pd_1D_match = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip")
     trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
     eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip")
@@ -646,7 +654,7 @@ def save_evt_display(run, data_folder, planar, nevents):
     if not os.path.isdir(evt_folder_ineff):
         os.mkdir(evt_folder_ineff)
 
-    displ= event_visualizer(cluster_pd_1D, cluster_pd_1D_match, trk_pd,data_pd, eff_pd, planar, correction)
+    displ= event_visualizer(cluster_pd_1D, cluster_pd_1D_match, trk_pd,hit_pd, eff_pd, planar, correction)
 
     eff_evt=eff_pd[(eff_pd.pos_x>4) & (eff_pd.pos_x<7) & (eff_pd.pos_y>4) & (eff_pd.pos_y<7) & (eff_pd.eff_x) & (eff_pd.eff_y)]["count"].unique()
     ineff_evt=eff_pd[(eff_pd.pos_x>4) & (eff_pd.pos_x<7) & (eff_pd.pos_y>4) & (eff_pd.pos_y<7) & (~(eff_pd.eff_x) | ~(eff_pd.eff_y))]["count"].unique()
@@ -663,4 +671,19 @@ def save_evt_display(run, data_folder, planar, nevents):
         save_html_event(fig_y, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_y.html"))
 
 def extract_eff_and_res(run, data_folder):
-    trk_pd = pd.read_pickle(os.path.join(data_folder,"/perf_out/",run), compression="gzip")
+    perf_path = os.path.join(data_folder, "perf_out", f"{run}")
+    log_file = os.path.join(perf_path, "logfile")
+    correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
+    eff_pd_l = []
+    for planar in range(0,4):
+        eff_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip"))
+    eff_pd = pd.concat(eff_pd_l)
+    hit_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
+
+    elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
+    ## Builds the folders
+    if not os.path.isdir(elab_folder) :
+        os.mkdir(elab_folder)
+
+    eff_calc = eff_calculation(eff_pd, hit_pd=hit_pd, log_path=log_file, correction=correction, outpath=elab_folder)
+    eff_calc.calc_eff()

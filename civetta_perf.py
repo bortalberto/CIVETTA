@@ -38,6 +38,9 @@ class runner:
     def save_events(self, put, nevents):
         perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
 
+    def save_eff(self):
+        perfo.extract_eff_and_res(self.data_folder, self.run, )
+
 ##############################################################################################
 ##																							##
 ##										MAIN												##
@@ -74,6 +77,8 @@ def main(run, **kwargs):
         print (f"Data_folder : {data_folder}")
         if args.performance:
             print("         -Performance evaluation")
+        if args.save_eff:
+            print("         -Calculating and saving eff")
         if args.save_events:
             print("         -Saving events")
         if args.cpu:
@@ -83,17 +88,15 @@ def main(run, **kwargs):
     op_list=[]
     options={}
 
-    if args.performance:
-        if args.performance != -2:
-            if args.performance in (0,1,2,3,-1):
-                op_list.append("perf")
-                options["sigmas_trackers"] = args.sigmas_trackers
-                options["sigmas_DUT"] = args.sigmas_DUT
-                if args.multi_tracks_suppresion:
-                    print("Using multi_tracks_suppresion \n")
-                options["multi_tracks_suppresion"] = True
-            else:
-                print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
+    if args.performance in (0,1,2,3,-1):
+        op_list.append("perf")
+        options["sigmas_trackers"] = args.sigmas_trackers
+        options["sigmas_DUT"] = args.sigmas_DUT
+        if args.multi_tracks_suppresion:
+            print("Using multi_tracks_suppresion \n")
+        options["multi_tracks_suppresion"] = True
+    else:
+        print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
@@ -106,8 +109,10 @@ def main(run, **kwargs):
         options["hit_efficiency"] = args.hit_efficiency
         print ("Efficiency on hits")
     if args.save_events:
-        print (args.save_events)
         op_list.append("save_events")
+    if args.save_eff:
+        op_list.append("save_eff")
+
     if len (op_list)>0:
         main_runner = runner(data_folder, run, **options)
     else:
@@ -116,9 +121,10 @@ def main(run, **kwargs):
 
     if "perf" in (op_list):
         main_runner.eval_perf(args.performance)
+    if "save_eff" in (op_list)
+        main_runner
     if "save_events" in (op_list):
         main_runner.save_events(args.save_events[0], args.save_events[1])
-
 
 
 if __name__=="__main__":
@@ -139,6 +145,7 @@ if __name__=="__main__":
 
     ## Options about saving the output
     parser.add_argument('-Se','--save_events', help='Save the html file of some events, specify the planar and the number of events',type=int, nargs=2)
+    parser.add_argument('-Ser','--save_eff', help='Calculate the efficiency and the noise contribution, the resolution and the enemy resolution',action="store_true")
 
 
     args = parser.parse_args()
