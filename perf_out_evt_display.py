@@ -376,7 +376,7 @@ class eff_calculation:
         logger=perf.log_writer(self.outpath, 0, "efficiency.txt")
         for put in range(0, 4):
             print(f"\n---\nPlanar {put} ")
-            logger.write_log(f"\n---\nPlanar {put} \n")
+            logger.write_log(f"\n---\nPlanar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
             eff_pd.loc[:, "pos_x_pl"], eff_pd.loc[:, "pos_y_pl"] = zip(
                 *eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
@@ -390,7 +390,7 @@ class eff_calculation:
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
-            logger.write_log("X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}\n")
+            logger.write_log(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_x > 0)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
@@ -405,13 +405,13 @@ class eff_calculation:
             error_real_eff = ((eff_x_good_error / (1 - prob_noise_eff)) ** 2 + (
                     prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
-            logger.write_log(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}\n")
+            logger.write_log(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
 
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
-            logger.write_log(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}\n")
+            logger.write_log(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
 
             print(f"---")
-            logger.write_log(f"---\n")
+            logger.write_log(f"---")
 
 
             k = eff_pd_c[
@@ -422,6 +422,8 @@ class eff_calculation:
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            logger.write_log(f"X: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_y > 0)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
@@ -436,11 +438,15 @@ class eff_calculation:
             error_real_eff = ((eff_y_good_error / (1 - prob_noise_eff)) ** 2 + (
                     prob_noise_eff_err / (1 - prob_noise_eff ** 2)) ** 2) ** (1 / 2)
             print(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
+            logger.write_log(f"Prob noise eff = {prob_noise_eff:.3E} +/- {prob_noise_eff_err:.3E}")
             print(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
+            logger.write_log(f"Real eff = {real_eff:.4f} +/- {error_real_eff:.4f}")
             print(f"---")
-        print(f"---")
-        print(f"AND eff")
-        print(f"---")
+            logger.write_log(f"---")
+
+            print(f"---")
+            print(f"AND eff")
+            print(f"---")
 
         for put in range(0, 4):
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
