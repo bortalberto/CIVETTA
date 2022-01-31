@@ -15,6 +15,7 @@ def gaus(x, a, x0, sigma):
 
 def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
     nbins=200
+    print (data)
     print (np.max(data))
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
