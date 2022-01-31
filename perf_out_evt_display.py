@@ -625,7 +625,7 @@ def save_html_event(fig, save_path):
 def save_evt_display(run, data_folder, planar, nevents):
     print (f"Saving events, run {run}, planar{planar}\n")
     os.path.join(data_folder, "/perf_out/", f"{run}", )
-    correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), f"{run}")  # Load the alignment correction
+    correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     ## Loads the datafram for the selected planar
     cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D.pickle.gzip"), compression="gzip")
     data_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
