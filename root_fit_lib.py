@@ -73,7 +73,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             a_0 = np.max(y)
             a_1 = np.max(y) / 10
             sigma_0 = sigma_def/10
-            sigma_1 = sigma_0
+            sigma_1 = sigma_def
             c=0
 #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
 #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
