@@ -17,7 +17,6 @@ def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
     nbins=200
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
-    sigma_def = estimate_sigma_def(data)
     amodel=R.RDF.TH1DModel("h1","h1",nbins,-sigma_def,sigma_def)
     h1 = rdf.Histo1D(amodel,"res")
     func=R.TF1("func", "gaus(0) + gaus(3) +[6]", -sigma_def,sigma_def,6)
