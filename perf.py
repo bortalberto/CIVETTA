@@ -495,7 +495,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         logger.write_log(f"{tracks_pd_c.shape[0]} tracks with all trackres before cutting")
 
         for view in ("x", "y"):
-            sigma_set = estimate_sigma_def(tracks_pd_res)
+            # sigma_set = r_fit.estimate_sigma_def(tracks_pd_res)
             popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd, view, put, sigma_def=sigma_set)
 
 
