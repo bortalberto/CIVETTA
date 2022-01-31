@@ -318,15 +318,15 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2):
             mean_0 =  x[np.argmax(y)]
             a_0 = np.max(y)
             a_1 = np.max(y) / 10
-            sigma_0=np.std(data)/3
-            sigma_1 = np.std(data)*2
+            sigma_0 = sigma_def/3
+            sigma_1 = sigma_def
             c=0
 #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
 #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
 #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
 
-            lower_bound=[np.max(y)/4*3,x[np.argmax(y)]-sigma_0/20,0,               0,x[np.argmax(y)]-sigma_0/20,         0,     0]
-            upper_bound=[np.max(y)    ,x[np.argmax(y)]+sigma_0/20,sigma_0,       np.max(y)/4,x[np.argmax(y)]+sigma_0/20,sigma_0*2,     200]
+            lower_bound=[np.max(y)/4*3,x[np.argmax(y)]-sigma_0/10,0,               0,x[np.argmax(y)]-sigma_0/10,         0,     0]
+            upper_bound=[np.max(y)    ,x[np.argmax(y)]+sigma_0/10,sigma_0/2,       np.max(y)/4,x[np.argmax(y)]+sigma_0/10,sigma_0*2,     200]
 
             popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], lower_bound, upper_bound, sigma_def )
             pcov=0
@@ -461,7 +461,6 @@ def estimate_sigma_def(tracks_pd):
         for pl in range (0,4):
             this_view_res = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             z_scores = zscore(this_view_res)
-
             std_list.append(np.std(this_view_res[np.abs(z_scores)<1]))
     return np.max(std_list)
 
