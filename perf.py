@@ -463,9 +463,9 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         # tracks_pd_c.drop_duplicates(inplace=True)
 
         logger.write_log(f"{tracks_pd_c.shape[0]} tracks with all trackres before cutting")
+        sigma_set = r_fit.estimate_sigma_def(tracks_pd_c)
 
         for view in ("x", "y"):
-            # sigma_set = r_fit.estimate_sigma_def(tracks_pd_res)
             popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd, view, put, sigma_def=sigma_set)
 
 
@@ -489,9 +489,10 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         # Fitta le tracce
         cl_pd_2D_res=cl_pd_2D_res["count"].isin(good_events) # Solo degli eventi con tracciatori buoni
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
+        sigma_set = r_fit.estimate_sigma_def(tracks_pd_res)
+
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
         view = "x"
-        sigma_set = 0.2
         popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
         # print (len(popt_list), len(pcov_list), len(res_list), len(R_list),len(chi_list), len(deg_list))
         put_mean_x = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
@@ -508,16 +509,14 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
         put_mean_y = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
         put_sigma_y = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
-
         popt_list_put_y=popt_list
-        logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
-
-
         r_fit.plot_residuals(tracks_pd_res, view, popt_list, R_list*4, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
+
         if any([R < 0.85 for R in R_list]):
             logger.write_log(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.85, verify the fits on view {view}, put {put}")
 
+        logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
         logger.write_log(f"Measuring efficiency on {tracks_pd_c.shape[0]} tracks")
 
@@ -616,6 +615,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         del eff_pd
         del tracks_pd
         del cl_pd_1D
+
 def concat_subrun_cluster(cl_list):
     if len(cl_list[0])>0:
         return (pd.concat(cl_list[0]))
