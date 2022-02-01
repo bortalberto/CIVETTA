@@ -59,7 +59,7 @@ def fit_tracks_manager(cl_pd, planar="None", tracking_fit=False):
     """
     Manages the parallelizing
     """
-    sub_data = cl_pd.groupby(["run", "subrun"])
+    sub_data = cl_pd.groupby(["subrun"])
     sub_list = []
     return_list = []
     for key in sub_data.groups:
