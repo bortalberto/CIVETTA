@@ -486,7 +486,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
                 raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
         good_events = tracks_pd_c["count"].unique()
         # Fitta le tracce
-        cl_pd_2D_res = cl_pd_2D_res[cl_pd_2D_res["count"].isin(good_events)]# Solo degli eventi con tracciatori buoni
+        # cl_pd_2D_res = cl_pd_2D_res[cl_pd_2D_res["count"].isin(good_events)]# Solo degli eventi con tracciatori buoni
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
 
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
