@@ -451,36 +451,6 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         if multi_tracks_suppresion:
             cl_pd_2D = cl_pd_2D.groupby(["subrun", "count", "planar"]).filter(lambda x: x.shape[0]==1)  # Filtering away events with more than 1 cluster per view
         cl_pd_2D_res = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: set(x["planar"]) == {0, 1, 2, 3})
-        # Fitta le tracce
-        tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
-        # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
-        view = "x"
-        sigma_set = 0.2
-        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
-        # print (len(popt_list), len(pcov_list), len(res_list), len(R_list),len(chi_list), len(deg_list))
-        put_mean_x = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
-        put_sigma_x = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
-        popt_list_put_x=popt_list
-        r_fit.plot_residuals(tracks_pd_res, view, popt_list, R_list*4, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
-
-        if any([R < 0.85 for R in R_list]):
-            logger.write_log(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
-            raise Warning(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
-
-
-        view = "y"
-        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
-        put_mean_y = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
-        put_sigma_y = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
-
-        popt_list_put_y=popt_list
-        logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
-
-
-        r_fit.plot_residuals(tracks_pd_res, view, popt_list, R_list*4, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
-        if any([R < 0.85 for R in R_list]):
-            logger.write_log(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
-            raise Warning(f"One R2 in PUT fit is less than 0.85, verify the fits on view {view}, put {put}")
 
         # Seleziona gli eventi che hanno i 3 tracciatori
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
@@ -515,6 +485,40 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
                 logger.write_log(
                     f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
                 raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
+        good_events=tracks_pd_c["count"].unique()
+        # Fitta le tracce
+        cl_pd_2D_res=cl_pd_2D_res["count"].isin(good_events) # Solo degli eventi con tracciatori buoni
+        tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
+        # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
+        view = "x"
+        sigma_set = 0.2
+        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
+        # print (len(popt_list), len(pcov_list), len(res_list), len(R_list),len(chi_list), len(deg_list))
+        put_mean_x = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
+        put_sigma_x = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
+        popt_list_put_x=popt_list
+        r_fit.plot_residuals(tracks_pd_res, view, popt_list, R_list*4, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
+
+        if any([R < 0.85 for R in R_list]):
+            logger.write_log(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
+            raise Warning(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
+
+
+        view = "y"
+        popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd_res, view, sigma_def=sigma_set)
+        put_mean_y = ((popt_list[0][1] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][4] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
+        put_sigma_y = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
+
+        popt_list_put_y=popt_list
+        logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
+
+
+        r_fit.plot_residuals(tracks_pd_res, view, popt_list, R_list*4, path_out_eff, put, put_mean_y, put_sigma_y, nsigma_put, put, chi_list, deg_list, sigma_def=sigma_set)
+        if any([R < 0.85 for R in R_list]):
+            logger.write_log(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
+            raise Warning(f"One R2 in PUT fit is less than 0.85, verify the fits on view {view}, put {put}")
+
+
         logger.write_log(f"Measuring efficiency on {tracks_pd_c.shape[0]} tracks")
 
         # Carico i cluster 1D per misurare l'efficienza
