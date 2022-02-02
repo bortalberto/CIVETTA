@@ -497,6 +497,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         put_sigma_x = ((popt_list[0][2] * popt_list[0][0] * popt_list[0][2]) + (popt_list[0][5] * popt_list[0][3] * popt_list[0][5])) / (popt_list[0][0] * popt_list[0][2] + popt_list[0][3] * popt_list[0][5])
         popt_list_put_x=popt_list
         r_fit.plot_residuals(tracks_pd_res, view, popt_list, R_list, path_out_eff, put, put_mean_x, put_sigma_x, nsigma_put, put, chi_list, deg_list)
+        prinT (R_list)
         if R_list[put] > 0.85:
             logger.write_log(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
             raise Warning(f"One R2 in PUT fit is less than 0.85,  verify the fits on view {view}, put {put}")
