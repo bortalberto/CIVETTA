@@ -506,13 +506,13 @@ class res_measure:
 
     def plot_residuals(self, cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
         data = cl_pd_res[f"res_{view}"]
-        sigma_0 = 0.2
-        data = data[abs(data) < sigma_0]
+        sigma_def = r_fit.estimate_sigma_def(data)
+        data = data[abs(data) < sigma_def]
         if data.shape[0] > 20000:
             nbins = 1000
         else:
             nbins = 200
-        y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
+        y, x = np.histogram(data, bins=nbins, range=[-sigma_def, sigma_def])
         x = (x[1:] + x[:-1]) / 2
         # x = np.insert(x, 0, -0.2)
         # y = np.insert(y, 0, 0)
