@@ -175,6 +175,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     data = cl_pd_res
     data = data[abs(data - np.mean(data)) < sigma_def]
     nbins = 200
+    print (data)
     y, x = np.histogram(data, bins=nbins, range=[np.mean(data) - sigma_def, np.mean(data) + sigma_def])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
