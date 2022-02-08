@@ -462,6 +462,7 @@ class res_measure:
         :param put:
         """
         self.cl_pds = {}
+        print (tracks_pd.keys)
         for put in planar_list:
             cl_pd_x, cl_pd_y = self.generate_cl_res_pd(eff_pd, tracks_pd, cl_pd, put)
             self.cl_pds[f"{put}x"] = cl_pd_x
