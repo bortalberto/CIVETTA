@@ -98,8 +98,6 @@ def main(run, **kwargs):
         if args.multi_tracks_suppresion:
             print("Using multi_tracks_suppresion \n")
         options["multi_tracks_suppresion"] = True
-    else:
-        print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
