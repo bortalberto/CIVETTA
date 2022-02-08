@@ -38,8 +38,12 @@ class runner:
     def save_events(self, put, nevents):
         perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
 
-    def save_eff(self):
-        perfo.extract_eff_and_res(self.run_number, self.data_folder, )
+    def save_eff(self, put):
+        if put in (0,1,2,3):
+            planar_list = [put,]
+        else:
+            planar_list=[0,1,2,3]
+        perfo.extract_eff_and_res(self.run_number, self.data_folder, planar_list)
 
 ##############################################################################################
 ##																							##
@@ -88,15 +92,14 @@ def main(run, **kwargs):
     op_list=[]
     options={}
     if args.performance:
-        if args.performance in (0,1,2,3,-1):
-            op_list.append("perf")
-            options["sigmas_trackers"] = args.sigmas_trackers
-            options["sigmas_DUT"] = args.sigmas_DUT
-            if args.multi_tracks_suppresion:
-                print("Using multi_tracks_suppresion \n")
-            options["multi_tracks_suppresion"] = True
-        else:
-            print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
+        op_list.append("perf")
+        options["sigmas_trackers"] = args.sigmas_trackers
+        options["sigmas_DUT"] = args.sigmas_DUT
+        if args.multi_tracks_suppresion:
+            print("Using multi_tracks_suppresion \n")
+        options["multi_tracks_suppresion"] = True
+    else:
+        print ("Bad argument for performance option. Use the planar number [0..3] or -1 to run on all")
 
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
@@ -120,9 +123,9 @@ def main(run, **kwargs):
 
 
     if "perf" in (op_list):
-        main_runner.eval_perf(args.performance)
+        main_runner.eval_perf(args.Detector_under_test)
     if "save_eff" in (op_list):
-        main_runner.save_eff()
+        main_runner.save_eff(args.Detector_under_test)
     if "save_events" in (op_list):
         main_runner.save_events(args.save_events[0], args.save_events[1])
 
@@ -139,7 +142,7 @@ if __name__=="__main__":
     parser.add_argument('-sT','--sigmas_trackers', help='Sigma trackers', type=float, default=1)
     parser.add_argument('-chi','--chi_sqared', help='Use chi squared cut on trackers',action="store_true")
     parser.add_argument('-sD','--sigmas_DUT', help='Sigma DUT', type=int, default=5)
-    parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int)
+    parser.add_argument('-perf','--performance', help='Performance evaluation ', action="store_true")
     parser.add_argument('-mt','--multi_tracks_suppresion', help='Activate suppression of multi tracks events',action="store_true")
     parser.add_argument('-ht','--hit_efficiency', help='Calculate efficiency with hits',action="store_true")
 
@@ -147,6 +150,7 @@ if __name__=="__main__":
     parser.add_argument('-Se','--save_events', help='Save the html file of some events, specify the planar and the number of events',type=int, nargs=2)
     parser.add_argument('-Ser','--save_eff', help='Calculate the efficiency and the noise contribution, the resolution and the enemy resolution',action="store_true")
 
+    parser.add_argument('-Dut','--Detector_under_test', help='Specify one detector under test',type=int, default=-1)
 
     args = parser.parse_args()
     args.method(**vars(args))
