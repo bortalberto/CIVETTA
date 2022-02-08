@@ -264,7 +264,7 @@ class eff_calculation:
         self.correction = correction
         self.outpath = outpath
 
-    def calc_eff(self):
+    def calc_eff(self, planar_list):
         """
         Calculate the efficiency and the probability to acquire one noise hit instead of signal
         """
@@ -275,8 +275,8 @@ class eff_calculation:
             view = "y"
             tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
         time_win = (1440 - 1370) * 6.25 * 1e-9
-        logger=perf.log_writer(self.outpath, 0, "efficiency.txt")
-        for put in range(0, 4):
+        logger = perf.log_writer(self.outpath, 0, "efficiency.txt")
+        for put in planar_list:
             print(f"\n---\nPlanar {put} ")
             logger.write_log(f"\n---\nPlanar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
@@ -397,7 +397,7 @@ class eff_calculation:
 
             print(f"---")
 
-        for put in range(0, 4):
+        for put in planar_list:
             #     matching_clusters=pd.read_pickle(os.path.join(eff_path, f"match_cl_{put}.gzip"), compression="gzip")
             print(f"Planar {put} ")
             eff_pd = self.eff_pd[self.eff_pd.PUT == put]
@@ -578,6 +578,35 @@ class res_measure:
             pos_res_list.append(pos_list)
         return enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list
 
+    def calc_enemy_align(self, view):
+        # pd_list = []
+        # for key in self.cl_pds:
+        #     pd_list.append(self.cl_pds[key])
+        # cluster_pd_1D_match = pd.concat(pd_list)
+        # cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
+        # enemy_res_list = []
+        # chi_list = []
+        # enemey_res_list = []
+        # pos_res_list = []
+        # error_list = []
+        # count_list = []
+        # for pls in tqdm([(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)], desc="Couples", leave=False):
+        #     complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
+        #     residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
+        #     pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
+        #     count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
+        #
+        #     sigma_def = r_fit.estimate_sigma_def(residual_list)
+        #     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
+        #     enemy_res_list.append(popt_list[2])
+        #     error_list.append(error[2])
+        #     chi_list.append(chi/deg_list)
+        #     enemey_res_list.append(residual_list)
+        #     pos_res_list.append(pos_list)
+        #
+        #
+        # return enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list
+        pass
 
 def save_html_event(fig, save_path):
     """
@@ -630,7 +659,10 @@ def save_evt_display(run, data_folder, planar, nevents):
         save_html_event(fig_x, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_x.html"))
         save_html_event(fig_y, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_y.html"))
 
-def extract_eff_and_res(run, data_folder):
+def extract_eff_and_res(run, data_folder, planar_list):
+    """
+    Calculate efficiency end resolution
+    """
     perf_path = os.path.join(data_folder, "perf_out", f"{run}")
     log_file = os.path.join(perf_path, "logfile")
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
@@ -644,6 +676,16 @@ def extract_eff_and_res(run, data_folder):
     ## Builds the folders
     if not os.path.isdir(elab_folder):
         os.mkdir(elab_folder)
-
+    ## Calc efficiency
     eff_calc = eff_calculation(eff_pd, hit_pd=hit_pd, log_path=log_file, correction=correction, outpath=elab_folder)
-    eff_calc.calc_eff()
+    eff_calc.calc_eff(planar_list=planar_list)
+
+    ## Cal res
+    trk_pd_l = []
+    cl_pd_l = []
+    for planar in range(0,4):
+        trk_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip"))
+        cl_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip"))
+    trk_pd = pd.concat(trk_pd_l)
+    cl_pd = pd.concat(cl_pd_l)
+    res_measure(cl_pd=cl_pd, tracks_pd=trk_pd, eff_pd=eff_pd)
