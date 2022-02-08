@@ -667,7 +667,7 @@ def extract_eff_and_res(run, data_folder, planar_list):
     log_file = os.path.join(perf_path, "logfile")
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     eff_pd_l = []
-    for planar in range(0,4):
+    for planar in planar_list:
         eff_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip"))
     eff_pd = pd.concat(eff_pd_l)
     hit_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
@@ -683,9 +683,17 @@ def extract_eff_and_res(run, data_folder, planar_list):
     ## Cal res
     trk_pd_l = []
     cl_pd_l = []
-    for planar in range(0,4):
+    for planar in planar_list:
         trk_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip"))
         cl_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip"))
     trk_pd = pd.concat(trk_pd_l)
     cl_pd = pd.concat(cl_pd_l)
-    res_measure(cl_pd=cl_pd, tracks_pd=trk_pd, eff_pd=eff_pd)
+    res_calc = res_measure(cl_pd=cl_pd, tracks_pd=trk_pd, eff_pd=eff_pd)
+    logger = perf.log_writer(elab_folder, 0, "resolution.txt")
+
+    for planar in planar_list:
+        for view in ("x","y"):
+            popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
+            plot = res_calc.plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
+            plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
+            logger.write_log( f"Planar {planar} view {view} \n Sigma_0={(popt_list[2]) * 10000:.2f}um, Sigma_1={popt_list[5] * 10000:.2f}um" )
