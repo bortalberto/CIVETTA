@@ -274,6 +274,10 @@ class eff_calculation:
         with open(self.log_path, "r") as logfile:
             view = "y"
             tol_y = [float(line.split("+/-")[1].split()[0]) for line in logfile if f"Residual {view}" in line]
+        with open(self.log_path, "r") as logfile:
+            key = [int(line.split(" ")[-1]) for line in logfile if f"Measuring performances on planar" in line]
+        tol_x=dict(zip(key, tol_x))
+        tol_y=dict(zip(key, tol_x))
         time_win = (1440 - 1370) * 6.25 * 1e-9
         logger = perf.log_writer(self.outpath, 0, "efficiency.txt")
         for put in planar_list:
