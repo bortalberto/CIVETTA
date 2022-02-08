@@ -454,7 +454,7 @@ class res_measure:
     Class for the calculation of resolution
     """
 
-    def __init__(self, cl_pd, tracks_pd, eff_pd):
+    def __init__(self, cl_pd, tracks_pd, eff_pd, planar_list):
         """
         :param cl_pd: match pd
         :param tracks_pd:
@@ -462,7 +462,7 @@ class res_measure:
         :param put:
         """
         self.cl_pds = {}
-        for put in range(0, 4):
+        for put in planar_list:
             cl_pd_x, cl_pd_y = self.generate_cl_res_pd(eff_pd, tracks_pd, cl_pd, put)
             self.cl_pds[f"{put}x"] = cl_pd_x
             self.cl_pds[f"{put}y"] = cl_pd_y
@@ -688,7 +688,7 @@ def extract_eff_and_res(run, data_folder, planar_list):
         cl_pd_l.append(pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip"))
     # trk_pd = pd.concat(trk_pd_l)
     cl_pd = pd.concat(cl_pd_l)
-    res_calc = res_measure(cl_pd=cl_pd, tracks_pd=trk_pd_l, eff_pd=eff_pd)
+    res_calc = res_measure(cl_pd=cl_pd, tracks_pd=trk_pd_l, eff_pd=eff_pd, planar_list=planar_list)
     logger = perf.log_writer(elab_folder, 0, "resolution.txt")
 
     for planar in planar_list:
