@@ -119,6 +119,8 @@ def main(run, **kwargs):
     else:
         sys.exit(0)
 
+    if args.Detector_under_test == -1:
+        args.Detector_under_test = [0,1,2,3]
 
     if "perf" in (op_list):
         main_runner.eval_perf(args.Detector_under_test)
