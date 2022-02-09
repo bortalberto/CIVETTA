@@ -438,11 +438,11 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
     correction = load_nearest_correction(os.path.join(data_folder,"alignment"), runs, logger)
     # Applica la correzione dell'allineamento al cluster 2D
     cl_pd_2D = apply_correction(cl_pd_2D_ori, correction)
-    print (put)
-    if put==-1:
-        put_list=[0,1,2,3]
+
+    if len(put) == 1:
+        put_list = [put]
     else:
-        put_list=[put]
+        put_list = put
     for put in tqdm( put_list, desc="Planar"):
         print (f" Measuring performances on planar {put}")
         logger.write_log(f"-------\n Measuring performances on planar {put}")
