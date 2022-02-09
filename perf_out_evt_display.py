@@ -556,7 +556,7 @@ class res_measure:
             pd.DataFrame(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
         return popt_list[0], pcov_list[0], res_list[0], R_list[0], chi_list[0], deg_list[0]
 
-    def calc_enemy(self, view):
+    def calc_enemy(self, view, planars):
         pd_list = []
         for key in self.cl_pds:
             pd_list.append(self.cl_pds[key])
@@ -564,11 +564,13 @@ class res_measure:
         cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
         enemy_res_list = []
         chi_list = []
-        enemey_res_list = []
+        residual_fit_list = []
         pos_res_list = []
         error_list = []
         count_list = []
-        for pls in tqdm([(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)], desc="Couples", leave=False):
+        couples = [(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)]
+        couples = [couple for couple in couples if np.all(np.isin(couple, planars))]
+        for pls in tqdm(couples, desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
@@ -579,9 +581,9 @@ class res_measure:
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
             chi_list.append(chi/deg_list)
-            enemey_res_list.append(residual_list)
+            residual_fit_list.append(residual_list)
             pos_res_list.append(pos_list)
-        return enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list
+        return couples,enemy_res_list, chi_list, residual_fit_list, pos_res_list, error_list, count_list
 
     def calc_enemy_align(self, view):
         # pd_list = []
@@ -699,4 +701,11 @@ def extract_eff_and_res(run, data_folder, planar_list):
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
             plot = res_calc.plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
-            logger.write_log( f"Planar {planar} view {view} \n Sigma_0={(popt_list[2]) * 10000:.2f}um, Sigma_1={popt_list[5] * 10000:.2f}um" )
+            logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um" )
+    ## Enemy
+    logger.write_log(f"\n--Enemy residual--\n")
+
+    for view in ("x","y"):
+        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list)
+        for couple, enemy_res in zip(couples, enemy_res_list):
+            logger.write_log(f"Couple: {couple}: {enemy_res} um")
