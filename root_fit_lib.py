@@ -214,7 +214,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     return popt, pcov, res, r2, chi_sqr, deg, error
 
 
-def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list,sigma_def=0.2 ):
+def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list,sigma_def=0.2, chi_sq_trackers = False):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     sigma_0 = estimate_sigma_def(data)
     data = data[abs(data) < sigma_0]
@@ -244,8 +244,9 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     plt.text(y=np.max(y)*0.7, x=np.min(x)+0.001, s=f"R^2={R_list[pl]:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1]*10000:.2f}um, Sigma_0={(popt[2])*10000:.2f}um"
                                                            f"\n Norm_1={popt[3]:.2f}, Mean_1={popt[4]*10000:.2f}um, Sigma_1={abs(popt[5])*10000:.2f}um"
                                                            f"\n Chi_sqrt={chi_list[pl]:.3e}, Chi_sqrt/NDoF = {chi_list[pl]/deg_list[pl]:.3e}", fontsize="small")
-    plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
-    plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
+    if not chi_sq_trackers:
+        plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
+        plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.xlim(np.min(x), np.max(x))
     if put==pl:
         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))

@@ -463,7 +463,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         # tracks_pd_c.drop_duplicates(inplace=True)
 
         logger.write_log(f"{tracks_pd_c.shape[0]} tracks with all trackres before cutting")
-
+        mean_res_dict = {}
+        res_sigma_dict = {}
         for view in ("x", "y"):
             popt_list, pcov_list, res_list, R_list,chi_list, deg_list = r_fit.double_gaus_fit_root(tracks_pd, view, put)
 
@@ -471,19 +472,26 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
             for pl in trackers_list:
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 res_sigma = ((popt_list[pl][2] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][5] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
-                r_fit.plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl, chi_list, deg_list)
+                mean_res_dict[pl,view] = mean_res
+                res_sigma_dict[pl,view] = res_sigma
+                r_fit.plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl, chi_list, deg_list, chi_sq_trackers)
                 # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
-                logger.write_log("Trackers fits")
-                logger.write_log(f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
-                tracks_pd_c = tracks_pd_c[
-                    (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
-                    (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
-                    ]
+                if not chi_sq_trackers:
+                    logger.write_log("Trackers fits")
+                    logger.write_log(f"pl {pl}, view {view}, mean {mean_res}, res_sigma {res_sigma}")
+                    tracks_pd_c = tracks_pd_c[
+                        (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) > (mean_res - nsigma_trck*res_sigma)) &
+                        (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]) < (mean_res + nsigma_trck*res_sigma))
+                        ]
             if any([R < 0.9 for R in R_list]):
                 logger.write_log(
                     f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
                 raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
+        if chi_sq_trackers:
+            tracks_pd_c["chi_sqrt"] = tracks_pd_c.apply(lambda x: calc_chi_sqrt(x, res_sigma_dict), 1)
+            tracks_pd_c = tracks_pd_c[tracks_pd_c["chi_sqrt"]] < nsigma_trck
+
         good_events = tracks_pd_c["count"].unique()
         # Fitta le tracce
         cl_pd_2D_res = cl_pd_2D_res[cl_pd_2D_res["count"].isin(good_events)]# Solo degli eventi con tracciatori buoni
@@ -629,3 +637,12 @@ def de_correct_process(row, corr):
         pos_x = pos_x - correction[f"{int(planar)}_y"][1] + angle * (pos_y)
         pos_y = pos_y - correction[f"{int(planar)}_x"][1] - angle * (pos_x)
     return pos_x, pos_y
+
+def calc_chi_sqrt(x, res_sigma_dict):
+    """
+    Calculate the N dimension chi squared sum, given the residual distributions sigmas
+    """
+    chi=0
+    for key in res_sigma_dict:
+        chi+= (x[f"res_{key[1]}"][key[0]] / res_sigma_dict[key])**2
+    return chi

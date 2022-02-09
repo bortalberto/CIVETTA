@@ -33,7 +33,7 @@ class runner:
         print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
 
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
-                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.sigmas_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
+                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.chi_sq_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
 
     def save_events(self, put, nevents):
         perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
@@ -109,6 +109,8 @@ def main(run, **kwargs):
     if args.hit_efficiency:
         options["hit_efficiency"] = args.hit_efficiency
         print ("Efficiency on hits")
+    if args.chi_squared:
+        options["chi_squared"] = True
     if args.save_events:
         op_list.append("save_events")
     if args.save_eff:
@@ -140,7 +142,7 @@ if __name__=="__main__":
     parser.add_argument('-cpu','--cpu', help='Specify CPU count ',type=int)
     parser.add_argument('-S','--Silent', help='Print only errors ',action="store_true")
     parser.add_argument('-sT','--sigmas_trackers', help='Sigma trackers', type=float, default=1)
-    parser.add_argument('-chi','--chi_sqared', help='Use chi squared cut on trackers',action="store_true")
+    parser.add_argument('-chi','--chi_squared', help='Use chi squared cut on trackers',action="store_true")
     parser.add_argument('-sD','--sigmas_DUT', help='Sigma DUT', type=int, default=5)
     parser.add_argument('-perf','--performance', help='Performance evaluation ', action="store_true")
     parser.add_argument('-mt','--multi_tracks_suppresion', help='Activate suppression of multi tracks events',action="store_true")
