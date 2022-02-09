@@ -695,7 +695,7 @@ def extract_eff_and_res(run, data_folder, planar_list):
         cl_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip")
     res_calc = res_measure(cl_pd=cl_pd_l, tracks_pd=trk_pd_l, eff_pd=eff_pd, planar_list=planar_list)
     logger = perf.log_writer(elab_folder, 0, "resolution.txt")
-f
+
     for planar in planar_list:
         for view in ("x","y"):
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
