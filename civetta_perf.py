@@ -33,7 +33,7 @@ class runner:
         print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
 
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
-                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.chi_sq_trackers, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
+                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.chi_squared, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
 
     def save_events(self, put, nevents):
         perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
