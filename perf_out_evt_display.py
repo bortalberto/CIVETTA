@@ -706,6 +706,8 @@ def extract_eff_and_res(run, data_folder, planar_list):
     logger.write_log(f"\n--Enemy residual--\n")
 
     for view in ("x","y"):
+        logger.write_log(f"\n--Enemy residual {view}--\n")
+
         couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list)
         for couple, enemy_res in zip(couples, enemy_res_list):
             logger.write_log(f"Couple: {couple}: {enemy_res} um")
