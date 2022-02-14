@@ -50,7 +50,7 @@ def load_cluster_2D_align(runs, data_folder):
     cl_pd_2D=cl_pd_2D.drop(columns=["cl_pos_x","cl_pos_y"])
     #Drop charge and size position, not needed for alinment
     # cl_pd_2D=cl_pd_2D.drop(columns=["cl_charge","cl_charge_x","cl_charge_y","cl_size_x","cl_size_y","cl_size_tot"])
-    cl_pd_2D=cl_pd_2D.drop(columns=["cl_size_x","cl_size_y"])
+    cl_pd_2D=cl_pd_2D.drop(columns=["cl_charge","cl_charge_x","cl_charge_y","cl_size_tot"])
 
     #Let's keep only events with 4 planars
 #     cl_pd_2D=cl_pd_2D.groupby(["subrun","count"]).filter(lambda x: set(x["planar"])=={0,1,2,3})
