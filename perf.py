@@ -55,7 +55,7 @@ def load_cluster_2D_align(runs, data_folder):
     return cl_pd_2D
 
 
-def fit_tracks_manager(cl_pd, planar="None", tracking_fit=False):
+def fit_tracks_manager(cl_pd, planar="None", tracking_fit=False, cpus=20):
     """
     Manages the parallelizing
     """
@@ -65,7 +65,7 @@ def fit_tracks_manager(cl_pd, planar="None", tracking_fit=False):
     for key in sub_data.groups:
         sub_list.append(sub_data.get_group(key))
     if len(sub_list) > 0:
-        with Pool(processes=20) as pool:
+        with Pool(processes=cpus) as pool:
             with tqdm(total=len(sub_list), desc="Tracks fitting", leave=False) as pbar:
                 for i, x in enumerate(pool.imap_unordered(fit_tracks_process_pd(planar, tracking_fit), sub_list)):
                     return_list.append(x)
@@ -456,7 +456,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         # Seleziona gli eventi che hanno i 3 tracciatori
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
         # Fit them to extract the put sigma and mean
-        tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True)
+        tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True, cpus=cpu_to_use)
         ##Seleziona le tracce che rispettano l'intervallo di residui
         ##Seleziona le tracce che rispettano l'intervallo di residui
         nsigma_trck = nsigma_trackers
@@ -496,7 +496,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         good_events = tracks_pd_c["count"].unique()
         # Fitta le tracce
         cl_pd_2D_res = cl_pd_2D_res[cl_pd_2D_res["count"].isin(good_events)]# Solo degli eventi con tracciatori buoni
-        tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put)
+        tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put, cpus=cpu_to_use)
 
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
         view = "x"
