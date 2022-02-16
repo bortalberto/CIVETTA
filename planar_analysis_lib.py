@@ -10,34 +10,37 @@ from sklearn.cluster import KMeans
 import sys
 import configparser
 import pickle
-from multiprocessing import Pool,cpu_count
+from multiprocessing import Pool, cpu_count
 import itertools
-config=configparser.ConfigParser()
+
+config = configparser.ConfigParser()
 config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
 try:
-    data_folder=config["GLOBAL"].get("data_folder")
-    mapping_file=config["GLOBAL"].get("mapping_file")
-    calib_folder=config["GLOBAL"].get("calib_folder")
+    data_folder = config["GLOBAL"].get("data_folder")
+    mapping_file = config["GLOBAL"].get("mapping_file")
+    calib_folder = config["GLOBAL"].get("calib_folder")
 
 
 except KeyError as E:
-    print (f"{E}Missing or partial configration file, restore it.")
+    print(f"{E}Missing or partial configration file, restore it.")
 
-if data_folder=="TER":
+if data_folder == "TER":
     try:
-        data_folder=os.environ["TER_data"]
+        data_folder = os.environ["TER_data"]
     except KeyError as E:
         print(f"{E} is not defined in your system variables")
+
 
 class decoder:
     """
     This class decode the dat file and produces a root file
     You need to specify GEMROC_ID
     """
-    def __init__(self, GEMROC_ID=0,  RUN=0, SUBRUN=0, downsamplig=1):
+
+    def __init__(self, GEMROC_ID=0, RUN=0, SUBRUN=0, downsamplig=1):
         # self.GEMROC_ID = int(GEMROC_ID) Make more sense to specify GEMROC and subrun while calling the function, since they are different every time
         self.RUN = int(RUN)
-        self.downsampling=downsamplig
+        self.downsampling = downsamplig
         # self.SUBRUN = int(SUBRUN)
 
     def __del__(self):
@@ -52,8 +55,7 @@ class decoder:
         path = input_[0]
         subRunNo = input_[1]
         GEMROC = input_[2]
-        pd_list=[]
-
+        pd_list = []
 
         statinfo = os.stat(path)
         packet_header = -1
@@ -87,7 +89,6 @@ class decoder:
         prev2_tiger_framenum = -1
         prev3_tiger_framenum = -1
 
-
         flag_swap1 = False
         flag_swap2 = False
         firstPacket = True
@@ -115,7 +116,7 @@ class decoder:
                 ##																							##
                 ##############################################################################################
 
-                if (((int_x & 0xE000000000000000) >> 61) == 0x6): ##packet header
+                if (((int_x & 0xE000000000000000) >> 61) == 0x6):  ##packet header
                     packet_header = 1
                     LOCAL_L1_COUNT_31_6 = int_x >> 32 & 0x3FFFFFF
                     LOCAL_L1_COUNT_5_0 = int_x >> 24 & 0x3F
@@ -133,7 +134,7 @@ class decoder:
                     firstData = True  ## Header flags that next line will be first data word of the packet
 
                     if len(lschannel) > 0:  ## Non dovrebbe manco succedere
-                        print ("ERROR")
+                        print("ERROR")
                         lschannel = []
                         lstac = []
                         lstcoarse = []
@@ -320,34 +321,34 @@ class decoder:
                     l_layer = []
                     l_l1framenum = []
                     for x in range(len(lstac)):
-                        l_channel.append( lschannel.pop())
-                        l_tac .append( lstac.pop())
-                        l_tcoarse .append( lstcoarse.pop())
-                        l_ecoarse .append( lsecoarse.pop())
-                        l_tfine .append( lstfine.pop())
-                        l_efine .append( lsefine.pop())
-                        l_tcoarse_10b .append( lstcoarse_10b.pop())
-                        l_tiger .append( lstigerid.pop())
-                        l_l1ts_min_tcoarse .append( lsl1ts_min_tcoarse.pop())
-                        l_lasttigerframenum .append( lslasttigerframenum.pop())
-                        l_delta_coarse .append(lsdelta_coarse.pop())
-                        l_count_ori .append( l1count)
-                        l_count .append(  l1count_new.pop())
-                        l_timestamp .append( l1timestamp)
-                        l_gemroc .append( GEMROC )
-                        l_runNo .append( self.RUN)
-                        l_subRunNo .append( subRunNo)
+                        l_channel.append(lschannel.pop())
+                        l_tac.append(lstac.pop())
+                        l_tcoarse.append(lstcoarse.pop())
+                        l_ecoarse.append(lsecoarse.pop())
+                        l_tfine.append(lstfine.pop())
+                        l_efine.append(lsefine.pop())
+                        l_tcoarse_10b.append(lstcoarse_10b.pop())
+                        l_tiger.append(lstigerid.pop())
+                        l_l1ts_min_tcoarse.append(lsl1ts_min_tcoarse.pop())
+                        l_lasttigerframenum.append(lslasttigerframenum.pop())
+                        l_delta_coarse.append(lsdelta_coarse.pop())
+                        l_count_ori.append(l1count)
+                        l_count.append(l1count_new.pop())
+                        l_timestamp.append(l1timestamp)
+                        l_gemroc.append(GEMROC)
+                        l_runNo.append(self.RUN)
+                        l_subRunNo.append(subRunNo)
                         l_l1framenum.append(l1framenum)
                         if (GEMROC < 4):
-                            l_layer .append(1)
+                            l_layer.append(1)
                         elif (GEMROC > 3):
-                            l_layer .append(2)
+                            l_layer.append(2)
                         if (GEMROC > 11):
-                            l_layer .append(0)
+                            l_layer.append(0)
 
-                    dict4_pd = {'channel': l_channel, 'tac': l_tac, 'tcoarse': l_tcoarse,"ecoarse":l_ecoarse, "tfine" : l_tfine, "efine": l_efine, "tcoarse_10b" : l_tcoarse_10b, "tiger" : l_tiger,
-                                "l1ts_min_tcoarse" : l_l1ts_min_tcoarse, "lasttigerframenum" : l_lasttigerframenum, "delta_coarse" : l_delta_coarse, "count_ori" : l_count_ori, "count" : l_count, "timestamp" : l_timestamp,
-                                "gemroc":l_gemroc, "runNo" : l_runNo,"subRunNo":l_subRunNo,"l1_framenum" : l_l1framenum}
+                    dict4_pd = {'channel'         : l_channel, 'tac': l_tac, 'tcoarse': l_tcoarse, "ecoarse": l_ecoarse, "tfine": l_tfine, "efine": l_efine, "tcoarse_10b": l_tcoarse_10b, "tiger": l_tiger,
+                                "l1ts_min_tcoarse": l_l1ts_min_tcoarse, "lasttigerframenum": l_lasttigerframenum, "delta_coarse": l_delta_coarse, "count_ori": l_count_ori, "count": l_count, "timestamp": l_timestamp,
+                                "gemroc"          : l_gemroc, "runNo": l_runNo, "subRunNo": l_subRunNo, "l1_framenum": l_l1framenum}
                     packet_header = 0
                     packet_tailer = 0
                     packet_udp = 0
@@ -356,22 +357,21 @@ class decoder:
                     # print (self.downsampling)
                     if l1count % self.downsampling == 0:
                         pd_list.append(pd.DataFrame(dict4_pd))
-        if len(pd_list)>0:
-            final_pd=pd.concat(pd_list, ignore_index=True)
-            if len(final_pd>0):
+        if len(pd_list) > 0:
+            final_pd = pd.concat(pd_list, ignore_index=True)
+            if len(final_pd > 0):
                 if root:
-                    pass## Inibit root decode
+                    pass  ## Inibit root decode
                     # import root_pandas
                     # filename=path.replace(".dat", ".root")
                     # filename=filename.replace("raw_dat", "raw_root")
                     # filename=filename.replace("/RUN_", "/")
                     # root_pandas.to_root(final_pd,filename,"tree")
                 else:
-                    filename=path.replace(".dat", ".pickle.gzip")
-                    filename=filename.replace("raw_dat", "raw_root")
-                    filename=filename.replace("/RUN_", "/")
+                    filename = path.replace(".dat", ".pickle.gzip")
+                    filename = filename.replace("raw_dat", "raw_root")
+                    filename = filename.replace("/RUN_", "/")
                     final_pd.to_pickle(filename, compression="gzip")
-
 
 
 class calib:
@@ -379,14 +379,13 @@ class calib:
     Class created to apply calibration and mapping
     """
 
-    def __init__(self, run_number, calib_folder, mapping_file, data_folder, root_dec,cylinder):
-            self.run_number=run_number
-            self.calib_folder=calib_folder
-            self.mapping_file=mapping_file
-            self.data_folder=data_folder
-            self.root_dec=False
-            self.cylinder=cylinder
-
+    def __init__(self, run_number, calib_folder, mapping_file, data_folder, root_dec, cylinder):
+        self.run_number = run_number
+        self.calib_folder = calib_folder
+        self.mapping_file = mapping_file
+        self.data_folder = data_folder
+        self.root_dec = False
+        self.cylinder = cylinder
 
     def load_mapping(self):
         """
@@ -394,13 +393,13 @@ class calib:
         :return:
         """
         if self.mapping_file[-5:] == ".root":
-           self.load_mapping_root()
+            self.load_mapping_root()
         else:
             try:
-                mapping_pd=pd.read_pickle(self.mapping_file)
-                self.mapping_pd=mapping_pd
+                mapping_pd = pd.read_pickle(self.mapping_file)
+                self.mapping_pd = mapping_pd
             except Exception as E:
-                print (f"Can't load the mapping file, exception: {E}. Verify that the file ({self.mapping_file})exists and it's readable")
+                print(f"Can't load the mapping file, exception: {E}. Verify that the file ({self.mapping_file})exists and it's readable")
                 sys.exit(1)
 
     def load_mapping_root(self):
@@ -412,8 +411,8 @@ class calib:
             import uproot
             file = uproot.open(self.mapping_file)
             mapping_pd = file["tree"].arrays(library="pd")
-            self.mapping_pd=mapping_pd
-            self.mapping_pd["tiger"]=self.mapping_pd["SW_FEB_id"]
+            self.mapping_pd = mapping_pd
+            self.mapping_pd["tiger"] = self.mapping_pd["SW_FEB_id"]
             self.mapping_pd["strip_x"] = self.mapping_pd["pos_x"]
             self.mapping_pd["strip_y"] = self.mapping_pd["pos_v"]
             self.mapping_pd["planar"] = self.mapping_pd["layer_id"]
@@ -421,43 +420,38 @@ class calib:
 
 
         except Exception as E:
-            print (f"Can't load the mapping file, exception: {E}. Verify that the file ({self.mapping_file})exists and it's readable")
+            print(f"Can't load the mapping file, exception: {E}. Verify that the file ({self.mapping_file})exists and it's readable")
             sys.exit(1)
 
-
     def convert_none(self, input_):
-        if str(input_)=='None':
+        if str(input_) == 'None':
             print(input_)
 
             return np.NaN
         else:
             return input_
 
-    def get_channels_QDC_calib(self,HW_FEB,layer):
+    def get_channels_QDC_calib(self, HW_FEB, layer):
         """
         The first time we try to access a calibration, we load the txt file, in such way we load only the needed files
         :param HW_FEB:
         :param layer:
         :return:
         """
-        fname_1="{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c1_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)
-        fname_2="{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c2_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)
+        fname_1 = "{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c1_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)
+        fname_2 = "{2}/QDC/L{0}_QDC_calib/L{0}FEB{1}_c2_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)
         if not os.path.isfile(fname_1):
-            print (f"Can't find {fname_1}")
+            print(f"Can't find {fname_1}")
             exit(0)
         if not os.path.isfile(fname_2):
-            print (f"Can't find {fname_2}")
+            print(f"Can't find {fname_2}")
             exit(0)
         return {
-                0 : np.loadtxt(fname=fname_1, converters={0: self.convert_none, 1: self.convert_none}),
-                1 : np.loadtxt(fname=fname_2,  converters={0: self.convert_none, 1: self.convert_none}),
-                }
+            0: np.loadtxt(fname=fname_1, converters={0: self.convert_none, 1: self.convert_none}),
+            1: np.loadtxt(fname=fname_2, converters={0: self.convert_none, 1: self.convert_none}),
+        }
 
-
-
-
-
-    def get_channels_TAC_calib(self,HW_FEB,layer):
+    def get_channels_TAC_calib(self, HW_FEB, layer):
         """
         The first time we try to access a calibration, we load the txt file, in such way we load only the needed files
          :param HW_FEB:
@@ -465,12 +459,12 @@ class calib:
          :return:
          """
         return {
-                0 : np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c1_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
-                1 : np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c2_Efine_calib.txt".format(layer,HW_FEB,self.calib_folder)),
-                       }
+            0: np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c1_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)),
+            1: np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c2_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)),
+        }
 
     def build_mapping_group(self):
-        self.mapping_group=self.mapping_pd.groupby(["channel_id","tiger","gemroc_id"])
+        self.mapping_group = self.mapping_pd.groupby(["channel_id", "tiger", "gemroc_id"])
 
     def get_mapping_value(self, field_names, channel_id, tiger, gemroc):
         """
@@ -483,7 +477,7 @@ class calib:
         """
         return_list = []
         # mapping_pd=self.mapping_pd[(self.mapping_pd.channel_id == channel_id) & (self.mapping_pd.tiger == tiger) & (self.mapping_pd.gemroc_id == gemroc)]
-        mapping_pd=self.mapping_group.get_group((channel_id,tiger,gemroc))
+        mapping_pd = self.mapping_group.get_group((channel_id, tiger, gemroc))
         for field_name in field_names:
             return_list.append(int(mapping_pd[field_name]))
         return return_list
@@ -518,15 +512,15 @@ class calib:
     #     subrun=int(subrun)
     #     cProfile.runctx('self.calibrate_subrun_runner(subrun)', globals(), locals(), 'prof%d.prof' %subrun)
 
-    def calibrate_subrun(self,subrun):
+    def calibrate_subrun(self, subrun):
         """
         Calirate a single subrun
         :param subrun:
         :return:
         """
         if self.root_dec:
-            calib_dict={}
-            in_f=R.TFile("{}/raw_root/{}/Sub_RUN_dec_{}.root".format(self.data_folder,self.run_number,subrun))
+            calib_dict = {}
+            in_f = R.TFile("{}/raw_root/{}/Sub_RUN_dec_{}.root".format(self.data_folder, self.run_number, subrun))
             runNo = []
             subRunNo = []
             gemroc = []
@@ -545,48 +539,48 @@ class calib:
             delta_coarse = []
             l1_framenum = []
             tiger = []
-            strip_x= []
-            strip_y= []
+            strip_x = []
+            strip_y = []
             planar = []
             FEB_label = []
             charge_SH = []
-            out_pd=pd.DataFrame()
-            hit_id=[]
+            out_pd = pd.DataFrame()
+            hit_id = []
             for entryNum in range(0, in_f.tree.GetEntries()):
-                    hit_id.append(entryNum)
-                    in_f.tree.GetEntry(entryNum)
-                    runNo.append(int(getattr(in_f.tree, "runNo")))
-                    subRunNo.append(int(subrun))
-                    gemroc.append(int(getattr(in_f.tree, "gemroc")))
-                    channel.append(int(getattr(in_f.tree, "channel")))
-                    tac.append(int(getattr(in_f.tree, "tac")))
-                    tcoarse.append(int(getattr(in_f.tree, "tcoarse")))
-                    tcoarse_10b.append(int(getattr(in_f.tree, "tcoarse_10b")))
-                    ecoarse.append(int(getattr(in_f.tree, "ecoarse")))
-                    tfine.append(int(getattr(in_f.tree, "tfine")))
-                    efine.append(int(getattr(in_f.tree, "efine")))
-                    count.append(int(getattr(in_f.tree, "count")))
-                    count_ori.append(int(getattr(in_f.tree, "count_ori")))
-                    timestamp.append(int(getattr(in_f.tree, "timestamp")))
-                    l1ts_min_tcoarse.append(int(getattr(in_f.tree, "l1ts_min_tcoarse")))
-                    lasttigerframenum.append(int(getattr(in_f.tree, "lasttigerframenum")))
-                    delta_coarse.append(int(getattr(in_f.tree, "delta_coarse")))
-                    l1_framenum.append(int(getattr(in_f.tree, "l1_framenum")))
-                    tiger.append(int(getattr(in_f.tree, "tiger")))
-                    mapping = self.mapping_pd[(self.mapping_pd.gemroc_id == gemroc[-1]) & (self.mapping_pd.tiger == tiger[-1]) & (self.mapping_pd.channel_id == channel[-1])]
+                hit_id.append(entryNum)
+                in_f.tree.GetEntry(entryNum)
+                runNo.append(int(getattr(in_f.tree, "runNo")))
+                subRunNo.append(int(subrun))
+                gemroc.append(int(getattr(in_f.tree, "gemroc")))
+                channel.append(int(getattr(in_f.tree, "channel")))
+                tac.append(int(getattr(in_f.tree, "tac")))
+                tcoarse.append(int(getattr(in_f.tree, "tcoarse")))
+                tcoarse_10b.append(int(getattr(in_f.tree, "tcoarse_10b")))
+                ecoarse.append(int(getattr(in_f.tree, "ecoarse")))
+                tfine.append(int(getattr(in_f.tree, "tfine")))
+                efine.append(int(getattr(in_f.tree, "efine")))
+                count.append(int(getattr(in_f.tree, "count")))
+                count_ori.append(int(getattr(in_f.tree, "count_ori")))
+                timestamp.append(int(getattr(in_f.tree, "timestamp")))
+                l1ts_min_tcoarse.append(int(getattr(in_f.tree, "l1ts_min_tcoarse")))
+                lasttigerframenum.append(int(getattr(in_f.tree, "lasttigerframenum")))
+                delta_coarse.append(int(getattr(in_f.tree, "delta_coarse")))
+                l1_framenum.append(int(getattr(in_f.tree, "l1_framenum")))
+                tiger.append(int(getattr(in_f.tree, "tiger")))
+                mapping = self.mapping_pd[(self.mapping_pd.gemroc_id == gemroc[-1]) & (self.mapping_pd.tiger == tiger[-1]) & (self.mapping_pd.channel_id == channel[-1])]
 
-                    strip_x.append(int(mapping.strip_x))
-                    strip_y.append(int(mapping.strip_y))
-                    planar.append(int (mapping.planar))
-                    FEB_label.append(int (mapping.FEB_label))
-                    if (int(mapping.HW_feb_id), int(mapping.planar)) not in calib_dict.keys():
-                        calib_dict[(int(mapping.HW_feb_id), int(mapping.planar))] = self.get_channels_QDC_calib(int(mapping.HW_feb_id), int(mapping.planar))
-                    constant = calib_dict[int(mapping.HW_feb_id),3][tiger[-1]%2][channel[-1]][1]
-                    slope = calib_dict[int(mapping.HW_feb_id),3][tiger[-1]%2][channel[-1]][2]
-                    if(efine[-1] >= 1008):
-                        charge_SH.append(((-1*constant)-(1024-efine[-1]))/slope)
-                    else:
-                        charge_SH.append((-1 * constant + efine[-1]) / slope)
+                strip_x.append(int(mapping.strip_x))
+                strip_y.append(int(mapping.strip_y))
+                planar.append(int(mapping.planar))
+                FEB_label.append(int(mapping.FEB_label))
+                if (int(mapping.HW_feb_id), int(mapping.planar)) not in calib_dict.keys():
+                    calib_dict[(int(mapping.HW_feb_id), int(mapping.planar))] = self.get_channels_QDC_calib(int(mapping.HW_feb_id), int(mapping.planar))
+                constant = calib_dict[int(mapping.HW_feb_id), 3][tiger[-1] % 2][channel[-1]][1]
+                slope = calib_dict[int(mapping.HW_feb_id), 3][tiger[-1] % 2][channel[-1]][2]
+                if (efine[-1] >= 1008):
+                    charge_SH.append(((-1 * constant) - (1024 - efine[-1])) / slope)
+                else:
+                    charge_SH.append((-1 * constant + efine[-1]) / slope)
 
             out_pd["runNo"] = runNo
             out_pd["subRunNo"] = subRunNo
@@ -614,10 +608,10 @@ class calib:
             out_pd["charge_SH"] = charge_SH
             out_pd["subRunNo"].astype(int)
             import root_pandas
-            root_pandas.to_root(out_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
+            root_pandas.to_root(out_pd, "{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder, self.run_number, subrun), "tree")
             return out_pd
         else:
-            decode_pd=pd.read_pickle("{}/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.data_folder,self.run_number,subrun), compression="gzip")
+            decode_pd = pd.read_pickle("{}/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
             ana_pd = decode_pd
             self.build_mapping_group()
 
@@ -625,25 +619,24 @@ class calib:
             ana_pd["subrun"] = subrun
             ana_pd["hit_id"] = ana_pd.index
             ana_pd[["strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"]] = pd.DataFrame(ana_pd.data.tolist())
-            ana_pd = ana_pd.drop(columns=["data"] )
+            ana_pd = ana_pd.drop(columns=["data"])
             ana_pd = ana_pd.astype(int)
             calib_dict = {}
             if self.cylinder:
-                for HW_feb_id,planar in ana_pd.groupby(["HW_feb_id","planar"]).groups.keys():
+                for HW_feb_id, planar in ana_pd.groupby(["HW_feb_id", "planar"]).groups.keys():
                     calib_dict[(int(HW_feb_id), int(planar))] = self.get_channels_QDC_calib(int(HW_feb_id), int(planar))
             else:
                 for HW_feb_id in ana_pd["HW_feb_id"].unique():
                     calib_dict[(int(HW_feb_id), 3)] = self.get_channels_QDC_calib(int(HW_feb_id), 3)
 
             ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["planar"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
-            compress_pd=compress_hit_pd(ana_pd)
-            verifiy_compression_validity(ana_pd,compress_pd )
-            ana_pd=compress_pd
+            compress_pd = compress_hit_pd(ana_pd)
+            verifiy_compression_validity(ana_pd, compress_pd)
+            ana_pd = compress_pd
             # import root_pandas
             # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
             ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
             return ana_pd
-
 
     def create_hits_pd_and_single_root(self):
         """
@@ -665,12 +658,11 @@ class calib:
 
 
         else:
-            pd_list=[]
+            pd_list = []
             for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.pickle.gzip".format(self.data_folder, self.run_number)):
                 pd_list.append(pd.read_pickle(filename, compression="gzip"))
-            data_pd=pd.concat(pd_list, ignore_index=True)
+            data_pd = pd.concat(pd_list, ignore_index=True)
             data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
-
 
     def append_hits_pd_and_single_root(self):
         """
@@ -700,10 +692,10 @@ class calib:
             else:
                 data_pd = pd.DataFrame()
 
-            pd_list=[]
+            pd_list = []
             for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.pickle.gzip".format(self.data_folder, self.run_number)):
                 pd_list.append(pd.read_pickle(filename, compression="gzip"))
-            data_pd=pd.concat(pd_list, ignore_index=True)
+            data_pd = pd.concat(pd_list, ignore_index=True)
             data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
     #
     # mapping_pd=load_mapping()
@@ -722,7 +714,7 @@ class clusterize:
     Class created to clusterize the data, in both 1-D and 2-D
     """
 
-    def __init__(self,run_number,data_folder,signal_window_lower_limit,signal_window_upper_limit):
+    def __init__(self, run_number, data_folder, signal_window_lower_limit, signal_window_upper_limit):
         """
         It needs the pickle file to run
         :param run_number:
@@ -734,24 +726,24 @@ class clusterize:
         self.signal_window_upper_limit = signal_window_upper_limit
 
     @classmethod
-    def default_time_winw(cls,run_number,data_folder):
+    def default_time_winw(cls, run_number, data_folder):
         config = configparser.ConfigParser()
         config.read(os.path.join(sys.path[0], "config.ini"))
         signal_window_lower_limit_conf = config["GLOBAL"].get("signal_window_lower_limit")
         signal_window_upper_limit_conf = config["GLOBAL"].get("signal_window_upper_limit")
-        return cls(run_number, data_folder, signal_window_lower_limit_conf,signal_window_upper_limit_conf)
-
+        return cls(run_number, data_folder, signal_window_lower_limit_conf, signal_window_upper_limit_conf)
 
     def load_data_pd(self, subrunNo_tgt=None):
         """
         Load the pickle file with the single hit information
         :return:
         """
-        self.data_pd=pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         if subrunNo_tgt:
             data_pd_cut_0 = self.data_pd[(self.data_pd.runNo == self.run_number) & (self.data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.delta_coarse > 0)]
             data_pd_cut_0 = data_pd_cut_0[data_pd_cut_0.subRunNo == subrunNo_tgt]
-            self.data_pd=data_pd_cut_0
+            self.data_pd = data_pd_cut_0
+
     def read_subruns(self):
         """
         Returns the list of subruns in the run
@@ -767,7 +759,7 @@ class clusterize:
         :return:
         """
         # hit_charge=np.abs(hit_charge)
-        hit_charge[hit_charge<0.1] = 0.1
+        hit_charge[hit_charge < 0.1] = 0.1
         ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
         return ret_centers
 
@@ -782,22 +774,22 @@ class clusterize:
         hit_charge = data_pd.charge_SH.to_numpy()
         hit_id = data_pd.hit_id.to_numpy()
 
-        k = 1   # Initialize with 1 cluster
+        k = 1  # Initialize with 1 cluster
 
         while True:
             ret_clusters = []
-            KM = KMeans(n_clusters = k, n_init = 1)   # Initialize the algorithm with k clusters
-            KM.fit(hit_pos.reshape(-1, 1))   # Perform the alg and find the clusters centers
+            KM = KMeans(n_clusters=k, n_init=1)  # Initialize the algorithm with k clusters
+            KM.fit(hit_pos.reshape(-1, 1))  # Perform the alg and find the clusters centers
 
-            for n,c in enumerate(KM.cluster_centers_):  # For each cluster
-                hit_pos_this_c = hit_pos[KM.labels_ == n]   # Load hit position and hit charge for this cluster
-                included = (abs(hit_pos_this_c-c) < len(hit_pos_this_c)/2+1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
+            for n, c in enumerate(KM.cluster_centers_):  # For each cluster
+                hit_pos_this_c = hit_pos[KM.labels_ == n]  # Load hit position and hit charge for this cluster
+                included = (abs(hit_pos_this_c - c) < len(hit_pos_this_c) / 2 + 1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
                 if np.any(included != True):
                     k += 1
                 else:
                     hit_charge_this_c = hit_charge[KM.labels_ == n]
                     hit_id_this_c = hit_id[KM.labels_ == n]
-                    ret_clusters.append( ( self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) ) #pos,charge, size
+                    ret_clusters.append((self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
 
             if len(ret_clusters) == len(KM.cluster_centers_):
                 return ret_clusters
@@ -825,10 +817,10 @@ class clusterize:
             cluster_centers, labels = manual_kmean(hit_pos, centers)  # Initialize the algorithm with k clusters
             #     print (cluster_centers)
 
-            good_clusters=0
+            good_clusters = 0
             for n, c in enumerate(cluster_centers):  # For each cluster
                 hit_pos_this_c = hit_pos[labels == n]  # Load hit position and hit charge for this cluster
-                distance = abs(hit_pos_this_c - c) # Distance from center
+                distance = abs(hit_pos_this_c - c)  # Distance from center
                 included = (abs(hit_pos_this_c - c) < len(hit_pos_this_c) / 2 + 1)  # For each hit, checks if the hit is in cluster_size/2 +1 from the center
                 #         print (included)
                 if np.any(included != True):
@@ -836,13 +828,13 @@ class clusterize:
                     centers = np.append(cluster_centers, hit_pos_this_c[np.argmax(distance)])  # Add to the center list the farthest point
                     break
                 else:
-                    good_clusters=good_clusters+1
+                    good_clusters = good_clusters + 1
                     # hit_charge_this_c = hit_charge[labels == n]
                     # hit_id_this_c = hit_id[labels == n]
                     # ret_clusters.append( (self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) )  # pos,charge, size
 
             labels_list = [x for _, x in sorted(zip(cluster_centers, set(labels)))]  # Order labels by center
-            if len(cluster_centers)==good_clusters:
+            if len(cluster_centers) == good_clusters:
                 # Merging near clusters:
                 if len(set(labels)) > 1:
                     i = 0
@@ -871,7 +863,7 @@ class clusterize:
                     cluster_centers.append(np.mean(hit_pos_this_c))
                     hit_charge_this_c = hit_charge[labels == label]
                     hit_id_this_c = hit_id[labels == label]
-                    ret_clusters.append( (self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c ),hit_id_this_c ) )  # pos,charge, size
+                    ret_clusters.append((self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
                 return ret_clusters
 
     def build_view_clusters(self, data_pd):
@@ -881,32 +873,31 @@ class clusterize:
         :return:
         """
 
-
         dict_4_pd = {
-            "run": [],
-            "subrun": [],
-            "count": [],
-            "planar": [],
-            "cl_pos_x": [],
-            "cl_pos_y": [],
+            "run"      : [],
+            "subrun"   : [],
+            "count"    : [],
+            "planar"   : [],
+            "cl_pos_x" : [],
+            "cl_pos_y" : [],
             "cl_charge": [],
-            "cl_size": [],
-            "cl_id": [],
-            "hit_ids" : []
+            "cl_size"  : [],
+            "cl_id"    : [],
+            "hit_ids"  : []
 
         }
         for runNo in data_pd["runNo"].unique():
-            data_pd_cut_1 = data_pd[(data_pd.runNo == runNo) & (data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit))  & (data_pd.delta_coarse > 0)]
+            data_pd_cut_1 = data_pd[(data_pd.runNo == runNo) & (data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (data_pd.delta_coarse > 0)]
             for count in data_pd_cut_1["count"].unique():
                 data_pd_cut_2 = data_pd_cut_1[data_pd_cut_1["count"] == count]
                 for planar in data_pd_cut_2["planar"].unique():
                     data_pd_cut_3 = data_pd_cut_2[data_pd_cut_2.planar == planar]
                     for view in ("x", "y"):
                         clusters = []
-                        data_pd_cut_4 = data_pd_cut_3[data_pd_cut_3[f"strip_{view}"] > 0]
+                        data_pd_cut_4 = data_pd_cut_3[data_pd_cut_3[f"strip_{view}"] > -1]
                         if len(data_pd_cut_4) > 0:
                             clusters = self.clusterize_view(data_pd_cut_4, view)
-                        for n,cluster in enumerate(clusters):
+                        for n, cluster in enumerate(clusters):
                             dict_4_pd["run"].append(runNo)
                             dict_4_pd["subrun"].append(int(data_pd.subRunNo.mean()))
                             dict_4_pd["count"].append(count)
@@ -925,23 +916,23 @@ class clusterize:
         return (pd.DataFrame(dict_4_pd))
 
     def save_cluster_pd(self, subrun="All"):
-        if subrun=="All":
+        if subrun == "All":
             self.cluster_pd.to_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         else:
-            self.cluster_pd.to_pickle("{}/raw_root/{}/cluster_pd_1D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,subrun), compression="gzip")
+            self.cluster_pd.to_pickle("{}/raw_root/{}/cluster_pd_1D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
 
     def append_cluster_pd(self):
-        path="{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number)
+        path = "{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number)
         if os.path.isfile(path):
             cluster_pd_old = pd.read_pickle(path, compression="gzip")
-            self.cluster_pd=pd.concat((self.cluster_pd, cluster_pd_old))
+            self.cluster_pd = pd.concat((self.cluster_pd, cluster_pd_old))
         self.cluster_pd.to_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
     def load_cluster_pd(self, subrun="All"):
-        if subrun=="All":
-            self.cluster_pd=pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        if subrun == "All":
+            self.cluster_pd = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         else:
-            self.cluster_pd=pd.read_pickle("{}/raw_root/{}/cluster_pd_1D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,subrun), compression="gzip")
+            self.cluster_pd = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
 
     def build_2D_clusters(self, cluster_pd):
         dict_4_pd = {
@@ -994,14 +985,16 @@ class clusterize:
         path = "{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number)
         if os.path.isfile(path):
             cluster_pd_2D_old = pd.read_pickle(path, compression="gzip")
-            self.cluster_pd_2D=pd.concat((self.cluster_pd_2D, cluster_pd_2D_old))
+            self.cluster_pd_2D = pd.concat((self.cluster_pd_2D, cluster_pd_2D_old))
         self.cluster_pd_2D.to_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+
 
 class tracking_2d:
     """
     Simple tracking 2D 4 data selection
     """
-    def __init__(self,run_number,data_folder):
+
+    def __init__(self, run_number, data_folder):
         """
         It needs the cluster 2_D pickle file to run
         :param run_number:
@@ -1015,11 +1008,11 @@ class tracking_2d:
         Load the cluster 2-D file
         :return:
         """
-        cluster_pd_2D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        cluster_pd_2D = pd.read_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         cluster_pd_2D["cl_pos_x_cm"] = cluster_pd_2D.cl_pos_x * 0.0650
         cluster_pd_2D["cl_pos_y_cm"] = cluster_pd_2D.cl_pos_y * 0.0650
         cluster_pd_2D["cl_pos_z_cm"] = cluster_pd_2D.planar * 10
-        self.cluster_pd_2D=cluster_pd_2D
+        self.cluster_pd_2D = cluster_pd_2D
 
     def build_tracks_pd(self, subrun_tgt):
         run_l = []
@@ -1063,21 +1056,21 @@ class tracking_2d:
                                 planar_di[f"res_planar_{planar}_x"].append(calc_res(data_pd_cut_3.cl_pos_x_cm, fit_x, data_pd_cut_3.cl_pos_z_cm))
                                 planar_di[f"res_planar_{planar}_y"].append(calc_res(data_pd_cut_3.cl_pos_y_cm, fit_y, data_pd_cut_3.cl_pos_z_cm))
         dict_4_pd = {
-                "run": run_l,
-                "subrun": subrun_l,
-                "count": count_l,
-                "x_fit": x_fit,
-                "y_fit": y_fit,
-                "res_planar_0_x": planar_di["res_planar_0_x"],
-                "res_planar_1_x": planar_di["res_planar_1_x"],
-                "res_planar_2_x": planar_di["res_planar_2_x"],
-                "res_planar_3_x": planar_di["res_planar_3_x"],
-                "res_planar_0_y": planar_di["res_planar_0_y"],
-                "res_planar_1_y": planar_di["res_planar_1_y"],
-                "res_planar_2_y": planar_di["res_planar_2_y"],
-                "res_planar_3_y": planar_di["res_planar_3_y"]
-            }
-        return ( pd.DataFrame(dict_4_pd) )
+            "run"           : run_l,
+            "subrun"        : subrun_l,
+            "count"         : count_l,
+            "x_fit"         : x_fit,
+            "y_fit"         : y_fit,
+            "res_planar_0_x": planar_di["res_planar_0_x"],
+            "res_planar_1_x": planar_di["res_planar_1_x"],
+            "res_planar_2_x": planar_di["res_planar_2_x"],
+            "res_planar_3_x": planar_di["res_planar_3_x"],
+            "res_planar_0_y": planar_di["res_planar_0_y"],
+            "res_planar_1_y": planar_di["res_planar_1_y"],
+            "res_planar_2_y": planar_di["res_planar_2_y"],
+            "res_planar_3_y": planar_di["res_planar_3_y"]
+        }
+        return (pd.DataFrame(dict_4_pd))
 
     def save_tracks_pd(self, subrun="ALL"):
         if subrun == "ALL":
@@ -1086,7 +1079,7 @@ class tracking_2d:
             self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_2D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
 
     def load_tracks_pd(self):
-        self.tracks_pd  = pd.read_pickle("{}/raw_root/{}/tracks_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.tracks_pd = pd.read_pickle("{}/raw_root/{}/tracks_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
     def append_tracks_pd(self):
         path = "{}/raw_root/{}/tracks_pd_2D.pickle.gzip".format(self.data_folder, self.run_number)
@@ -1095,7 +1088,6 @@ class tracking_2d:
             self.tracks_pd = pd.concat((self.tracks_pd, tracks_dataframe_old))
         self.tracks_pd.to_pickle("{}/raw_root/{}/tracks_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
-
     def read_subruns(self):
         """
         Returns the list of subruns in the run
@@ -1103,11 +1095,13 @@ class tracking_2d:
         """
         return (self.cluster_pd_2D.subrun.unique())
 
+
 class tracking_1d:
     """
     Simple tracking 1D 4 data selection
     """
-    def __init__(self, run_number, data_folder, alignment,cylinder):
+
+    def __init__(self, run_number, data_folder, alignment, cylinder):
         """
         It needs the cluster 2_D pickle file to run
         :param alignment:
@@ -1117,16 +1111,16 @@ class tracking_1d:
         self.run_number = run_number
         self.data_folder = data_folder
         self.residual_tol = 0.15
-        self.alignment=alignment
-        self.PUT = False ## Planar under test
-        self.cylinder=cylinder
+        self.alignment = alignment
+        self.PUT = False  ## Planar under test
+        self.cylinder = cylinder
 
-    def load_cluster_1D(self, cylinder = False):
+    def load_cluster_1D(self, cylinder=False):
         """
         Load the cluster 2-D file
         :return:
         """
-        cluster_pd_1D  = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
         if cylinder:
             cluster_pd_1D = cluster_pd_1D[cluster_pd_1D.cl_pos_x.notna()]
         else:
@@ -1135,14 +1129,14 @@ class tracking_1d:
                 cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
                 cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
             else:
-                corr_matrix=self.search_corr_matrix()
+                corr_matrix = self.search_corr_matrix()
                 cluster_pd_1D["cl_pos_x_cm"] = cluster_pd_1D.cl_pos_x * 0.0650
                 cluster_pd_1D["cl_pos_y_cm"] = cluster_pd_1D.cl_pos_y * 0.0650
                 cluster_pd_1D["cl_pos_z_cm"] = cluster_pd_1D.planar * 10
                 for planar in (0, 1, 2, 3):
                     for view in ("x", "y"):
                         cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] = cluster_pd_1D.loc[cluster_pd_1D.planar == planar, f"cl_pos_{view}_cm"] - corr_matrix[planar][view]
-        cluster_pd_1D = cluster_pd_1D.astype( ## Verifica che i campi che devono essere interi lo siano
+        cluster_pd_1D = cluster_pd_1D.astype(  ## Verifica che i campi che devono essere interi lo siano
             {"run"    : int,
              "subrun" : int,
              "count"  : int,
@@ -1150,11 +1144,10 @@ class tracking_1d:
              "cl_size": int,
              "cl_id"  : int}
         )
-        self.cluster_pd_1D=cluster_pd_1D
+        self.cluster_pd_1D = cluster_pd_1D
 
         if self.alignment:
             self.save_aligned_clusters()
-
 
     def save_aligned_clusters(self, subrun="All"):
         """
@@ -1162,12 +1155,12 @@ class tracking_1d:
         :param subrun:
         :return:
         """
-        #TODO sistemare per poterlo runnurare su singolo run
+        # TODO sistemare per poterlo runnurare su singolo run
         self.cluster_pd_1D.to_pickle("{}/raw_root/{}/cluster_pd_1D_align.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
     def search_corr_matrix(self):
-        if os.path.isfile(self.data_folder+"/alignment/"+f"{self.run_number}"):
-            return pickle.load(open (self.data_folder+"/alignment/"+f"{self.run_number}", 'rb'))
+        if os.path.isfile(self.data_folder + "/alignment/" + f"{self.run_number}"):
+            return pickle.load(open(self.data_folder + "/alignment/" + f"{self.run_number}", 'rb'))
         else:
             return None
 
@@ -1177,46 +1170,45 @@ class tracking_1d:
         :param df:
         :return:
         """
-        pd_fit_l = [] ## list of rows to fit
+        pd_fit_l = []  ## list of rows to fit
         ids = []
         for planar in df.planar.unique():
             if self.PUT is False or (self.PUT != planar):
-                df_p=df[df.planar==planar] ## select planar
-                to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
+                df_p = df[df.planar == planar]  ## select planar
+                to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()]  ## Finds maximum charge cluster
 
-                if len (to_fit)>1: ## If we have 2 cluster with the exact same charge...
+                if len(to_fit) > 1:  ## If we have 2 cluster with the exact same charge...
                     pd_fit_l.append(to_fit.iloc[[0]])
                     ids.append((planar, to_fit.iloc[[0]].cl_id.values[0]))
 
 
                 else:
                     pd_fit_l.append(to_fit)
-                    ids.append((planar,to_fit.cl_id.values[0]))
+                    ids.append((planar, to_fit.cl_id.values[0]))
             else:
                 pass
-        pd_fit=pd.concat(pd_fit_l)
+        pd_fit = pd.concat(pd_fit_l)
         fit = fit_1_d(pd_fit.cl_pos_z_cm, pd_fit[f"cl_pos_{view}_cm"])
 
-        res_dict={}
+        res_dict = {}
 
-
-        pd_fit_l = [] ## list of rows to fit lo rigenero per usarlo per il calcolo del residuo
+        pd_fit_l = []  ## list of rows to fit lo rigenero per usarlo per il calcolo del residuo
         ids = []
         for planar in df.planar.unique():
-            df_p=df[df.planar==planar] ## select planar
-            to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()] ## Finds maximum charge cluster
+            df_p = df[df.planar == planar]  ## select planar
+            to_fit = df_p[df_p['cl_charge'] == df_p['cl_charge'].max()]  ## Finds maximum charge cluster
 
-            if len (to_fit)>1: ## If we have 2 cluster with the exact same charge...
+            if len(to_fit) > 1:  ## If we have 2 cluster with the exact same charge...
                 pd_fit_l.append(to_fit.iloc[[0]])
                 ids.append((planar, to_fit.iloc[[0]].cl_id.values[0]))
 
             else:
                 pd_fit_l.append(to_fit)
-                ids.append((planar,to_fit.cl_id.values[0]))
-        pd_fit=pd.concat(pd_fit_l)
+                ids.append((planar, to_fit.cl_id.values[0]))
+        pd_fit = pd.concat(pd_fit_l)
 
         for planar in df.planar.unique():
-            pd_fit_pl=pd_fit[pd_fit.planar==planar]
+            pd_fit_pl = pd_fit[pd_fit.planar == planar]
             calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
             res_dict[planar] = calc_res(pd_fit_pl[f"cl_pos_{view}_cm"], fit, pd_fit_pl.cl_pos_z_cm)
 
@@ -1243,25 +1235,25 @@ class tracking_1d:
             "res_planar_2_y": [],
             "res_planar_3_y": []
         }
-        cl_id_l=[]
-        n_points=[]
+        cl_id_l = []
+        n_points = []
         if self.cylinder:
             sub_pd = sub_pd.apply(calc_pos_x_cylinder, 1)
 
         for count in sub_pd["count"].unique():
-            df_c2 = sub_pd[sub_pd["count"] == count] # df_c2 is shorter
+            df_c2 = sub_pd[sub_pd["count"] == count]  # df_c2 is shorter
 
             # Build track X
-            df_c2_x=df_c2[df_c2.cl_pos_x_cm.notna()]
-            if len(df_c2_x.planar.unique())>2: ## I want at least 3 point in that view
-                if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT ].planar.unique())>2):
+            df_c2_x = df_c2[df_c2.cl_pos_x_cm.notna()]
+            if len(df_c2_x.planar.unique()) > 2:  ## I want at least 3 point in that view
+                if self.PUT is False or (len(df_c2_x[df_c2_x.planar != self.PUT].planar.unique()) > 2):
                     fit_x, cl_ids, res_dict = self.fit_tracks_view(df_c2_x, "x")
                     run_l.append(self.run_number)
                     subrun_l.append(int(sub_pd.subrun.mean()))
                     count_l.append(count)
                     x_fit.append(fit_x)
                     y_fit.append(np.nan)
-                    for planar in range(0,4):
+                    for planar in range(0, 4):
                         if planar in res_dict.keys():
                             planar_di[f"res_planar_{planar}_x"].append(res_dict[planar])
                             planar_di[f"res_planar_{planar}_y"].append(np.nan)
@@ -1271,12 +1263,11 @@ class tracking_1d:
                     cl_id_l.append(cl_ids)
                     n_points.append(len(df_c2_x.planar.unique()))
 
-
             # Build track Y
-            df_c2_y=df_c2[df_c2.cl_pos_y_cm.notna()]
-            if len(df_c2_y.planar.unique())>2: ## I want at least  3 point in that view
-                if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT ].planar.unique())>2):
-                    fit_y, cl_ids,res_dict = self.fit_tracks_view(df_c2_y, "y")
+            df_c2_y = df_c2[df_c2.cl_pos_y_cm.notna()]
+            if len(df_c2_y.planar.unique()) > 2:  ## I want at least  3 point in that view
+                if self.PUT is False or (len(df_c2_y[df_c2_y.planar != self.PUT].planar.unique()) > 2):
+                    fit_y, cl_ids, res_dict = self.fit_tracks_view(df_c2_y, "y")
                     run_l.append(self.run_number)
                     subrun_l.append(int(sub_pd.subrun.mean()))
                     count_l.append(count)
@@ -1292,14 +1283,12 @@ class tracking_1d:
                     cl_id_l.append(cl_ids)
                     n_points.append(len(df_c2_x.planar.unique()))
 
-
-
         dict_4_pd = {
-            "run": run_l,
-            "subrun": subrun_l,
-            "count": count_l,
-            "x_fit": x_fit,
-            "y_fit": y_fit,
+            "run"           : run_l,
+            "subrun"        : subrun_l,
+            "count"         : count_l,
+            "x_fit"         : x_fit,
+            "y_fit"         : y_fit,
             "res_planar_0_x": planar_di["res_planar_0_x"],
             "res_planar_1_x": planar_di["res_planar_1_x"],
             "res_planar_2_x": planar_di["res_planar_2_x"],
@@ -1308,43 +1297,42 @@ class tracking_1d:
             "res_planar_1_y": planar_di["res_planar_1_y"],
             "res_planar_2_y": planar_di["res_planar_2_y"],
             "res_planar_3_y": planar_di["res_planar_3_y"],
-            "cl_ids":cl_id_l
+            "cl_ids"        : cl_id_l
         }
-        return ( pd.DataFrame(dict_4_pd) )
+        return (pd.DataFrame(dict_4_pd))
 
     def save_tracks_pd(self, subrun="ALL"):
         if not self.alignment:
-            name="tracks_pd_1D"
+            name = "tracks_pd_1D"
         else:
-            name="tracks_pd_1D_align"
+            name = "tracks_pd_1D_align"
         if subrun == "ALL":
             self.tracks_pd.to_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
         else:
-            self.tracks_pd.to_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,name, subrun), compression="gzip")
+            self.tracks_pd.to_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, name, subrun), compression="gzip")
 
     def load_tracks_pd(self, subrun="ALL"):
         if not self.alignment:
-            name="tracks_pd_1D"
+            name = "tracks_pd_1D"
         else:
-            name="tracks_pd_1D_align"
+            name = "tracks_pd_1D_align"
 
         if subrun == "ALL":
-            self.tracks_pd = pd.read_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number,name), compression="gzip")
+            self.tracks_pd = pd.read_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
         else:
-            self.tracks_pd = pd.read_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number,name, subrun), compression="gzip")
+            self.tracks_pd = pd.read_pickle("{}/raw_root/{}/{}_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, name, subrun), compression="gzip")
 
     def append_tracks_pd(self):
         if not self.alignment:
-            name="tracks_pd_1D"
+            name = "tracks_pd_1D"
         else:
-            name="tracks_pd_1D_align"
+            name = "tracks_pd_1D_align"
 
-        path = "{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number,name)
+        path = "{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name)
         if os.path.isfile(path):
             tracks_dataframe_old = pd.read_pickle(path, compression="gzip")
             self.tracks_pd = pd.concat((self.tracks_pd, tracks_dataframe_old))
         self.tracks_pd.to_pickle("{}/raw_root/{}/{}.pickle.gzip".format(self.data_folder, self.run_number, name), compression="gzip")
-
 
     def read_subruns(self, from_track=False):
         """
@@ -1353,24 +1341,22 @@ class tracking_1d:
         """
         if from_track:
             self.load_tracks_pd()
-            return(self.tracks_pd.subrun.unique())
+            return (self.tracks_pd.subrun.unique())
         return (self.cluster_pd_1D.subrun.unique())
 
-
-    def build_select_cl_pd(self,pds):
+    def build_select_cl_pd(self, pds):
         """
         Use the track information to select the 1-D clusters
         :return:
         """
-        subrun_tgt=pds[0].subrun.mean()
-        df_x=self.build_select_cl_pd_view(pds[1], pds[0], "x", subrun_tgt)
-        df_y=self.build_select_cl_pd_view(pds[1], pds[0], "y", subrun_tgt)
-        cluster_pd_1D_selected=pd.concat([df_x, df_y])
+        subrun_tgt = pds[0].subrun.mean()
+        df_x = self.build_select_cl_pd_view(pds[1], pds[0], "x", subrun_tgt)
+        df_y = self.build_select_cl_pd_view(pds[1], pds[0], "y", subrun_tgt)
+        cluster_pd_1D_selected = pd.concat([df_x, df_y])
         return cluster_pd_1D_selected
 
-
     def build_select_cl_pd_view(self, track_pd, cluster_pd, view, subrun_tgt):
-        sel_cd=[]
+        sel_cd = []
         for planar in range(0, 4):
             y, x, = np.histogram(track_pd[f"res_planar_{planar}_{view}"], bins=400, range=[-0.2, 0.2])
             x_max = (x[y.argmax()])
@@ -1389,11 +1375,11 @@ class tracking_1d:
                     tr_pd = pd_c
                     cl_pd = cluster_pd[(cluster_pd["run"] == run) & (cluster_pd["subrun"] == subrun) & (cluster_pd["count"] == count)]
                     for cl_id in tr_pd.cl_ids.values[0]:
-                        res_list=[abs(tr_pd[f"res_planar_{i}_{view}"].values[0]) for i in range(0,4) ]
-                        if all (np.array(res_list) < self.residual_tol*1.5):
+                        res_list = [abs(tr_pd[f"res_planar_{i}_{view}"].values[0]) for i in range(0, 4)]
+                        if all(np.array(res_list) < self.residual_tol * 1.5):
                             if abs(tr_pd[f"res_planar_{cl_id[0]}_{view}"].values[0]) < self.residual_tol:
                                 sel_cd.append(cl_pd[(cl_pd.cl_id == cl_id[1]) & (cl_pd.planar == cl_id[0]) & (cl_pd[f"cl_pos_{view}"] > 0)])
-        if len(sel_cd)>0:
+        if len(sel_cd) > 0:
             return pd.concat(sel_cd)
         else:
             return pd.DataFrame()
@@ -1405,7 +1391,7 @@ class tracking_1d:
             self.cluster_pd_1D_selected.to_pickle("{}/raw_root/{}/sel_cluster_pd_1D_sub_{}_1D.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
 
     def load_sel_cl_pd(self):
-        self.cluster_pd_1D_selected  = pd.read_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.cluster_pd_1D_selected = pd.read_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
     def append_sel_cl_pd(self):
         path = "{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number)
@@ -1414,46 +1400,45 @@ class tracking_1d:
             self.cluster_pd_1D_selected = pd.concat((self.cluster_pd_1D_selected, cluster_pd_1D_selected_old))
         self.cluster_pd_1D_selected.to_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
 
+
 class eff_calculator():
     """
     Class to calculate the efficiency, need the aligned clusters and tracks
     """
+
     def __init__(self, run_number, data_folder, res_trk_max, res_put_max, cut):
-        self.res_trk_max=res_trk_max
-        self.res_put_max=res_put_max
-        self.run_number=run_number
-        self.data_folder=f"{data_folder}/raw_root"
-        self.out_folder=f"{self.data_folder}/out_eff/{run_number}"
-        self.out_folder_meta=f"{self.data_folder}/out_eff/{run_number}"
+        self.res_trk_max = res_trk_max
+        self.res_put_max = res_put_max
+        self.run_number = run_number
+        self.data_folder = f"{data_folder}/raw_root"
+        self.out_folder = f"{self.data_folder}/out_eff/{run_number}"
+        self.out_folder_meta = f"{self.data_folder}/out_eff/{run_number}"
         if not os.path.isdir(self.out_folder):
             os.mkdir(self.out_folder)
         if not os.path.isdir(self.out_folder_meta):
             os.mkdir(self.out_folder_meta)
-        with open (self.out_folder+"/recap.txt", "w") as recap_file:
+        with open(self.out_folder + "/recap.txt", "w") as recap_file:
             recap_file.write("Run {}\n".format(run_number))
-
-
 
     def gaus_fit(self, track_pd_align, planar, view, PUT):
         c1 = R.TCanvas()
-        h1 = R.TH1F ("h1","h1",400,-0.4,0.4)
-        res_list=[]
-        cut=1
+        h1 = R.TH1F("h1", "h1", 400, -0.4, 0.4)
+        res_list = []
+        cut = 1
         for va in track_pd_align[f"res_planar_{planar}_{view}"].values:
             val = va
-            if abs(val)<cut:
+            if abs(val) < cut:
                 h1.Fill(val)
-        h1.Fit("gaus","S")
-        res_mean=h1.GetListOfFunctions().FindObject("gaus").GetParameter(1)
-        res_std=h1.GetListOfFunctions().FindObject("gaus").GetParameter(2)
+        h1.Fit("gaus", "S")
+        res_mean = h1.GetListOfFunctions().FindObject("gaus").GetParameter(1)
+        res_std = h1.GetListOfFunctions().FindObject("gaus").GetParameter(2)
         h1.Draw()
         c1.SaveAs(f"{self.out_folder_meta}/{planar}_{view}_PUT_{PUT}.png");
-    #     print ("saving hist")
-    #     print (f"Fit mean: {res_mean}, std :{res_std}")
-    #     print (f"Distr mean: {h1.GetMean()}, std :{h1.GetStdDev()}")
+        #     print ("saving hist")
+        #     print (f"Fit mean: {res_mean}, std :{res_std}")
+        #     print (f"Distr mean: {h1.GetMean()}, std :{h1.GetStdDev()}")
 
         return res_mean, res_std
-
 
     def build_track_pd(self, cluster_pd, PUT):
         tracking_return_list = []
@@ -1471,7 +1456,7 @@ class eff_calculator():
 
         return pd.concat(tracking_return_list)
 
-    def build_select_cl_pd_view(self,cluster_pd, view, residual_max_number, PUT):
+    def build_select_cl_pd_view(self, cluster_pd, view, residual_max_number, PUT):
         track_pd = self.build_track_pd(cluster_pd, PUT)
         mean, std = self.gaus_fit(track_pd, PUT, view, PUT)
         residual_max = residual_max_number * std
@@ -1495,15 +1480,16 @@ class eff_calculator():
             return pd.DataFrame(), track_pd_view.reindex()
 
 
-def fit_1_d(data_series_x,data_series_y):
+def fit_1_d(data_series_x, data_series_y):
     """
     Function used by tracking
     :param data_series_x:
     :param data_series_y:
     :return:
     """
-    fit_r=np.polyfit(data_series_x,data_series_y,1)
+    fit_r = np.polyfit(data_series_x, data_series_y, 1)
     return (fit_r)
+
 
 def calc_res(pos, fit, cl_pos_z_cm):
     """
@@ -1513,9 +1499,10 @@ def calc_res(pos, fit, cl_pos_z_cm):
     :param cl_pos_z_cm:
     :return:
     """
-    res= pos.values - (fit[1]+fit[0]*cl_pos_z_cm.values)
+    res = pos.values - (fit[1] + fit[0] * cl_pos_z_cm.values)
 
     return (res[0])
+
 
 def change_planar(row):
     """
@@ -1523,30 +1510,32 @@ def change_planar(row):
     :param row:
     :return:
     """
-    if row.planar==2:
-        if row.cl_pos_x>630:
-            row.planar=3
+    if row.planar == 2:
+        if row.cl_pos_x > 630:
+            row.planar = 3
         else:
-            row.planar =0
+            row.planar = 0
     else:
-        if row.cl_pos_x>856/2:
-            row.planar=2
+        if row.cl_pos_x > 856 / 2:
+            row.planar = 2
         else:
-            row.planar =1
+            row.planar = 1
     return row
 
+
 def calc_pos_x_cylinder(row):
-    if row.planar==2 or row.planar==1:
+    if row.planar == 2 or row.planar == 1:
         radius = 18.84
-        tot_strips= 856
+        tot_strips = 856
     else:
         radius = 24.34
         tot_strips = 1260
-    row["cl_pos_x_cm"]=np.cos(row.cl_pos_x/tot_strips*2*np.pi)*radius
-    row["cl_pos_z_cm"]=np.sin(row.cl_pos_x/tot_strips*2*np.pi)*radius
-    row["cl_pos_y_cm"]=0
+    row["cl_pos_x_cm"] = np.cos(row.cl_pos_x / tot_strips * 2 * np.pi) * radius
+    row["cl_pos_z_cm"] = np.sin(row.cl_pos_x / tot_strips * 2 * np.pi) * radius
+    row["cl_pos_y_cm"] = 0
 
     return row
+
 
 def compress_hit_pd(hits):
     """
@@ -1579,6 +1568,7 @@ def compress_hit_pd(hits):
     hit_compre["charge_SH"] = hits.charge_SH.astype(np.half)
     return hit_compre
 
+
 def verifiy_compression_validity(hits, compress_hits):
     """
     Verify that the min and max values of compressed and uncompressd dataframe are compatbile
@@ -1587,38 +1577,39 @@ def verifiy_compression_validity(hits, compress_hits):
     :return:
     """
     for column in compress_hits.columns:
-        assert (abs(hits[column].max() * 0.99) <=abs(compress_hits[column].max()) <= abs(hits[column].max() * 1.01)) or ( compress_hits[column].max() == hits[column].max()), f" Max error in column {column}, {hits[column].max()} != {compress_hits[column].max()}"
-        assert (abs(hits[column].min() * 0.99) <=abs(compress_hits[column].min()) <= abs(hits[column].min() * 1.01)) or (compress_hits[column].min()) == (hits[column].min()), f" Min error in column {column}, {hits[column].min()} != {compress_hits[column].min()}"
+        assert (abs(hits[column].max() * 0.99) <= abs(compress_hits[column].max()) <= abs(hits[column].max() * 1.01)) or (compress_hits[column].max() == hits[column].max()), f" Max error in column {column}, {hits[column].max()} != {compress_hits[column].max()}"
+        assert (abs(hits[column].min() * 0.99) <= abs(compress_hits[column].min()) <= abs(hits[column].min() * 1.01)) or (compress_hits[column].min()) == (hits[column].min()), f" Min error in column {column}, {hits[column].min()} != {compress_hits[column].min()}"
     return 0
+
 
 def assign_data(data, centers):
     """
     Assign the hit to the nearest center
     """
-    dx=np.zeros([len(centers),len(data) ])
-    for n,center in enumerate(centers):
+    dx = np.zeros([len(centers), len(data)])
+    for n, center in enumerate(centers):
         dx[n] = (np.abs(data - center))
-    labels=dx.argmin(0)
-    max_dist=data[dx.min(0).argmax()]
-    return labels,max_dist
+    labels = dx.argmin(0)
+    max_dist = data[dx.min(0).argmax()]
+    return labels, max_dist
 
 
-def manual_kmean(hit_pos,centers):
+def manual_kmean(hit_pos, centers):
     """
         Performs a simple 1D kmean algoritm
 
     """
-    for i in range (0,2000):
-        prev_centers=centers.copy()
-        labels,max_dist=assign_data(hit_pos, centers)
-        for n,center in enumerate(centers):
+    for i in range(0, 2000):
+        prev_centers = centers.copy()
+        labels, max_dist = assign_data(hit_pos, centers)
+        for n, center in enumerate(centers):
             hit_pos_this_c = hit_pos[labels == n]
-            if len(hit_pos_this_c)>0:
-                centers[n]=hit_pos_this_c.mean()
+            if len(hit_pos_this_c) > 0:
+                centers[n] = hit_pos_this_c.mean()
             else:
-                centers[n]=max_dist
+                centers[n] = max_dist
 
-        if np.all(prev_centers==centers):
+        if np.all(prev_centers == centers):
             return (centers, labels)
-    print ("WARNING kmeans not converged")
+    print("WARNING kmeans not converged")
     raise Exception("Note convergence error")
