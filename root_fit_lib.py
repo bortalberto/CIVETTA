@@ -248,10 +248,11 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
         plt.plot([put_mean + nsigma_eff * put_sigma, put_mean + nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
         plt.plot([put_mean - nsigma_eff * put_sigma, put_mean - nsigma_eff * put_sigma], [0, np.max(y)], 'r-.')
     plt.xlim(np.min(x), np.max(x))
-    if put==pl:
-        plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
-    else:
-        plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
+    if len(path_out_eff)>1:
+        if put==pl:
+            plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
+        else:
+            plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
 
     plt.close()
 
