@@ -687,7 +687,8 @@ def extract_eff_and_res(run, data_folder, planar_list):
     eff_pd_l = []
     for planar in planar_list:
         eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip")
-        eff_pd_l[planar] = eff_pd[(eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7)]
+        eff_pd = eff_pd[(eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7)]
+        eff_pd_l.append(eff_pd)
     eff_pd = pd.concat(eff_pd_l)
     hit_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
 
