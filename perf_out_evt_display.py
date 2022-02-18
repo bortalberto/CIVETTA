@@ -506,6 +506,18 @@ class res_measure:
 
         cl_pd_x.loc[:, "res_x"] = tracks_pd.prev_pos_put_x - cl_pd_x.loc[:, "cl_pos_x_cm"]
         cl_pd_y.loc[:, "res_y"] = tracks_pd.prev_pos_put_y - cl_pd_y.loc[:, "cl_pos_y_cm"]
+
+        cl_pd_x.loc[:, "cov"] = tracks_pd.prev_pos_put_x.cov_x
+        cl_pd_y.loc[:, "cov"] = tracks_pd.prev_pos_put_y.cov_y
+
+        cl_pd_x["error_tracking"] = cl_pd_x.apply(
+            lambda x: x.cov[1][1] + (x.cl_pos_x_cm ** 2) * x.cov[0, 0] + x.cl_pos_x_cm * x.cov[0, 1] + x.cl_pos_x_cm *
+                      x.cov[1, 0], 1)
+
+        cl_pd_y["error_tracking"] = cl_pd_y.apply(
+            lambda x: x.cov[1][1] + (x.cl_pos_y_cm ** 2) * x.cov[0, 0] + x.cl_pos_y_cm * x.cov[0, 1] + x.cl_pos_y_cm *
+                      x.cov[1, 0], 1)
+
         return cl_pd_x, cl_pd_y
 
     def plot_residuals(self, cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
@@ -694,15 +706,18 @@ def extract_eff_and_res(run, data_folder, planar_list):
     for planar in planar_list:
         trk_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
         cl_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip")
+
     res_calc = res_measure(cl_pd=cl_pd_l, tracks_pd=trk_pd_l, eff_pd=eff_pd, planar_list=planar_list)
     logger = perf.log_writer(elab_folder, 0, "resolution.txt")
 
     for planar in planar_list:
         for view in ("x","y"):
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
+            errror_tracking = (res_calc.cl_pds[f"{planar}{view}"].error_tracking**(1/2)).mean()
             plot = res_calc.plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
-            logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um" )
+            logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um, "
+                              f"error tracking: {errror_tracking * 10000:.2f} um" )
     ## Enemy
     logger.write_log(f"\n--Enemy residual--\n")
 
