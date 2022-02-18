@@ -101,12 +101,12 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     fit_x, cov = np.polyfit(x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_x_cm"].dropna(), 1,cov=True)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
-    chi_x = cov
+    cov_x = cov
 
     fit_y, cov = np.polyfit(x[(x.planar != put) & (x.cl_pos_y_cm.notna())]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_y_cm"].dropna(), 1,cov=True)
     pos_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values
     res_y = fit_y[1] + fit_y[0] * x["cl_pos_z_cm"].values - x["cl_pos_y_cm"].values
-    chi_y = cov
+    cov_y = cov
 
     if tracking_fit:
         pos_x=np.insert(pos_x,put, np.nan)
@@ -124,7 +124,7 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     #     fig.show()
     #     print (type(fit))
     #     print (type(pos))
-    return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, chi_x, fit_y, pos_y, res_y, chi_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x","chi_x", "fit_y", "pos_y", "res_y","chi_y"])
+    return pd.DataFrame(data=[[run, subrun, fit_x, pos_x, res_x, cov_x, fit_y, pos_y, res_y, cov_y]], columns=["run", "subrun", "fit_x", "pos_x", "res_x","cov_x", "fit_y", "pos_y", "res_y","cov_y"])
 
 
 # def filter_tracks(tracks_pd, cut=0.2, res_max=0.7):
