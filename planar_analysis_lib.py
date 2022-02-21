@@ -446,6 +446,7 @@ class decoder:
                     UDP_pd_dict["daq_pll_unlocked"] = (int_x >> 57)& 0x1
                     UDP_pd_dict["global_rx_error"] = (int_x >> 58)& 0x1
                     UDP_pd_dict["XCVR_rx_alignment_error"] = (int_x >> 59)& 0x1
+        print (header_pd_dict)
         if len(header_pd_dict) > 0 and len(trailer_pd_dict) > 0 and len(UDP_pd_dict) > 0:
             header_pd = pd.DataFrame(header_pd_dict)
             trailer_pd = pd.DataFrame(trailer_pd_dict)
