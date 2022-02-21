@@ -511,12 +511,12 @@ class res_measure:
         cl_pd_y.loc[:, "cov"] = tracks_pd.cov_y
 
         cl_pd_x["error_tracking"] = cl_pd_x.apply(
-            lambda x: x.cov[1][1] + (x.cl_pos_x_cm ** 2) * x.cov[0, 0] + x.cl_pos_x_cm * x.cov[0, 1] + x.cl_pos_x_cm *
-                      x.cov[1, 0], 1)
+            lambda x: x["cov"][1][1] + (x.cl_pos_x_cm ** 2) * x["cov"][0, 0] + x.cl_pos_x_cm * x["cov"][0, 1] + x.cl_pos_x_cm *
+                      x["cov"][1, 0], 1)
 
         cl_pd_y["error_tracking"] = cl_pd_y.apply(
-            lambda x: x.cov[1][1] + (x.cl_pos_y_cm ** 2) * x.cov[0, 0] + x.cl_pos_y_cm * x.cov[0, 1] + x.cl_pos_y_cm *
-                      x.cov[1, 0], 1)
+            lambda x: x["cov"][1][1] + (x.cl_pos_y_cm ** 2) * x["cov"][0, 0] + x.cl_pos_y_cm * x["cov"][0, 1] + x.cl_pos_y_cm *
+                      x["cov"][1, 0], 1)
 
         return cl_pd_x, cl_pd_y
 
