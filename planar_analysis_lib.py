@@ -388,6 +388,28 @@ class decoder:
 
         statinfo = os.stat(path)
 
+        header_pd_dict["gemroc"] = []
+        header_pd_dict["subrun"] = []
+        header_pd_dict["run"] = []
+        header_pd_dict["l1_count"] = []
+        header_pd_dict["l1_ts"] = []
+        header_pd_dict["top_L1_chk_error"] = []
+        header_pd_dict["header_misalignment_error"] = []
+        header_pd_dict["FIFO_FULL_error"] = []
+
+        trailer_pd_dict["gemroc"] = []
+        trailer_pd_dict["subrun"] = []
+        trailer_pd_dict["run"] = []
+        trailer_pd_dict["l1_frame"] = []
+        trailer_pd_dict["tiger_id"] = []
+        trailer_pd_dict["count_trailer"] = []
+        trailer_pd_dict["ch"] = []
+        trailer_pd_dict["last_count_from_ch"] = []
+
+        UDP_pd_dict["UDP_num"] = []
+        UDP_pd_dict["daq_pll_unlocked"] = []
+        UDP_pd_dict["global_rx_error"] = []
+        UDP_pd_dict["XCVR_rx_alignment_error"] = []
         with open(path, 'rb') as f:
             for i in range(0, statinfo.st_size // 8):
                 data = f.read(8)
@@ -409,20 +431,21 @@ class decoder:
                 ##############################################################################################
 
                 if (((int_x & 0xE000000000000000) >> 61) == 0x6):  ##packet header
-                    header_pd_dict["gemroc"] = GEMROC
-                    header_pd_dict["subrun"] = subRunNo
-                    header_pd_dict["run"] = self.RUN
+                    header_pd_dict["gemroc"].append( GEMROC)
+                    header_pd_dict["subrun"].append( subRunNo)
+                    header_pd_dict["run"].append( self.RUN)
 
                     LOCAL_L1_COUNT_31_6 = int_x >> 32 & 0x3FFFFFF
                     LOCAL_L1_COUNT_5_0 = int_x >> 24 & 0x3F
                     LOCAL_L1_COUNT = (LOCAL_L1_COUNT_31_6 << 6) + LOCAL_L1_COUNT_5_0
                     LOCAL_L1_TIMESTAMP = int_x & 0xFFFF
-                    header_pd_dict["l1_count"] = LOCAL_L1_COUNT
-                    header_pd_dict["l1_ts"] = LOCAL_L1_TIMESTAMP
+                    header_pd_dict["l1_count"].append( LOCAL_L1_COUNT)
+                    header_pd_dict["l1_ts"].append( LOCAL_L1_TIMESTAMP)
 
-                    header_pd_dict["top_L1_chk_error"] = (int_x >> 58)& 0x1
-                    header_pd_dict["header_misalignment_error"] = (int_x >> 59)& 0x1
-                    header_pd_dict["FIFO_FULL_error"] = (int_x >> 60)& 0x1
+                    header_pd_dict["top_L1_chk_error"].append( (int_x >> 58)& 0x1)
+                    header_pd_dict["header_misalignment_error"].append( (int_x >> 59)& 0x1)
+                    header_pd_dict["FIFO_FULL_error"].append( (int_x >> 60)& 0x1)
+
 
 
                 if (((int_x & 0xC000000000000000) >> 62) == 0x0):  ## DATA word
@@ -431,27 +454,27 @@ class decoder:
                 if (((int_x & 0xE000000000000000) >> 61) == 0x7):  ## TRAILER WORD --> sometimes is missing --> DO NOT USE
                     # print "enter trailer"
 
-                    trailer_pd_dict["gemroc"] = GEMROC
-                    trailer_pd_dict["subrun"] = subRunNo
-                    trailer_pd_dict["run"] = self.RUN
+                    trailer_pd_dict["gemroc"].append(GEMROC)
+                    trailer_pd_dict["subrun"].append(subRunNo)
+                    trailer_pd_dict["run"].append(self.RUN)
 
-                    trailer_pd_dict["l1_frame"] =  ((int_x >> 37) & 0xFFFFFF)
-                    trailer_pd_dict["tiger_id"] = ((int_x >> 27) & 0x7)
-                    trailer_pd_dict["count_trailer"] = ((int_x >> 24) & 0x7)
-                    trailer_pd_dict["ch"] = ((int_x >> 18) & 0x3F)
-                    trailer_pd_dict["last_count_from_ch"] = (int_x & 0x3FFFF)
+                    trailer_pd_dict["l1_frame"].append(((int_x >> 37) & 0xFFFFFF))
+                    trailer_pd_dict["tiger_id"].append(((int_x >> 27) & 0x7))
+                    trailer_pd_dict["count_trailer"].append(((int_x >> 24) & 0x7))
+                    trailer_pd_dict["ch"].append(((int_x >> 18) & 0x3F))
+                    trailer_pd_dict["last_count_from_ch"].append((int_x & 0x3FFFF))
 
                 if (((int_x & 0xF000000000000000) >> 60) == 0x4):  ## UDP WORD --> used to flag end of packet
-                    UDP_pd_dict["UDP_num"] = ((int_x >> 32) & 0xFFFFF) + ((int_x >> 0) & 0xFFFFFFF)
-                    UDP_pd_dict["daq_pll_unlocked"] = (int_x >> 57)& 0x1
-                    UDP_pd_dict["global_rx_error"] = (int_x >> 58)& 0x1
-                    UDP_pd_dict["XCVR_rx_alignment_error"] = (int_x >> 59)& 0x1
-        print (header_pd_dict)
+                    UDP_pd_dict["UDP_num"].append(((int_x >> 32) & 0xFFFFF) + ((int_x >> 0) & 0xFFFFFFF))
+                    UDP_pd_dict["daq_pll_unlocked"].append((int_x >> 57)& 0x1)
+                    UDP_pd_dict["global_rx_error"].append((int_x >> 58)& 0x1)
+                    UDP_pd_dict["XCVR_rx_alignment_error"].append((int_x >> 59)& 0x1)
+        # print (header_pd_dict)
         if len(header_pd_dict) > 0 and len(trailer_pd_dict) > 0 and len(UDP_pd_dict) > 0:
             header_pd = pd.DataFrame(header_pd_dict)
             trailer_pd = pd.DataFrame(trailer_pd_dict)
             UDP_pd = pd.DataFrame(UDP_pd_dict)
-        return header_pd, trailer_pd, UDP_pd
+            return header_pd, trailer_pd, UDP_pd
 
 class calib:
     """
