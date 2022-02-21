@@ -20,6 +20,7 @@ import perf
 from plotly.subplots import make_subplots
 from scipy.stats import poisson
 import root_fit_lib as r_fit
+import sympy as sym
 
 def de_correct_process(pos_x, pos_y, corr, planar):
     rev_corr = corr[::-1]
@@ -720,6 +721,13 @@ def extract_eff_and_res(run, data_folder, planar_list):
                               f"error tracking: {errror_tracking * 10000:.2f} um" )
     ## Enemy
     logger.write_log(f"\n--Enemy residual--\n")
+    s0 = sym.Symbol("s0")
+    s1 = sym.Symbol("s1")
+    s2 = sym.Symbol("s2")
+    s3 = sym.Symbol("s3")
+    sb = sym.Symbol("sb")
+    sc = sym.Symbol("sc")
+
 
     for view in ("x","y"):
         logger.write_log(f"\n--Enemy residual {view}--\n")
@@ -727,3 +735,14 @@ def extract_eff_and_res(run, data_folder, planar_list):
         couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list)
         for couple, enemy_res in zip(couples, enemy_res_list):
             logger.write_log(f"Couple: {couple}: {enemy_res} um")
+        if len (couples)>4:
+            sol=sym.solve([(s0**2+s1**2+sb**2)**(1/2)-enemy_res_list[0],
+           (s1**2+s2**2+sb**2)**(1/2)-enemy_res_list[1],
+           (s2**2+s3**2+sb**2)**(1/2)-enemy_res_list[2],
+           (s0**2+s2**2+(2*sb)**2)**(1/2)-enemy_res_list[3],
+           (s1**2+s3**2+(2*sb)**2)**(1/2)-enemy_res_list[4],
+           (s0**2+s3**2+(sc)**2)**(1/2)-enemy_res_list[5]
+              ],
+             (s0, s1, s2,s3,sb, sc))
+            logger.write_log("System solution:\n"
+                             f"{sol[-1]}")
