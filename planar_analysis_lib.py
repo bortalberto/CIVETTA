@@ -475,6 +475,8 @@ class decoder:
             trailer_pd = pd.DataFrame(trailer_pd_dict)
             UDP_pd = pd.DataFrame(UDP_pd_dict)
             return header_pd, trailer_pd, UDP_pd
+        else:
+            return pd.DataFrame(),pd.DataFrame(),pd.DataFrame()
 
 class calib:
     """
