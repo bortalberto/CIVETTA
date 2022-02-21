@@ -40,6 +40,11 @@ class runner:
         filename = input_[0]
         # os.rename(filename.split(".")[0]+".root",self.data_folder+"/raw_root/{}/".format(self.run_number)+filename.split("/")[-1].split(".")[0]+".root")
 
+    def decode_on_file_header_trailer(self,input_):
+        header_pd, trailer_pd, UDP_pd = self.decoder.decode_file_header_trailer(input_)
+        return header_pd, trailer_pd, UDP_pd
+
+
     def dec_subrun(self, subrun_tgt):
         input_list=[]
         self.decoder = pl_lib.decoder(1, self.run_number, downsamplig=self.downsampling)
@@ -67,6 +72,39 @@ class runner:
                 with tqdm(total=len(input_list), disable=self.silent) as pbar:
                     for i, _ in enumerate(pool.imap_unordered(self.decode_on_file, input_list)):
                         pbar.update()
+        else:
+            print (f"Can't find any .dat file in {self.data_folder}/raw_dat/RUN_{self.run_number}")
+
+    def dec_run_header_trailer(self):
+        """
+        Decodes one run in parallel
+        :return:
+        """
+        input_list = []
+        return_list_hd = []
+        return_list_tr = []
+        return_list_udp = []
+
+        self.decoder = pl_lib.decoder(1, self.run_number, downsamplig=self.downsampling)
+        if not self.silent:
+            print ("Decoding")
+        for filename ,(subrun,gemroc) in glob2.iglob(self.data_folder+"/raw_dat/RUN_{}/SubRUN_*_GEMROC_*_TM.dat".format(self.run_number), with_matches=True):
+            input_list.append((filename, int(subrun), int(gemroc)))
+        if len(input_list)>0:
+            with Pool(processes=self.cpu_to_use) as pool:
+                with tqdm(total=len(input_list), disable=self.silent) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(self.decode_on_file_header_trailer, input_list)):
+                        return_list_hd.append(x[0])
+                        return_list_tr.append(x[1])
+                        return_list_udp.append(x[3])
+                        pbar.update()
+            header_pd = pd.concat(return_list_hd)
+            trailer_pd = pd.concat(return_list_tr)
+            UDP_pd = pd.concat(return_list_udp)
+
+            header_pd.to_pickle(os.path.join(self.data_folder,"raw_root",f"{self.run_number}","header_pd.gzip"), compression ="gzip")
+            trailer_pd.to_pickle(os.path.join(self.data_folder,"raw_root",f"{self.run_number}","trailer_pd.gzip"), compression ="gzip")
+            UDP_pd.to_pickle(os.path.join(self.data_folder,"raw_root",f"{self.run_number}","UDP_pd.gzip"), compression ="gzip")
         else:
             print (f"Can't find any .dat file in {self.data_folder}/raw_dat/RUN_{self.run_number}")
 
@@ -961,6 +999,8 @@ def main(run, **kwargs):
     op_list=[]
     if args.decode:
         op_list.append("D")
+    if args.decode_htu:
+        op_list.append("Dh")
     if args.ana:
         op_list.append("A")
 
@@ -1026,6 +1066,8 @@ def main(run, **kwargs):
             main_runner.dec_run_fill(subrun_fill)
             main_runner.merge_dec()
 
+    if "Dh" in (op_list):
+            main_runner.dec_run_header_trailer()
     if "A" in (op_list):
         if not args.Silent:
             print ("Calibrating and mapping")
@@ -1090,6 +1132,8 @@ if __name__=="__main__":
     parser.add_argument('run', type=int, help='Run number')
     parser.set_defaults(method=main)
     parser.add_argument('-d','--decode',  action="store_true", help='Decode')
+    parser.add_argument('-dh','--decode_htu', help='Decode header, trailer and UDP ', action="store_true")
+
     parser.add_argument('-a','--ana', help='Analyze (=calibrate and apply mapping)', action="store_true")
     parser.add_argument('-c','--clusterize', help='clusterize ', action="store_true")
     parser.add_argument('-c2','--clusterize_2D', help='Build 2D clusters  ', action="store_true")

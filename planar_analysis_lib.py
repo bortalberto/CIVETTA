@@ -373,6 +373,86 @@ class decoder:
                     filename = filename.replace("/RUN_", "/")
                     final_pd.to_pickle(filename, compression="gzip")
 
+    def decode_file_header_trailer(self, input_):
+        """
+        Write a root file from a data file
+        :param path:
+        :return:
+        """
+        path = input_[0]
+        subRunNo = input_[1]
+        GEMROC = input_[2]
+        header_pd_dict = {}
+        trailer_pd_dict = {}
+        UDP_pd_dict = {}
+
+        statinfo = os.stat(path)
+
+        with open(path, 'rb') as f:
+            for i in range(0, statinfo.st_size // 8):
+                data = f.read(8)
+                if sys.version_info[0] == 2:
+                    hexdata = str(binascii.hexlify(data))
+                else:
+                    hexdata = str(binascii.hexlify(data), 'ascii')
+                string = "{:064b}".format(int(hexdata, 16))
+                inverted = []
+                for i in range(8, 0, -1):
+                    inverted.append(string[(i - 1) * 8:i * 8])
+                string_inv = "".join(inverted)
+                int_x = int(string_inv, 2)
+
+                ##############################################################################################
+                ##																							##
+                ##								TRIGGER-MATCH DECODE										##
+                ##																							##
+                ##############################################################################################
+
+                if (((int_x & 0xE000000000000000) >> 61) == 0x6):  ##packet header
+                    header_pd_dict["gemroc"] = GEMROC
+                    header_pd_dict["subrun"] = subRunNo
+                    header_pd_dict["run"] = self.RUN
+
+                    LOCAL_L1_COUNT_31_6 = int_x >> 32 & 0x3FFFFFF
+                    LOCAL_L1_COUNT_5_0 = int_x >> 24 & 0x3F
+                    LOCAL_L1_COUNT = (LOCAL_L1_COUNT_31_6 << 6) + LOCAL_L1_COUNT_5_0
+                    LOCAL_L1_TIMESTAMP = int_x & 0xFFFF
+                    header_pd_dict["l1_count"] = LOCAL_L1_COUNT
+                    header_pd_dict["l1_ts"] = LOCAL_L1_TIMESTAMP
+
+                    header_pd_dict["top_L1_chk_error"] = (int_x >> 58)& 0x1
+                    header_pd_dict["header_misalignment_error"] = (int_x >> 59)& 0x1
+                    header_pd_dict["FIFO_FULL_error"] = (int_x >> 60)& 0x1
+
+
+                if (((int_x & 0xC000000000000000) >> 62) == 0x0):  ## DATA word
+                    pass
+
+                if (((int_x & 0xE000000000000000) >> 61) == 0x7):  ## TRAILER WORD --> sometimes is missing --> DO NOT USE
+                    # print "enter trailer"
+
+                    trailer_pd_dict["gemroc"] = GEMROC
+                    trailer_pd_dict["subrun"] = subRunNo
+                    trailer_pd_dict["run"] = self.RUN
+
+                    trailer_pd_dict["l1_frame"] =  ((int_x >> 37) & 0xFFFFFF)
+                    trailer_pd_dict["tiger_id"] = ((int_x >> 27) & 0x7)
+                    trailer_pd_dict["count_trailer"] = ((int_x >> 24) & 0x7)
+                    trailer_pd_dict["ch"] = ((int_x >> 18) & 0x3F)
+                    trailer_pd_dict["last_count_from_ch"] = (int_x & 0x3FFFF)
+
+                if (((int_x & 0xF000000000000000) >> 60) == 0x4):  ## UDP WORD --> used to flag end of packet
+                    UDP_pd_dict["UDP_num"] = ((int_x >> 32) & 0xFFFFF) + ((int_x >> 0) & 0xFFFFFFF)
+                    UDP_pd_dict["daq_pll_unlocked"] = (int_x >> 57)& 0x1
+                    UDP_pd_dict["global_rx_error"] = (int_x >> 58)& 0x1
+                    UDP_pd_dict["XCVR_rx_alignment_error"] = (int_x >> 59)& 0x1
+        if len(header_pd_dict) > 0:
+            header_pd = pd.concat(header_pd_dict, ignore_index=True)
+        if len(trailer_pd_dict) > 0:
+            trailer_pd = pd.concat(trailer_pd_dict, ignore_index=True)
+        if len(UDP_pd_dict) > 0:
+            UDP_pd = pd.concat(UDP_pd_dict, ignore_index=True)
+        return header_pd, trailer_pd, UDP_pd
 
 class calib:
     """
