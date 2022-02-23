@@ -334,13 +334,12 @@ class eff_calculation:
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_y > -1)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
-            print ("rate_strip_avg")
-            print (rate_strip_avg)
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_y > -1)].channel.count()) ** (1 / 2)) / (
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
+            print (tol_y[put])
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
             prob_noise_eff_err = np.exp(rate_strip_avg) * error_rate_strip
             real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
