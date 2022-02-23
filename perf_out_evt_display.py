@@ -278,7 +278,7 @@ class eff_calculation:
         with open(self.log_path, "r") as logfile:
             key = [int(line.split(" ")[-1]) for line in logfile if f"Measuring performances on planar" in line]
         tol_x=dict(zip(key, tol_x))
-        tol_y=dict(zip(key, tol_x))
+        tol_y=dict(zip(key, tol_y))
         time_win = (1440 - 1370) * 6.25 * 1e-9
         logger = perf.log_writer(self.outpath, 0, "efficiency.txt")
         for put in planar_list:
@@ -339,7 +339,6 @@ class eff_calculation:
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
-            print (tol_y[put])
             prob_noise_eff = 1 - (poisson.pmf(k=0, mu=rate_strip_avg)) ** round(tol_y[put] * 2 / 0.0650)
             prob_noise_eff_err = np.exp(rate_strip_avg) * error_rate_strip
             real_eff = (eff_y_good - prob_noise_eff) / (1 - prob_noise_eff)
