@@ -332,10 +332,12 @@ class eff_calculation:
             logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
 
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                    self.hit_pd.strip_y > 0)].channel.count()) / (
+                    self.hit_pd.strip_y > -1)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
+            print ("rate_strip_avg")
+            print (rate_strip_avg)
             error_rate_strip = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                    self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                    self.hit_pd.strip_y > -1)].channel.count()) ** (1 / 2)) / (
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg = rate_strip_avg * time_win
             error_rate_strip = error_rate_strip * time_win
@@ -365,10 +367,10 @@ class eff_calculation:
             logger.write_log(f"AND: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
             ## Y
             rate_strip_avg_y = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                    self.hit_pd.strip_y > 0)].channel.count()) / (
+                    self.hit_pd.strip_y > -1)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip_y = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                    self.hit_pd.strip_y > 0)].channel.count()) ** (1 / 2)) / (
+                    self.hit_pd.strip_y > -1)].channel.count()) ** (1 / 2)) / (
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg_y = rate_strip_avg_y * time_win
             error_rate_strip_y = error_rate_strip_y * time_win
@@ -376,10 +378,10 @@ class eff_calculation:
             prob_noise_eff_err_y = np.exp(rate_strip_avg_y) * error_rate_strip_y
             ## X
             rate_strip_avg_x = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                    self.hit_pd.strip_x > 0)].channel.count()) / (
+                    self.hit_pd.strip_x > -1)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             error_rate_strip_x = ((self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
-                    self.hit_pd.strip_x > 0)].channel.count()) ** (1 / 2)) / (
+                    self.hit_pd.strip_x > -1)].channel.count()) ** (1 / 2)) / (
                                        self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
             rate_strip_avg_x = rate_strip_avg_x * time_win
             error_rate_strip_x = error_rate_strip_x * time_win
