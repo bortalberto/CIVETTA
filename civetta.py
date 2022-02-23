@@ -94,8 +94,6 @@ class runner:
             with Pool(processes=self.cpu_to_use) as pool:
                 with tqdm(total=len(input_list), disable=self.silent) as pbar:
                     for i, x in enumerate(pool.imap_unordered(self.decode_on_file_header_trailer, input_list)):
-                        # print (len(x))
-                        # print (x)
                         return_list_hd.append(x[0])
                         return_list_tr.append(x[1])
                         return_list_udp.append(x[2])
