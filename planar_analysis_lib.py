@@ -405,11 +405,15 @@ class decoder:
         trailer_pd_dict["count_trailer"] = []
         trailer_pd_dict["ch"] = []
         trailer_pd_dict["last_count_from_ch"] = []
+        trailer_pd_dict["l1_count"] = []
 
         UDP_pd_dict["UDP_num"] = []
         UDP_pd_dict["daq_pll_unlocked"] = []
         UDP_pd_dict["global_rx_error"] = []
         UDP_pd_dict["XCVR_rx_alignment_error"] = []
+        UDP_pd_dict["l1_count"] = []
+
+        LOCAL_L1_COUNT=0
         with open(path, 'rb') as f:
             for i in range(0, statinfo.st_size // 8):
                 data = f.read(8)
@@ -457,7 +461,7 @@ class decoder:
                     trailer_pd_dict["gemroc"].append(GEMROC)
                     trailer_pd_dict["subrun"].append(subRunNo)
                     trailer_pd_dict["run"].append(self.RUN)
-
+                    trailer_pd_dict["l1_count"].append(LOCAL_L1_COUNT)
                     trailer_pd_dict["l1_frame"].append(((int_x >> 37) & 0xFFFFFF))
                     trailer_pd_dict["tiger_id"].append(((int_x >> 27) & 0x7))
                     trailer_pd_dict["count_trailer"].append(((int_x >> 24) & 0x7))
@@ -469,6 +473,7 @@ class decoder:
                     UDP_pd_dict["daq_pll_unlocked"].append((int_x >> 57)& 0x1)
                     UDP_pd_dict["global_rx_error"].append((int_x >> 58)& 0x1)
                     UDP_pd_dict["XCVR_rx_alignment_error"].append((int_x >> 59)& 0x1)
+                    UDP_pd_dict["l1_count"].append(LOCAL_L1_COUNT)
         # print (header_pd_dict)
         if len(header_pd_dict) > 0 and len(trailer_pd_dict) > 0 and len(UDP_pd_dict) > 0:
             header_pd = pd.DataFrame(header_pd_dict)
