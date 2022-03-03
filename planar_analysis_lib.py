@@ -133,21 +133,21 @@ class decoder:
 
                     firstData = True  ## Header flags that next line will be first data word of the packet
 
-                    if len(lschannel) > 0:  ## Non dovrebbe manco succedere
-                        print("ERROR")
-                        lschannel = []
-                        lstac = []
-                        lstcoarse = []
-                        lsecoarse = []
-                        lstfine = []
-                        lsefine = []
-                        lstcoarse_10b = []
-                        lstigerid = []
-                        lsl1ts_min_tcoarse = []
-                        lslasttigerframenum = []
-                        lscount_mismatch = []
-                        l1count_new = []
-                        lsdelta_coarse = []
+                    # if len(lschannel) > 0:  ## Non dovrebbe manco succedere
+                    #     print("ERROR")
+                    #     lschannel = []
+                    #     lstac = []
+                    #     lstcoarse = []
+                    #     lsecoarse = []
+                    #     lstfine = []
+                    #     lsefine = []
+                    #     lstcoarse_10b = []
+                    #     lstigerid = []
+                    #     lsl1ts_min_tcoarse = []
+                    #     lslasttigerframenum = []
+                    #     lscount_mismatch = []
+                    #     l1count_new = []
+                    #     lsdelta_coarse = []
 
                 if (((int_x & 0xC000000000000000) >> 62) == 0x0 and packet_header == 1 and packet_udp != 1):  ## DATA word
                     LOCAL_L1_TS_minus_TIGER_COARSE_TS = LOCAL_L1_TIMESTAMP - ((int_x >> 32) & 0xFFFF)
@@ -474,6 +474,8 @@ class decoder:
                     UDP_pd_dict["global_rx_error"].append((int_x >> 58)& 0x1)
                     UDP_pd_dict["XCVR_rx_alignment_error"].append((int_x >> 59)& 0x1)
                     UDP_pd_dict["l1_count"].append(LOCAL_L1_COUNT)
+
+
         # print (header_pd_dict)
         if len(header_pd_dict) > 0 and len(trailer_pd_dict) > 0 and len(UDP_pd_dict) > 0:
             header_pd = pd.DataFrame(header_pd_dict)
@@ -1542,7 +1544,7 @@ class eff_calculator():
         res_mean = h1.GetListOfFunctions().FindObject("gaus").GetParameter(1)
         res_std = h1.GetListOfFunctions().FindObject("gaus").GetParameter(2)
         h1.Draw()
-        c1.SaveAs(f"{self.out_folder_meta}/{planar}_{view}_PUT_{PUT}.png");
+        c1.SaveAs(f"{self.out_folder_meta}/{planar}_{view}_PUT_{PUT}.png")
         #     print ("saving hist")
         #     print (f"Fit mean: {res_mean}, std :{res_std}")
         #     print (f"Distr mean: {h1.GetMean()}, std :{h1.GetStdDev()}")
