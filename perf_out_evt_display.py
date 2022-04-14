@@ -721,12 +721,12 @@ def extract_eff_and_res(run, data_folder, planar_list):
                               f"error tracking: {errror_tracking * 10000:.2f} um" )
     ## Enemy
     logger.write_log(f"\n--Enemy residual--\n")
-    s0 = sym.Symbol("s0")
-    s1 = sym.Symbol("s1")
-    s2 = sym.Symbol("s2")
-    s3 = sym.Symbol("s3")
-    sb = sym.Symbol("sb")
-    sc = sym.Symbol("sc")
+    s0 = sym.Symbol("s0", positive=True)
+    s1 = sym.Symbol("s1", positive=True)
+    s2 = sym.Symbol("s2", positive=True)
+    s3 = sym.Symbol("s3", positive=True)
+    sb = sym.Symbol("sb", positive=True)
+    sc = sym.Symbol("sc", positive=True)
 
 
     for view in ("x","y"):
@@ -744,5 +744,22 @@ def extract_eff_and_res(run, data_folder, planar_list):
            (s0**2+s3**2+(sc)**2)**(1/2)-enemy_res_list[5]
               ],
              (s0, s1, s2,s3,sb, sc))
-            logger.write_log("System solution:\n"
-                             f"{sol[-1]}")
+            if len(sol)>0:
+                logger.write_log("System solution:\n"
+                                 f"{sol[-1]}")
+            else:
+                sol = sym.solve([(s0 ** 2 + s1 ** 2 + sb ** 2) ** (1 / 2) - enemy_res_list[0],
+                                 (s1 ** 2 + s2 ** 2 + sb ** 2) ** (1 / 2) - enemy_res_list[1],
+                                 (s2 ** 2 + s3 ** 2 + sb ** 2) ** (1 / 2) - enemy_res_list[2],
+                                 (s0 ** 2 + s2 ** 2 + (2 * sb) ** 2) ** (1 / 2) - enemy_res_list[3],
+                                 (s0 ** 2 + s3 ** 2 + (3 * sb) ** 2) ** (1 / 2) - enemy_res_list[5]
+                                 ],
+                                (s0, s1, s2, s3, sb))
+                if len(sol) > 0:
+                    logger.write_log("System solution:\n"
+                                     f"{sol[-1]}")
+                else:
+                    logger.write_log("Can't find solution:\n"
+                                     f"{sol[-1]}")
+
+
