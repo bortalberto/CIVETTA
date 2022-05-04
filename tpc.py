@@ -124,8 +124,10 @@ class tpc_prep:
         print (f"Time: {time.time()-start}")
         print ("Sorting")
 
-        hit_pd.sort_values("hit_id", inplace=True)
+        hit_pd.sort_values(["subRunNo","count","hit_id"], inplace=True)
         hit_pd.reset_index(drop=True, inplace=True)
+        hit_pd["hit_time_corr"] = hit_pd["hit_time_corr"].astype(np.float16)
+        hit_pd["hit_time"] = hit_pd["hit_time"].astype(np.float16)
         print ("Save")
         start=time.time()
         hit_pd.to_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"), compression='zstd')
