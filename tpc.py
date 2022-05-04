@@ -121,11 +121,13 @@ class tpc_prep:
         start=time.time()
         print ("Concat")
         hit_pd = pd.concat(return_list, ignore_index=True)
-        print (f"Time: {start-time.time()}")
+        print (f"Time: {time.time()-start}")
         print ("Sorting")
 
         hit_pd.sort_values("hit_id", inplace=True)
         hit_pd.reset_index(drop=True, inplace=True)
         print ("Save")
-
+        start=time.time()
+        # hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"), compression='zstd')
         hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt.pickle.gzip"), compression="gzip")
+        print (f"Time: {time.time()-start}")
