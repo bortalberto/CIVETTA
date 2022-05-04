@@ -217,7 +217,7 @@ class runner:
                 file_list.append(filename)
 
         else:
-            for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*.pickle.gzip".format(self.run_number), with_matches=True):
+            for filename, subrun in glob2.iglob(self.data_folder + "/raw_root/{}/Sub_RUN_dec_*-zstd.feather".format(self.run_number), with_matches=True):
                 subrun_list.append(int(subrun[0]))  # subrun is a tuple
                 file_list.append(filename)
 
@@ -233,7 +233,7 @@ class runner:
                     for i, _ in enumerate(pool.imap_unordered(analizer.calibrate_subrun, subrun_list)):
                         pbar.update()
         else:
-            print(f"Can't find any decoded file in {self.data_folder}raw_root/{self.run_number}")
+            print(f"Can't find any decoded file in {self.data_folder}/raw_root/{self.run_number}")
         analizer.create_hits_pd_and_single_root()
 
         if self.purge:
