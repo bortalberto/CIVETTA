@@ -1035,8 +1035,10 @@ class clusterize:
         # else:
         #     self.cluster_pd.to_pickle("{}/raw_root/{}/cluster_pd_1D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
         if subrun == "All":
+            self.cluster_pd.reset_index(drop=True, inplace=True)
             self.cluster_pd.to_feather("{}/raw_root/{}/cluster_pd_1D-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
         else:
+            self.cluster_pd.reset_index(drop=True, inplace=True)
             self.cluster_pd.to_feather("{}/raw_root/{}/cluster_pd_1D_sub_{}-zstd.feather".format(self.data_folder, self.run_number, subrun), compression="zstd")
 
 
@@ -1045,6 +1047,7 @@ class clusterize:
         if os.path.isfile(path):
             cluster_pd_old = pd.read_feather(path)
             self.cluster_pd = pd.concat((self.cluster_pd, cluster_pd_old))
+        self.cluster_pd.reset_index(drop=True, inplace=True)
         self.cluster_pd.to_feather("{}/raw_root/{}/cluster_pd_1D-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
 
     def load_cluster_pd(self, subrun="All"):
