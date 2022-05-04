@@ -5,7 +5,8 @@ import requests
 from scipy.optimize import curve_fit
 from multiprocessing import Pool,cpu_count
 from tqdm import tqdm
-
+from itertools import chain
+import time
 def time_walk_rough_corr(charge,signal_width, a,b,c):
     charge=np.array(charge)
     if charge<=0:
@@ -117,8 +118,10 @@ class tpc_prep:
                     for i, x in enumerate(pool.imap(self.apply_time_walk_corr_subrun, sub_list)):
                         return_list.append(x)
                         pbar.update()
+        start=time.time()
         print ("Concat")
         hit_pd = pd.concat(return_list, ignore_index=True)
+        print (f"Time: {start-time.time()}")
         print ("Sorting")
 
         hit_pd.sort_values("hit_id", inplace=True)
