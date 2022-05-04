@@ -368,10 +368,11 @@ class decoder:
                     # filename=filename.replace("/RUN_", "/")
                     # root_pandas.to_root(final_pd,filename,"tree")
                 else:
-                    filename = path.replace(".dat", ".pickle.gzip")
+                    filename = path.replace(".dat", "-zstd.feather")
                     filename = filename.replace("raw_dat", "raw_root")
                     filename = filename.replace("/RUN_", "/")
-                    final_pd.to_pickle(filename, compression="gzip")
+                    # final_pd.to_pickle(filename, compression="gzip")
+                    final_pd.to_feather(filename, compression="zstd")
 
     def decode_file_header_trailer(self, input_):
         """
@@ -722,7 +723,7 @@ class calib:
             root_pandas.to_root(out_pd, "{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder, self.run_number, subrun), "tree")
             return out_pd
         else:
-            decode_pd = pd.read_pickle("{}/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+            decode_pd = pd.read_feather("{}/raw_root/{}/Sub_RUN_dec_{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
             ana_pd = decode_pd
             self.build_mapping_group()
 
@@ -746,7 +747,8 @@ class calib:
             ana_pd = compress_pd
             # import root_pandas
             # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
-            ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+            # ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+            ana_pd.to_feather("{}/raw_root/{}/Sub_RUN_pl_ana{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
             return ana_pd
 
     def create_hits_pd_and_single_root(self):
@@ -770,10 +772,11 @@ class calib:
 
         else:
             pd_list = []
-            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.pickle.gzip".format(self.data_folder, self.run_number)):
-                pd_list.append(pd.read_pickle(filename, compression="gzip"))
+            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*-zstd.feather".format(self.data_folder, self.run_number)):
+                pd_list.append(pd.read_feather(filename))
             data_pd = pd.concat(pd_list, ignore_index=True)
-            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            data_pd.to_feather("{}/raw_root/{}/hit_data-zstd.feather".format(self.data_folder, self.run_number))
 
     def append_hits_pd_and_single_root(self):
         """
@@ -797,17 +800,19 @@ class calib:
             # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
             # root_pandas.to_root(data_pd, "{}/raw_root/{}/pl_ana.root".format(self.data_folder, self.run_number), "tree")
         else:
-            path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+            path = self.data_folder + f"/raw_root/{self.run_number}/hit_data-zstd.feather"
             if os.path.isfile(path):
-                data_pd = pd.read_pickle(path, compression="gzip")
+                data_pd = pd.read_feather(path)
             else:
                 data_pd = pd.DataFrame()
 
             pd_list = []
-            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*.pickle.gzip".format(self.data_folder, self.run_number)):
-                pd_list.append(pd.read_pickle(filename, compression="gzip"))
+            for filename in glob2.iglob("{}/raw_root/{}/Sub_RUN_pl_ana*-zstd.feather".format(self.data_folder, self.run_number)):
+                pd_list.append(pd.read_feather(filename))
             data_pd = pd.concat(pd_list, ignore_index=True)
-            data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            data_pd.to_feather("{}/raw_root/{}/hit_data-zstd.feather".format(self.data_folder, self.run_number))
+
+            # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
     #
     # mapping_pd=load_mapping()
     #
@@ -849,7 +854,7 @@ class clusterize:
         Load the pickle file with the single hit information
         :return:
         """
-        self.data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(self.data_folder, self.run_number))
         if subrunNo_tgt:
             data_pd_cut_0 = self.data_pd[(self.data_pd.runNo == self.run_number) & (self.data_pd.l1ts_min_tcoarse > int(self.signal_window_lower_limit)) & (self.data_pd.l1ts_min_tcoarse < int(self.signal_window_upper_limit)) & (self.data_pd.delta_coarse > 0)]
             data_pd_cut_0 = data_pd_cut_0[data_pd_cut_0.subRunNo == subrunNo_tgt]
@@ -1101,20 +1106,20 @@ class clusterize:
 
     def save_cluster_pd_2D(self, subrun="All"):
         if subrun == "All":
-            self.cluster_pd_2D.to_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            self.cluster_pd_2D.to_feather("{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
         else:
-            self.cluster_pd_2D.to_pickle("{}/raw_root/{}/cluster_pd_2D_sub_{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+            self.cluster_pd_2D.to_feather("{}/raw_root/{}/cluster_pd_2D_sub_{}-zstd.feather".format(self.data_folder, self.run_number, subrun), compression="zstd")
 
     def append_cluster_pd_2D(self):
         """
         Append the data from the last subrun with the others
         :return:
         """
-        path = "{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number)
+        path = "{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(self.data_folder, self.run_number)
         if os.path.isfile(path):
-            cluster_pd_2D_old = pd.read_pickle(path, compression="gzip")
+            cluster_pd_2D_old = pd.read_feather(path)
             self.cluster_pd_2D = pd.concat((self.cluster_pd_2D, cluster_pd_2D_old))
-        self.cluster_pd_2D.to_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        self.cluster_pd_2D.to_feather("{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
 
 
 class tracking_2d:
@@ -1136,7 +1141,7 @@ class tracking_2d:
         Load the cluster 2-D file
         :return:
         """
-        cluster_pd_2D = pd.read_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        cluster_pd_2D = pd.read_feather("{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(self.data_folder, self.run_number))
         cluster_pd_2D["cl_pos_x_cm"] = cluster_pd_2D.cl_pos_x * 0.0650
         cluster_pd_2D["cl_pos_y_cm"] = cluster_pd_2D.cl_pos_y * 0.0650
         cluster_pd_2D["cl_pos_z_cm"] = cluster_pd_2D.planar * 10
@@ -1248,7 +1253,7 @@ class tracking_1d:
         Load the cluster 2-D file
         :return:
         """
-        cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/cluster_pd_1D.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        cluster_pd_1D = pd.read_feather("{}/raw_root/{}/cluster_pd_1D-zstd.feather".format(self.data_folder, self.run_number))
         if cylinder:
             cluster_pd_1D = cluster_pd_1D[cluster_pd_1D.cl_pos_x.notna()]
         else:

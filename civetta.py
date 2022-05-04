@@ -118,11 +118,11 @@ class runner:
         input_list=[]
         self.decoder = pl_lib.decoder(1, self.run_number, downsamplig=self.downsampling)
 
-        path=self.data_folder+f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+        path=self.data_folder+f"/raw_root/{self.run_number}/hit_data-zstd.feather"
         if not self.silent:
             print (f"Decoding filling up to subrun {subrun_tgt}")
         if os.path.isfile(path):
-            data_pd=pd.read_pickle(path,compression="gzip")
+            data_pd=pd.read_feather(path)
             done_subruns=data_pd.subRunNo.unique()
         else:
             done_subruns=[]
@@ -152,11 +152,12 @@ class runner:
             input_list.append((filename, int(subrun), int(gemroc)))
     def merg_dec_func(self, subrun ):
         pd_list = []
-        for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM.pickle.gzip".format(self.run_number, subrun), with_matches=True):
-            pd_list.append(pd.read_pickle(filename, compression="gzip"))
+        for filename, (gemroc) in glob2.iglob(self.data_folder + "/raw_root/{}/SubRUN_{}_GEMROC_*_TM-zstd.feather".format(self.run_number, subrun), with_matches=True):
+            pd_list.append(pd.read_feather(filename))
         if len(pd_list)>0:
             subrun_pd = pd.concat(pd_list, ignore_index=True)
-            subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
+            # subrun_pd.to_pickle(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}.pickle.gzip".format(self.run_number, subrun), compression="gzip")
+            subrun_pd.to_feather(self.data_folder + "/raw_root/{}/Sub_RUN_dec_{}-zstd.feather".format(self.run_number, subrun), compression="zstd")
 
     def merge_dec (self):
         """
@@ -253,11 +254,11 @@ class runner:
         :param subrun_tgt:
         :return:
         """
-        path = self.data_folder + f"/raw_root/{self.run_number}/hit_data.pickle.gzip"
+        path = self.data_folder + f"/raw_root/{self.run_number}/hit_data-zstd.feather"
         if not self.silent:
             print(f"Calibrating filling up to subrun {subrun_tgt}")
         if os.path.isfile(path):
-            data_pd = pd.read_pickle(path, compression="gzip")
+            data_pd = pd.read_feather(path)
             done_subruns = data_pd.subRunNo.unique()
         else:
             done_subruns = []
@@ -370,9 +371,9 @@ class runner:
         if not self.silent:
             print(f"Clusterizing filling up to subrun {subrun_tgt}")
 
-        path = self.data_folder + f"/raw_root/{self.run_number}/cluster_pd_1D.pickle.gzip"
+        path = self.data_folder + f"/raw_root/{self.run_number}/cluster_pd_1D-zstd.feather"
         if os.path.isfile(path):
-            data_pd = pd.read_pickle(path, compression="gzip")
+            data_pd = pd.read_feather(path)
             done_subruns = data_pd.subrun.unique()
         else:
             done_subruns = []
@@ -460,9 +461,9 @@ class runner:
                 print (f"Building clusters 2D subrun {subrun_tgt} \n")
 
         if subrun_fill:
-            path = self.data_folder + f"/raw_root/{self.run_number}/cluster_pd_2D.pickle.gzip"
+            path = self.data_folder + f"/raw_root/{self.run_number}/cluster_pd_2D-zstd.feather"
             if os.path.isfile(path):
-                data_pd = pd.read_pickle(path, compression="gzip")
+                data_pd = pd.read_feather(path)
                 done_subruns = data_pd.subrun.unique()
             else:
                 done_subruns = []
@@ -769,9 +770,9 @@ class runner:
         if not self.silent:
             print(f"Selecting clusters near tracks subrun {subrun_tgt}")
 
-        path = self.data_folder + f"/raw_root/{self.run_number}/sel_cluster_pd_1D.pickle.gzip"
+        path = self.data_folder + f"/raw_root/{self.run_number}/sel_cluster_pd_1D-zstd.feather"
         if os.path.isfile(path):
-            data_pd = pd.read_pickle(path, compression="gzip")
+            data_pd = pd.read_feather(path)
             done_subruns = data_pd.subrun.unique()
         else:
             done_subruns = []
@@ -869,7 +870,9 @@ class runner:
         clusterizer.load_data_pd()
         compress_data = pl_lib.compress_hit_pd(clusterizer.data_pd)
         pl_lib.verifiy_compression_validity(clusterizer.data_pd, compress_data)
-        compress_data.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        # compress_data.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+        compress_data.to_feather("{}/raw_root/{}/hit_data-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
+
     def convert_hit_pd_root(self):
         """
         Convert the hit file in root
