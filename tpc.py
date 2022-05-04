@@ -72,8 +72,8 @@ class tpc_prep:
         hit_pd = hit_pd.query("charge_SH<10")
         thr_eff = hit_pd.groupby(["gemroc", "tiger", "channel"]).charge_SH.agg(self.thr_eff)
         thr_tmw = thr_eff.apply(self.thr_tmw)
-        thr_eff.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"thr_eff.pickle.gzip"))
-        thr_tmw.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"thr_tmw.pickle.gzip"))
+        thr_eff.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"thr_eff.pickle"))
+        thr_tmw.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"thr_tmw.pickle"))
 
 
     def apply_time_walk_corr_subrun(self, hit_pd):
