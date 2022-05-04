@@ -25,6 +25,9 @@ class runner:
         tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
         tpc_prep.exctract_thr_eff()
 
+    def calc_time_and_time_walk(self):
+        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
+        tpc_prep.apply_time_walk_corr_run()
 ##############################################################################################
 ##																							##
 ##										MAIN												##
@@ -59,6 +62,8 @@ def main(run, **kwargs):
         print (f"Data_folder : {data_folder}")
         if args.thr_eff:
             print("         -Estimating thr")
+        if args.time_walk:
+            print("         -Calculating time and time walk")
 
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
@@ -68,6 +73,8 @@ def main(run, **kwargs):
     options={}
     if args.thr_eff:
         op_list.append("thr_eff")
+    if args.time_walk:
+        op_list.append("time_walk")
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
 
@@ -84,6 +91,8 @@ def main(run, **kwargs):
     if "thr_eff" in (op_list):
         main_runner.calc_and_save_thr_eff()
 
+    if "time_walk" in (op_list):
+        main_runner.calc_time_and_time_walk()
 
 if __name__=="__main__":
 
@@ -95,6 +104,7 @@ if __name__=="__main__":
     parser.add_argument('-cpu', '--cpu', help='Specify CPU count ',type=int)
     parser.add_argument('-S', '--Silent', help='Print only errors ',action="store_true")
     parser.add_argument('-thr', '--thr_eff', help='Calculate and save effective thr ', action="store_true")
+    parser.add_argument('-tw', '--time_walk', help='Correct time walk ', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))

@@ -3,17 +3,29 @@ import pandas as pd
 import os
 import requests
 from scipy.optimize import curve_fit
+from multiprocessing import Pool,cpu_count
+from tqdm import tqdm
 
 def time_walk_rough_corr(charge,signal_width, a,b,c):
     charge=np.array(charge)
-    time =  a/charge**b  +  c
-    time[np.where(time>signal_width*1.1)]=signal_width*1.1
+    if charge<=0:
+        charge=0.01
+    time = a/charge**b  +  c
+    if time > signal_width/4+60:
+        time = signal_width/4+60
     return time
+
 
 def time_walk_rough_corr_calib(charge, a,b,c ):
     charge=np.array(charge)
     time =  a/charge**b  +  c
     return time
+
+def calc_corr(row,dict_calibrations, thr_tmw):
+    g = row.gemroc
+    t = row.tiger
+    c = row.channel
+    return(time_walk_rough_corr(row.charge_SH, *dict_calibrations[thr_tmw[g,t,c]]))
 
 
 class tpc_prep:
@@ -80,8 +92,32 @@ class tpc_prep:
         """
 
         """
+        thr_tmw = pd.read_pickle("/media/disk2T/VM_work_zone/data/raw_root/563/thr_tmw.pickle.gzip")
+        dict_calibrations = {}
+        for thr in (0.5, 1, 2, 3):
+            dict_calibrations[thr] = np.append(np.array([self.signal_width]), self.get_calibration_time_walk_courve(self.signal_width, thr))
+        hit_pd["hit_time_corr"] = hit_pd.apply(lambda x: calc_corr(x, dict_calibrations, thr_tmw), axis=1)
+        hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 - hit_pd["hit_time_corr"] - 800
+        hit_pd["hit_time_error"] = (64 + (hit_pd["hit_time_corr"]/5)**2)**(1/2)
+        return hit_pd
 
-    def apply_tw(self, row):
+    def apply_time_walk_corr_run(self):
         """
 
         """
+        hit_pd = pd.read_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data.pickle.gzip"), compression="gzip")
+        sub_list = []
+        return_list = []
+        hit_pd_sub = hit_pd.groupby(["subRunNo"])
+        for key in hit_pd_sub.groups:
+            sub_list.append(hit_pd_sub.get_group(key))
+        if len(sub_list) > 0:
+            with Pool(processes=self.cpu_to_use) as pool:
+                with tqdm(total=len(sub_list), desc="Calculating event efficiency", leave=False) as pbar:
+                    for i, x in enumerate(pool.imap(self.apply_time_walk_corr_subrun, sub_list)):
+                        return_list.append(x)
+                        pbar.update()
+        hit_pd = pd.concat(return_list, ignore_index=True)
+        hit_pd.sort_values("hit_id", inplace=True)
+        hit_pd.reset_index(drop=True, inplace=True)
+        hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data.pickle.gzip"), compression="gzip")
