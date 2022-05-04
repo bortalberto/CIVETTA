@@ -113,11 +113,16 @@ class tpc_prep:
             sub_list.append(hit_pd_sub.get_group(key))
         if len(sub_list) > 0:
             with Pool(processes=self.cpu_to_use) as pool:
-                with tqdm(total=len(sub_list), desc="Calculating event efficiency", leave=False) as pbar:
+                with tqdm(total=len(sub_list), desc="Calculating time and time walk", leave=False) as pbar:
                     for i, x in enumerate(pool.imap(self.apply_time_walk_corr_subrun, sub_list)):
                         return_list.append(x)
                         pbar.update()
+        print ("Concat")
         hit_pd = pd.concat(return_list, ignore_index=True)
+        print ("Sorting")
+
         hit_pd.sort_values("hit_id", inplace=True)
         hit_pd.reset_index(drop=True, inplace=True)
+        print ("Save")
+
         hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data.pickle.gzip"), compression="gzip")
