@@ -1106,6 +1106,7 @@ class clusterize:
 
     def save_cluster_pd_2D(self, subrun="All"):
         if subrun == "All":
+            self.cluster_pd_2D.reset_index(drop=True, inplace=True)
             self.cluster_pd_2D.to_feather("{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
         else:
             self.cluster_pd_2D.to_feather("{}/raw_root/{}/cluster_pd_2D_sub_{}-zstd.feather".format(self.data_folder, self.run_number, subrun), compression="zstd")
@@ -1119,6 +1120,7 @@ class clusterize:
         if os.path.isfile(path):
             cluster_pd_2D_old = pd.read_feather(path)
             self.cluster_pd_2D = pd.concat((self.cluster_pd_2D, cluster_pd_2D_old))
+        self.cluster_pd_2D.reset_index(drop=True, inplace=True)
         self.cluster_pd_2D.to_feather("{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(self.data_folder, self.run_number), compression="zstd")
 
 
