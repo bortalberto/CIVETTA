@@ -28,7 +28,7 @@ def get_run_data(runs, dtype="h", data_folder=""):
 
     data_list=[]
     for run in runs:
-        data_list.append(pd.read_pickle(f"{data_folder}/raw_root/{run}/{filename}.pickle.gzip", compression="gzip"))
+        data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/{filename}-zstd.feather"))
 
     return pd.concat(data_list)
 

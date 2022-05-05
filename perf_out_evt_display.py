@@ -643,11 +643,11 @@ def save_evt_display(run, data_folder, planar, nevents):
     os.path.join(data_folder, "/perf_out/", f"{run}", )
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     ## Loads the datafram for the selected planar
-    cluster_pd_1D = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D.pickle.gzip"), compression="gzip")
-    hit_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
-    cluster_pd_1D_match = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip")
-    trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
-    eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip")
+    cluster_pd_1D = pd.read_feather(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D-zstd.feather"))
+    hit_pd = pd.read_feather(os.path.join(data_folder, "raw_root", f"{run}", "hit_data-zstd.feather"))
+    cluster_pd_1D_match = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}-zstd.feather" ))
+    trk_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}-zstd.feather"))
+    eff_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}-zstd.feather" ))
 
     elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
     ## Builds the folders
@@ -687,11 +687,11 @@ def extract_eff_and_res(run, data_folder, planar_list):
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     eff_pd_l = []
     for planar in planar_list:
-        eff_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}.gzip" ), compression="gzip")
+        eff_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}-zstd.feather" ))
         eff_pd = eff_pd[(eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7)]
         eff_pd_l.append(eff_pd)
     eff_pd = pd.concat(eff_pd_l)
-    hit_pd = pd.read_pickle(os.path.join(data_folder, "raw_root", f"{run}", "hit_data.pickle.gzip"), compression="gzip")
+    hit_pd = pd.read_feather(os.path.join(data_folder, "raw_root", f"{run}", "hit_data-zstd.feather"))
 
     elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
     ## Builds the folders
@@ -705,8 +705,8 @@ def extract_eff_and_res(run, data_folder, planar_list):
     trk_pd_l = {}
     cl_pd_l = {}
     for planar in planar_list:
-        trk_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
-        cl_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}.gzip" ), compression="gzip")
+        trk_pd_l[planar] = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}-zstd.feather" ))
+        cl_pd_l[planar] = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}-zstd.feather" ))
 
     res_calc = res_measure(cl_pd=cl_pd_l, tracks_pd=trk_pd_l, eff_pd=eff_pd, planar_list=planar_list)
     logger = perf.log_writer(elab_folder, 0, "resolution.txt")
