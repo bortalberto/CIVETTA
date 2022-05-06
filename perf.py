@@ -620,9 +620,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
         logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}\n")
         print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}\n")
-        tracks_pd.drop(columns=["cov_x", "cov_y"], inplace=True)
-        tracks_pd.reset_index(drop=True, inplace=True)
-        tracks_pd.to_feather(os.path.join(path_out_eff, f"tracks_pd_{put}-zstd.feather"), compression="zstd")
+        tracks_pd.to_pickle(os.path.join(path_out_eff, f"tracks_pd_{put}.gzip"), compression="gzip")
         del eff_pd
         del tracks_pd
         del cl_pd_1D
