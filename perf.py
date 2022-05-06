@@ -601,6 +601,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
             matching_clusters.to_feather(os.path.join(path_out_eff, f"match_cl_{put}-zstd.feather"), compression="zstd")
 
         eff_pd = pd.concat([x[1] for x in return_list])
+        eff_pd.reset_index(drop=True, inplace=True)
         eff_pd.to_feather(os.path.join(path_out_eff, f"eff_pd_{put}-zstd.feather"), compression="zstd")
         eff_pd_c = eff_pd
         eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process(x, correction), axis=1))
