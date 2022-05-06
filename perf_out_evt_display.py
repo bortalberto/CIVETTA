@@ -646,7 +646,7 @@ def save_evt_display(run, data_folder, planar, nevents):
     cluster_pd_1D = pd.read_feather(os.path.join(data_folder, "raw_root", f"{run}", "cluster_pd_1D-zstd.feather"))
     hit_pd = pd.read_feather(os.path.join(data_folder, "raw_root", f"{run}", "hit_data-zstd.feather"))
     cluster_pd_1D_match = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}-zstd.feather" ))
-    trk_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}-zstd.feather"))
+    trk_pd = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip"), compression = "gzip")
     eff_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}-zstd.feather" ))
 
     elab_folder= os.path.join(data_folder, "elaborated_output", f"{run}")
