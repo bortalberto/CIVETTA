@@ -705,7 +705,7 @@ def extract_eff_and_res(run, data_folder, planar_list):
     trk_pd_l = {}
     cl_pd_l = {}
     for planar in planar_list:
-        trk_pd_l[planar] = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}-zstd.feather" ))
+        trk_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
         cl_pd_l[planar] = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}-zstd.feather" ))
 
     res_calc = res_measure(cl_pd=cl_pd_l, tracks_pd=trk_pd_l, eff_pd=eff_pd, planar_list=planar_list)
