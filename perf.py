@@ -598,7 +598,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         if len(cl_list)>0:
             matching_clusters = pd.concat(cl_list)
             matching_clusters.reset_index(drop=True, inplace=True)
-            matching_clusters.to_feater(os.path.join(path_out_eff, f"match_cl_{put}-zstd.feather"), compression="zstd")
+            matching_clusters.to_feather(os.path.join(path_out_eff, f"match_cl_{put}-zstd.feather"), compression="zstd")
 
         eff_pd = pd.concat([x[1] for x in return_list])
         eff_pd.to_feather(os.path.join(path_out_eff, f"eff_pd_{put}-zstd.feather"), compression="zstd")
