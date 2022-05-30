@@ -98,15 +98,15 @@ class tpc_prep:
         for thr in (0.5, 1, 2, 3):
             dict_calibrations[thr] = np.append(np.array([self.signal_width]), self.get_calibration_time_walk_courve(self.signal_width, thr))
         hit_pd["hit_time_corr"] = hit_pd.apply(lambda x: calc_corr(x, dict_calibrations, thr_tmw), axis=1)
-        hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 - hit_pd["hit_time_corr"] - 800
-        hit_pd["hit_time_error"] = (15**2 + (hit_pd["hit_time_corr"]/3)**2)**(1/2)
+        hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 + hit_pd["hit_time_corr"] - 800
+        hit_pd["hit_time_error"] = (15**2 + (hit_pd["hit_time_corr"]/3)**2 + 6.25/(12**1/2)**2 )**(1/2)
         return hit_pd
 
     def apply_time_walk_corr_run(self):
         """
 
         """
-        hit_pd = pd.read_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data.pickle.gzip"), compression="gzip")
+        hit_pd = pd.read_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
         sub_list = []
         return_list = []
         hit_pd_sub = hit_pd.groupby(["subRunNo"])
