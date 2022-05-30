@@ -106,7 +106,7 @@ class tpc_prep:
         """
 
         """
-        hit_pd = pd.read_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
+        hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
         sub_list = []
         return_list = []
         hit_pd_sub = hit_pd.groupby(["subRunNo"])
