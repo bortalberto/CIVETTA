@@ -151,21 +151,20 @@ class tpc_prep:
         hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"))
         for pl in tqdm(range (0,4), desc="Planar", leave=False):
             cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))
-            pd_list = []
             ## Selecting only hit inside clusters (only in X)
             cluster_pd_eff_cc = cluster_pd_eff_cc.query(f"cl_pos_x>-2")
-            hit_pd = hit_pd.query(f"planar=={pl}")
-            hit_pd = hit_pd.query(f"strip_x>-1")
-            total_mask = hit_pd.charge_SH > 1000
+            hit_pd_c = hit_pd.query(f"planar=={pl}")
+            hit_pd_c = hit_pd_c.query(f"strip_x>-1")
+            total_mask = hit_pd_c.charge_SH > 1000
             for subrun in tqdm(cluster_pd_eff_cc.subrun.unique()):
                 ids = np.concatenate(cluster_pd_eff_cc.query(f"subrun=={subrun}").hit_ids.values)
                 counts = cluster_pd_eff_cc.query(f"subrun=={subrun}")["count"].values
                 total_mask = total_mask | (
-                        (hit_pd.hit_id.isin(ids)) & (hit_pd.subRunNo == subrun) & (hit_pd["count"].isin(counts))
+                        (hit_pd_c.hit_id.isin(ids)) & (hit_pd_c.subRunNo == subrun) & (hit_pd_c["count"].isin(counts))
                 )
-            hit_pd["in_cl"] = total_mask
-            hit_pd = hit_pd.query("in_cl")
-            hit_pd_c = hit_pd.query(f"planar=={pl} and strip_x>-1 and charge_SH>10 and hit_time>0 and hit_time<500")
+            hit_pd_c["in_cl"] = total_mask
+            hit_pd_c = hit_pd_c.query("in_cl")
+            hit_pd_c = hit_pd_c.query(f"planar=={pl} and strip_x>-1 and charge_SH>10 and hit_time>0 and hit_time<500")
             y,x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0,625])
             x = x + 0.625/2
             x = x[:-1]
