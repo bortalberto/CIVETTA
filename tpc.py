@@ -155,6 +155,7 @@ class tpc_prep:
             ## Selecting only hit inside clusters (only in X)
             cluster_pd_eff_cc = cluster_pd_eff_cc.query(f"cl_pos_x>-2")
             hit_pd = hit_pd.query(f"planar=={pl}")
+            hit_pd = hit_pd.query(f"strip_x>-1")
             total_mask = hit_pd.charge_SH > 1000
             for subrun in tqdm(cluster_pd_eff_cc.subrun.unique()):
                 ids = np.concatenate(cluster_pd_eff_cc.query(f"subrun=={subrun}").hit_ids.values)
