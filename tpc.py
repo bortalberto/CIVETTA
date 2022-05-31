@@ -100,8 +100,7 @@ class tpc_prep:
         hit_pd["hit_time_corr"] = hit_pd.apply(lambda x: calc_corr(x, dict_calibrations, thr_tmw), axis=1)
         # hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 - 800
         hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 - hit_pd["hit_time_corr"] - 800
-
-        hit_pd["hit_time_error"] = (10**2 + (hit_pd["hit_time_corr"]/3)**2 + 6.25/(12**1/2)**2 )**(1/2)
+        hit_pd["hit_time_error"] = (5**2 + (hit_pd["hit_time_corr"]/2)**2 + 6.25/(12**1/2)**2 )**(1/2)
         return hit_pd
 
     def apply_time_walk_corr_run(self):
