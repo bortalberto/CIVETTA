@@ -148,14 +148,14 @@ class tpc_prep:
     # def calc_tpc_pos_subrun(self, cl_pd, hit_pd):
 
     def calc_tpc_pos(self):
-        hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
+        hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"))
         for pl in tqdm(range (0,4), desc="Planar", leave=False):
             cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))
             pd_list = []
             ## Selecting only hit inside clusters (only in X)
-            total_mask = hit_pd.charge_SH > 1000
             cluster_pd_eff_cc = cluster_pd_eff_cc.query(f"cl_pos_x>-2")
             hit_pd = hit_pd.query(f"planar=={pl}")
+            total_mask = hit_pd.charge_SH > 1000
             for subrun in tqdm(cluster_pd_eff_cc.subrun.unique()):
                 ids = np.concatenate(cluster_pd_eff_cc.query(f"subrun=={subrun}").hit_ids.values)
                 counts = cluster_pd_eff_cc.query(f"subrun=={subrun}")["count"].values
