@@ -114,7 +114,7 @@ if __name__=="__main__":
     parser.add_argument('-S', '--Silent', help='Print only errors ',action="store_true")
     parser.add_argument('-thr', '--thr_eff', help='Calculate and save effective thr ', action="store_true")
     parser.add_argument('-tw', '--time_walk', help='Correct time walk ', action="store_true")
-    parser.add_argument('-tpc_poc', '--tpc_position_clusters', help='Calculate TPC position on all clusters ', action="store_true")
+    parser.add_argument('-tpc_pos', '--tpc_position_clusters', help='Calculate TPC position on all clusters ', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
