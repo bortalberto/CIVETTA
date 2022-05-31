@@ -6,7 +6,9 @@ from scipy.optimize import curve_fit
 from multiprocessing import Pool,cpu_count
 from tqdm import tqdm
 from itertools import chain
+import root_fit_lib
 import time
+from scipy import special
 def time_walk_rough_corr(charge,signal_width, a,b,c):
     charge=np.array(charge)
     if charge<=0:
@@ -28,6 +30,14 @@ def calc_corr(row,dict_calibrations, thr_tmw):
     c = row.channel
     return(time_walk_rough_corr(row.charge_SH, *dict_calibrations[thr_tmw[g,t,c]]))
 
+def minus_errorfunc(x, x0, sig, c):
+    y = (special.erf((x - x0) / (1.4142 * sig))) * c / 2 + 0.5 * c
+    return -y
+
+
+def errorfunc(x, x0, sig, c):
+    y = (special.erf((x - x0) / (1.4142 * sig))) * c / 2 + 0.5 * c
+    return y
 
 class tpc_prep:
     """
@@ -134,3 +144,44 @@ class tpc_prep:
         hit_pd.to_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"), compression='zstd')
         # hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt.pickle.gzip"), compression="gzip")
         print (f"Time: {time.time()-start}")
+
+    # def calc_tpc_pos_subrun(self, cl_pd, hit_pd):
+
+    def calc_tpc_pos(self):
+        hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
+        for pl in tqdm(range (0,4), desc="Planar", leave=False):
+            cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))
+            pd_list = []
+            ## Selecting only hit inside clusters (only in X)
+            total_mask = hit_pd.charge_SH > 1000
+            cluster_pd_eff_cc = cluster_pd_eff_cc.query(f"cl_pos_x>-2")
+            hit_pd = hit_pd.query(f"planar=={pl}")
+            for subrun in tqdm(cluster_pd_eff_cc.subrun.unique()):
+                ids = np.concatenate(cluster_pd_eff_cc.query(f"subrun=={subrun}").hit_ids.values)
+                counts = cluster_pd_eff_cc.query(f"subrun=={subrun}")["count"].values
+                total_mask = total_mask | (
+                        (hit_pd.hit_id.isin(ids)) & (hit_pd.subRunNo == subrun) & (hit_pd["count"].isin(counts))
+                )
+            hit_pd["in_cl"] = total_mask
+            hit_pd = hit_pd.query("in_cl")
+            hit_pd_c = hit_pd.query(f"planar=={pl} and strip_x>-1 and charge_SH>10 and hit_time>0 and hit_time<500")
+            y,x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0,625])
+            x = x + 0.625/2
+            x = x[:-1]
+            # x=np.arange(1,625,6.25)
+            # fig = px.scatter(y=y,x=x)
+            y[y.argmax():] = y.max()
+            fit, cov = curve_fit(errorfunc, x, y, p0=[150, 3, y.max()])
+            # fig.add_trace(go.Scatter(x=x, y=errorfunc(x, *fit)))
+            y,x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0,625])
+            x = x + 0.625/2
+            x = x[:-1]
+            y[:min(range(len(x)), key=lambda i: abs(x[i]-200))] = y[min(range(len(x)), key=lambda i: abs(x[i]-206))]
+            # fig2 = px.scatter(y=y,x=x)
+            # fig2.show()
+            fit2, cov = curve_fit(minus_errorfunc, x,y, p0=[150,3,y.max()] )
+            ref_time = fit[0]
+            vel = 5 / (fit2[0] - ref_time)
+            print (f"Ref time: {ref_time}, vel {vel}")
+
+

@@ -28,6 +28,11 @@ class runner:
     def calc_time_and_time_walk(self):
         tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
         tpc_prep.apply_time_walk_corr_run()
+
+    def tpc_position_clusters(self):
+        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
+        tpc_prep.calc_tpc_pos()
+
 ##############################################################################################
 ##																							##
 ##										MAIN												##
@@ -64,7 +69,8 @@ def main(run, **kwargs):
             print("         -Estimating thr")
         if args.time_walk:
             print("         -Calculating time and time walk")
-
+        if args.tpc_position_clusters:
+            print("         -Calculating TPC position on clusters")
         if args.cpu:
             print (f"Parallel on {args.cpu} CPUs")
         print ("#############################################################")
@@ -75,6 +81,8 @@ def main(run, **kwargs):
         op_list.append("thr_eff")
     if args.time_walk:
         op_list.append("time_walk")
+    if args.tpc_position_clusters:
+        op_list.append("tpc_position_clusters")
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
 
@@ -93,7 +101,8 @@ def main(run, **kwargs):
 
     if "time_walk" in (op_list):
         main_runner.calc_time_and_time_walk()
-
+    if "tpc_position_clusters" in (op_list):
+        main_runner.tpc_position_clusters()
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="CIVETTA perf: Tools to measure the performances of TIGER data",)
@@ -105,6 +114,7 @@ if __name__=="__main__":
     parser.add_argument('-S', '--Silent', help='Print only errors ',action="store_true")
     parser.add_argument('-thr', '--thr_eff', help='Calculate and save effective thr ', action="store_true")
     parser.add_argument('-tw', '--time_walk', help='Correct time walk ', action="store_true")
+    parser.add_argument('-tpc_poc', '--tpc_position_clusters', help='Calculate TPC position on all clusters ', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
