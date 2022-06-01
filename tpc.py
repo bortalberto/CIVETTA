@@ -41,13 +41,18 @@ def calc_tpc_pos(cluster, hits, vel_l, ref_l):
     hits = hits[hits.hit_id.isin(cluster.hit_ids)]
     hits["pos_g"] = (hits.hit_time - ref_time) * vel
     if hits.shape[0] > 1:
-        fit = np.polyfit(
-            x=np.float64(hits.strip_x.values),
-            y=np.float64(hits.pos_g.values),
-            w=np.float64(1 / (hits.hit_time_error.values * vel)),
-            deg=1
-        )
-        pos_utpc = (2.5 - fit[1]) / fit[0]
+        try:
+            fit = np.polyfit(
+                x=np.float64(hits.strip_x.values),
+                y=np.float64(hits.pos_g.values),
+                w=np.float64(1 / (hits.hit_time_error.values * vel)),
+                deg=1
+            )
+            pos_utpc = (2.5 - fit[1]) / fit[0]
+        except ValueError as E:
+            print (ValueError, "Hits" , hits)
+            print (f"Count: {hits['count'].mean.values[0]} ")
+            pos_utpc=0
         return pos_utpc
     else:
         return cluster.cl_pos_x
