@@ -254,7 +254,7 @@ class tpc_prep:
         :return:
         """
         cluster_pd_evts = cluster_pd.groupby("count")
-        hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode}")
+        hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]}")
         hit_pd_evts = hit_pd.groupby("count")
         for count in cluster_pd_evts.groups:
             cluster_pd_evt = cluster_pd_evts.get_group(count)
