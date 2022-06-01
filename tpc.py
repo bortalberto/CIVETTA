@@ -9,6 +9,10 @@ from itertools import chain
 import root_fit_lib
 import time
 from scipy import special
+
+import matplotlib.pyplot as plt
+from scipy.signal import argrelextrema
+from scipy.signal import savgol_filter
 def time_walk_rough_corr(charge,signal_width, a,b,c):
     charge=np.array(charge)
     if charge<=0:
@@ -147,6 +151,43 @@ class tpc_prep:
 
     # def calc_tpc_pos_subrun(self, cl_pd, hit_pd):
 
+    def calc_ref_time(self, hit_pd_c):
+        y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
+        x = x + 0.625 / 2
+        x = x[:-1]
+        # x=np.arange(1,625,6.25)
+        # fig = px.scatter(y=y,x=x)
+        y[y.argmax():] = y.max()
+        fit, cov = curve_fit(errorfunc, x, y, p0=[150, 3, y.max()])
+        ref_time = fit[0]
+        return ref_time, fit
+
+
+    def calc_drift_vel(self, hit_pd_c, ref_time):
+        y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
+        x = x + 0.625 / 2
+        x = x[:-1]
+        y_max = np.argmax(y)
+        y_der = np.gradient(y)
+        y_df = savgol_filter(y_der, 3, 1)
+        max_ind = argrelextrema(y_df, np.greater)
+        cut_index = max_ind[0][max_ind[0] > y_max][0]
+        y[:cut_index] = y[cut_index]
+        # y[:min(range(len(x)), key=lambda i: abs(x[i]-200))] = y[min(range(len(x)), key=lambda i: abs(x[i]-206))]
+        fit2, cov = curve_fit(minus_errorfunc, x, y, p0=[200, 3, y.max() / 2])
+        vel = 5 / (fit2[0] - ref_time)
+        return vel, fit2
+
+    def plot_extraction(self, hit_pd_c, fit, fit2, ref_time, vel, pl):
+        y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
+        figplot, ax = plt.subplots(figsize=(10, 8))
+        ax.plot(x, errorfunc(x, *fit), label="fit1")
+        ax.plot(x, minus_errorfunc(x, *fit2), label="fit2")
+        # plt.plot(y_der2 ,label= "ddy")
+        ax.text(np.mean(x), np.mean(y), f"T_0 = {ref_time:.2f}, V_drift = {vel}")
+        ax.legend()
+        figplot.savefig(os.path.join(self.data_folder,f"raw_root",f"{self.run_number}",f"fit_time_pl_{pl}.png"))
+
     def calc_tpc_pos(self):
         hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"))
         for pl in tqdm(range (0,4), desc="Planar", leave=False):
@@ -165,23 +206,8 @@ class tpc_prep:
             hit_pd_c["in_cl"] = total_mask
             hit_pd_c = hit_pd_c.query("in_cl")
             hit_pd_c = hit_pd_c.query(f"planar=={pl} and strip_x>-1 and charge_SH>10 and hit_time>0 and hit_time<500")
-            y,x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0,625])
-            x = x + 0.625/2
-            x = x[:-1]
-            # x=np.arange(1,625,6.25)
-            # fig = px.scatter(y=y,x=x)
-            y[y.argmax():] = y.max()
-            fit, cov = curve_fit(errorfunc, x, y, p0=[150, 3, y.max()])
-            # fig.add_trace(go.Scatter(x=x, y=errorfunc(x, *fit)))
-            y,x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0,625])
-            x = x + 0.625/2
-            x = x[:-1]
-            y[:min(range(len(x)), key=lambda i: abs(x[i]-200))] = y[min(range(len(x)), key=lambda i: abs(x[i]-206))]
-            # fig2 = px.scatter(y=y,x=x)
-            # fig2.show()
-            fit2, cov = curve_fit(minus_errorfunc, x,y, p0=[150,3,y.max()] )
-            ref_time = fit[0]
-            vel = 5 / (fit2[0] - ref_time)
-            print (f"Ref time: {ref_time}, vel {vel}")
+            ref_time, fit = self.calc_ref_time(hit_pd_c)
+            vel, fit2 = self.calc_drift_vel(hit_pd_c, ref_time)
+            self.plot_extraction(hit_pd_c, fit, fit2, ref_time, vel, pl)
 
 
