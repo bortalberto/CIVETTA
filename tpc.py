@@ -22,6 +22,32 @@ def time_walk_rough_corr(charge,signal_width, a,b,c):
         time = signal_width/4+60
     return time
 
+def calc_tpc_pos(cluster, hits, vel_l, ref_l):
+    """
+    Generic function to calc the tpc position on a cluster
+    :param cluster:
+    :param hits:
+    :param vel_l:
+    :param ref_l:
+    :return:
+    """
+    vel = vel_l[cluster.planar]
+    ref_time = ref_l[cluster.planar]
+
+    hits = hits[hits.hit_id.isin(cluster.hit_ids)]
+    hits["pos_g"] = (hits.hit_time - ref_time) * vel
+    if hits.shape[0] > 1:
+        fit = np.polyfit(
+            x=np.float64(hits.strip_x.values),
+            y=np.float64(hits.pos_g.values),
+            w=np.float64(1 / (hits.hit_time_error.values * vel)),
+            deg=1
+        )
+        pos_utpc = (2.5 - fit[1]) / fit[0]
+        return pos_utpc
+    else:
+        return cluster.cl_pos_x
+
 
 def time_walk_rough_corr_calib(charge, a,b,c ):
     charge=np.array(charge)
@@ -108,7 +134,7 @@ class tpc_prep:
 
     def apply_time_walk_corr_subrun(self, hit_pd):
         """
-
+        Calculate and apply the time walk correction on a single subrun
         """
         thr_tmw = pd.read_pickle("/media/disk2T/VM_work_zone/data/raw_root/563/thr_tmw.pickle.gzip")
         dict_calibrations = {}
@@ -153,9 +179,13 @@ class tpc_prep:
         # hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt.pickle.gzip"), compression="gzip")
         print (f"Time: {time.time()-start}")
 
-    # def calc_tpc_pos_subrun(self, cl_pd, hit_pd):
 
     def calc_ref_time(self, hit_pd_c):
+        """
+        Calculate the reference time for the TPC fit
+        :param hit_pd_c:
+        :return:
+        """
         y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
         x = x + 0.625 / 2
         x = x[:-1]
@@ -168,6 +198,12 @@ class tpc_prep:
 
 
     def calc_drift_vel(self, hit_pd_c, ref_time):
+        """
+        Calculate the dirft velocity (! not precise for angles <30°)
+        :param hit_pd_c:
+        :param ref_time:
+        :return:
+        """
         y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
         x = x + 0.625 / 2
         x = x[:-1]
@@ -183,6 +219,16 @@ class tpc_prep:
         return vel, fit2
 
     def plot_extraction(self, hit_pd_c, fit, fit2, ref_time, vel, pl):
+        """
+        Dave the plots of the drift velocity and time reference extraction
+        :param hit_pd_c:
+        :param fit:
+        :param fit2:
+        :param ref_time:
+        :param vel:
+        :param pl:
+        :return:
+        """
         y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
         x = x + 0.625 / 2
         x = x[:-1]
@@ -195,13 +241,40 @@ class tpc_prep:
         ax.legend()
         figplot.savefig(os.path.join(self.tpc_dir, f"fit_time_pl_{pl}.png"))
 
-    def calc_tpc_pos(self):
-        hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
+
+
+
+    def calc_tpc_pos_subrun(self, cluster_pd):
+        """
+        Perform the tpc calculation on 1 subrun
+        :param cluster_pd:
+        :param hit_pd:
+        :param vel_list:
+        :param ref_time_list:
+        :return:
+        """
+        cluster_pd_evts = cluster_pd.groupby("count")
+        hit_pd = self.hit_pd.query("subRunNo == cluster_pd.subrun.values[0]")
+        hit_pd_evts = hit_pd.groupby("count")
+        for count in cluster_pd_evts.groups:
+            cluster_pd_evt = cluster_pd_evts.get_group(count)
+            hit_pd_evt = hit_pd_evts.get_group(count)
+            cluster_pd.loc[cluster_pd_evt.index, "pos_utpc"] = cluster_pd_evt.apply(
+                axis=1,
+                func=lambda x: calc_tpc_pos(x, hit_pd_evt, self.vel_list, self.ref_time_list),
+            )
+        return cluster_pd
+
+    def calc_tpc_pos(self, cpus=30):
+        self.hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
+        self.vel_list = []
+        self.ref_time_list = []
+        ### Calc ref time and vel
         for pl in tqdm(range (0,4), desc="Planar", leave=False):
             cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))
             ## Selecting only hit inside clusters (only in X)
             cluster_pd_eff_cc = cluster_pd_eff_cc.query(f"cl_pos_x>-2")
-            hit_pd_c = hit_pd.query(f"planar=={pl}")
+            hit_pd_c = self.hit_pd.query(f"planar=={pl}")
             hit_pd_c = hit_pd_c.query(f"strip_x>-1")
             total_mask = hit_pd_c.charge_SH > 1000
             for subrun in tqdm(cluster_pd_eff_cc.subrun.unique(), leave = False):
@@ -216,5 +289,20 @@ class tpc_prep:
             ref_time, fit = self.calc_ref_time(hit_pd_c)
             vel, fit2 = self.calc_drift_vel(hit_pd_c, ref_time)
             self.plot_extraction(hit_pd_c, fit, fit2, ref_time, vel, pl)
-
+            self.vel_list.append(vel)
+            self.ref_time_list.append(ref_time)
+        cluster_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root",f"{self.run_number}", "cluster_pd_1D-zstd.feather"))
+        sub_data = cluster_pd.groupby(["subrun"])
+        sub_list = []
+        return_list = []
+        for key in sub_data.groups:
+            sub_list.append(sub_data.get_group(key))
+        if len(sub_list) > 0:
+            with Pool(processes=cpus) as pool:
+                with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
+                    for i, x in enumerate(pool.imap_unordered(self.calc_tpc_pos_subrun, sub_list)):
+                        return_list.append(x)
+                        pbar.update()
+        cluster_pd_micro = pd.concat(return_list)
+        cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
 
