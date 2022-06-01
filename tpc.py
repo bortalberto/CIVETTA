@@ -180,9 +180,10 @@ class tpc_prep:
 
     def plot_extraction(self, hit_pd_c, fit, fit2, ref_time, vel, pl):
         y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
+        x = x + 0.625 / 2
+        x = x[:-1]
         figplot, ax = plt.subplots(figsize=(10, 8))
         ax.plot(x,y , "+",label= "data")
-
         ax.plot(x, errorfunc(x, *fit), label="fit1")
         ax.plot(x, minus_errorfunc(x, *fit2), label="fit2")
         # plt.plot(y_der2 ,label= "ddy")
