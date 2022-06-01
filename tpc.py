@@ -314,5 +314,6 @@ class tpc_prep:
                         return_list.append(x)
                         pbar.update()
         cluster_pd_micro = pd.concat(return_list)
+        cluster_pd_micro.reset_index(inplace=True, drop=True)
         cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
 
