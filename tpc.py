@@ -9,10 +9,14 @@ from itertools import chain
 import root_fit_lib
 import time
 from scipy import special
-
+import warnings
 import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
 from scipy.signal import savgol_filter
+
+
+warnings.filterwarnings('ignore')
+
 def time_walk_rough_corr(charge,signal_width, a,b,c):
     charge=np.array(charge)
     if charge<=0:
@@ -254,7 +258,7 @@ class tpc_prep:
         :return:
         """
         cluster_pd_evts = cluster_pd.groupby("count")
-        hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]}")
+        hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
         hit_pd_evts = hit_pd.groupby("count")
         for count in cluster_pd_evts.groups:
             cluster_pd_evt = cluster_pd_evts.get_group(count)
