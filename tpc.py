@@ -51,7 +51,7 @@ def calc_tpc_pos(cluster, hits, vel_l, ref_l):
             pos_utpc = (2.5 - fit[1]) / fit[0]
         except ValueError as E:
             print (ValueError, "Hits" , hits)
-            print (f"Count: {hits['count'].mean.values[0]} ")
+            print (f"Count: {hits['count'].mean().values[0]} ")
             pos_utpc=0
         return pos_utpc
     else:
