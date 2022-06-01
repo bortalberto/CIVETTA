@@ -53,7 +53,10 @@ class tpc_prep:
         self.cpu_to_use = cpu_to_use
         self.run_number = run
         self.cylinder = cylinder
-        self.signal_width =signal_width
+        self.signal_width = signal_width
+        self.tpc_dir = os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"tpc")
+        if not os.path.isdir(self.tpc_dir):
+            os.mkdir(self.tpc_dir)
 
     def thr_tmw(self,row):
         """
@@ -145,7 +148,8 @@ class tpc_prep:
         hit_pd["hit_time"] = hit_pd["hit_time"].astype(np.float16)
         print ("Save")
         start=time.time()
-        hit_pd.to_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"), compression='zstd')
+
+        hit_pd.to_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"), compression='zstd')
         # hit_pd.to_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt.pickle.gzip"), compression="gzip")
         print (f"Time: {time.time()-start}")
 
@@ -189,10 +193,10 @@ class tpc_prep:
         # plt.plot(y_der2 ,label= "ddy")
         ax.text(np.mean(x), np.mean(y), f"T_0 = {ref_time:.2f}, V_drift = {vel}")
         ax.legend()
-        figplot.savefig(os.path.join(self.data_folder,f"raw_root",f"{self.run_number}",f"fit_time_pl_{pl}.png"))
+        figplot.savefig(os.path.join(self.tpc_dir, f"fit_time_pl_{pl}.png"))
 
     def calc_tpc_pos(self):
-        hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data_wt-zstd.feather"))
+        hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
         for pl in tqdm(range (0,4), desc="Planar", leave=False):
             cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))
             ## Selecting only hit inside clusters (only in X)
