@@ -181,7 +181,8 @@ class tpc_prep:
     def plot_extraction(self, hit_pd_c, fit, fit2, ref_time, vel, pl):
         y, x = np.histogram(hit_pd_c.hit_time, bins=100, range=[0, 625])
         figplot, ax = plt.subplots(figsize=(10, 8))
-        figplot, ax = plt.subplots(figsize=(10, 8))
+        ax.plot(x,y , "+",label= "data")
+
         ax.plot(x, errorfunc(x, *fit), label="fit1")
         ax.plot(x, minus_errorfunc(x, *fit2), label="fit2")
         # plt.plot(y_der2 ,label= "ddy")
@@ -198,7 +199,7 @@ class tpc_prep:
             hit_pd_c = hit_pd.query(f"planar=={pl}")
             hit_pd_c = hit_pd_c.query(f"strip_x>-1")
             total_mask = hit_pd_c.charge_SH > 1000
-            for subrun in tqdm(cluster_pd_eff_cc.subrun.unique()):
+            for subrun in tqdm(cluster_pd_eff_cc.subrun.unique(), leave = False):
                 ids = np.concatenate(cluster_pd_eff_cc.query(f"subrun=={subrun}").hit_ids.values)
                 counts = cluster_pd_eff_cc.query(f"subrun=={subrun}")["count"].values
                 total_mask = total_mask | (
