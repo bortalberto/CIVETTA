@@ -296,6 +296,7 @@ class tpc_prep:
             self.vel_list.append(vel)
             self.ref_time_list.append(ref_time)
         cluster_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root",f"{self.run_number}", "cluster_pd_1D-zstd.feather"))
+        cluster_pd = cluster_pd.query("cl_pos_x>-1")
         sub_data = cluster_pd.groupby(["subrun"])
         sub_list = []
         return_list = []
