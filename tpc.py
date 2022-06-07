@@ -152,7 +152,7 @@ class tpc_prep:
         hit_pd["hit_time_corr"] = hit_pd.apply(lambda x: calc_corr(x, dict_calibrations, thr_tmw), axis=1)
         # hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 - 800
         hit_pd["hit_time"] = -(hit_pd["l1ts_min_tcoarse"] - 1567) * 6.25 - hit_pd["hit_time_corr"] - 800
-        hit_pd["hit_time_error"] = (5**2 + (hit_pd["hit_time_corr"]/2)**2 + 6.25/(12**1/2)**2 )**(1/2)
+        hit_pd["hit_time_error"] = (  (hit_pd["hit_time_corr"]/2)**2 + 6.25/(12**1/2)**2 )**(1/2)
         return hit_pd
 
     def apply_time_walk_corr_run(self):
@@ -245,8 +245,11 @@ class tpc_prep:
         ax.plot(x,y , "+",label= "data")
         ax.plot(x, errorfunc(x, *fit), label="fit1")
         ax.plot(x, minus_errorfunc(x, *fit2), label="fit2")
+
         # plt.plot(y_der2 ,label= "ddy")
         ax.text(np.mean(x), np.mean(y), f"T_0 = {ref_time:.2f}, V_drift = {vel}")
+        ax.set_xlabel("Time [ns]")
+        ax.set_ylabel("# hits")
         ax.legend()
         figplot.savefig(os.path.join(self.tpc_dir, f"fit_time_pl_{pl}.png"))
 
