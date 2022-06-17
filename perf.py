@@ -73,8 +73,11 @@ def fit_tracks_manager(cl_pd, planar="None", tracking_fit=False, cpus=20):
                     return_list.append(x)
                     pbar.update()
         track_pd = pd.concat(return_list)
-    track_pd = track_pd.reset_index()
-    track_pd = track_pd.drop(columns="level_1")
+        track_pd = track_pd.reset_index()
+        track_pd = track_pd.drop(columns="level_1")
+    else:
+        print ("No tracks to fit")
+        return 0
 
     return track_pd
 
@@ -457,6 +460,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
         # Fit them to extract the put sigma and mean
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True, cpus=cpu_to_use)
+        del cl_pd_2D_tracking
         ##Seleziona le tracce che rispettano l'intervallo di residui
         ##Seleziona le tracce che rispettano l'intervallo di residui
         nsigma_trck = nsigma_trackers
