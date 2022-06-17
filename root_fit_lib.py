@@ -13,13 +13,16 @@ def gaus(x, a, x0, sigma):
 
 
 
-def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def):
-    nbins=200
+def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def, nbins=200, mean_0=0):
+    """
+    Function to fit or double fit gaussian data
+    """
+    nbins=nbins
     data={"res":data.values.astype(np.float32) }
     rdf = R.RDF.MakeNumpyDataFrame(data)
-    amodel=R.RDF.TH1DModel("h1","h1",nbins,-sigma_def,sigma_def)
+    amodel=R.RDF.TH1DModel("h1","h1",nbins,mean_0-sigma_def,mean_0+sigma_def)
     h1 = rdf.Histo1D(amodel,"res")
-    func=R.TF1("func", "gaus(0) + gaus(3) +[6]", -sigma_def,sigma_def,6)
+    func=R.TF1("func", "gaus(0) + gaus(3) +[6]", mean_0-sigma_def,mean_0+sigma_def,6)
     a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c = p0
     func.SetParameters(a_0,mean_0,sigma_0,a_1,mean_1,sigma_1, c)
     for n, limits in enumerate(zip(lower_bounds,upper_bounds)):
