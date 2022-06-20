@@ -117,4 +117,5 @@ if __name__=="__main__":
     parser.add_argument('-tpc_pos', '--tpc_position_clusters', help='Calculate TPC position on all clusters ', action="store_true")
 
     args = parser.parse_args()
+
     args.method(**vars(args))
