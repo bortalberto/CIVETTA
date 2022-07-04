@@ -1,7 +1,7 @@
 import os
 import sys
 
-run = sys.argv[0]
+run = sys.argv[1]
 if len(sys.argv)>2:
     down_sampling = sys.argv[2]
 else:
