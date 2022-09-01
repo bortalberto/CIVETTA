@@ -311,7 +311,7 @@ class tpc_prep:
         cluster_pd_evts = cluster_pd.groupby("count")
         # hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
         hit_pd["pos_g"] = np.nan
-        hit_pd["dropped"] = False
+        hit_pd["dropped"] = "Not"
 
         count_list = []
         pos_utpc_list = []
