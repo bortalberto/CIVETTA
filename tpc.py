@@ -321,7 +321,8 @@ class tpc_prep:
         subrun = hit_pd.subRunNo.values[0]
         hit_pd_evts = hit_pd.groupby("count")
 
-        for count in tqdm(cluster_pd_evts.groups, desc=f"Events subrun = {subrun}", leave=False ):
+        # for count in tqdm(cluster_pd_evts.groups, desc=f"Events subrun = {subrun}", leave=False ):
+        for count in cluster_pd_evts.groups:
             clusters = cluster_pd_evts.get_group(count)
             events_hits = hit_pd_evts.get_group(count)
             for cl_index, cluster in clusters.iterrows():
