@@ -88,7 +88,7 @@ class tpc_prep:
     Class to run before TPC
     """
 
-    def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80):
+    def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80, silent=False):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
@@ -98,7 +98,7 @@ class tpc_prep:
         if not os.path.isdir(self.tpc_dir):
             os.mkdir(self.tpc_dir)
         self.cut = 0.15
-
+        self.silent = silent
     def thr_tmw(self,row):
         """
         Extract the nearest calibration value to the the thr_eff
@@ -380,6 +380,8 @@ class tpc_prep:
         self.hit_pd = self.hit_pd.sort_values(["subRunNo", "count", "planar", "strip_x"]).reset_index(drop=True) ## Sorting the values for later use
         self.vel_list = []
         self.ref_time_list = []
+        if not self.silent:
+            print ("\n Calculation drift velocity and reference time")
         ### Calc ref time and vel
         for pl in tqdm(range (0,4), desc="Planar", leave=False):
             cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))

@@ -14,23 +14,24 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False):
+    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, Silent=False):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
         self.cylinder = cylinder
+        self.silent = Silent
 
 
     def calc_and_save_thr_eff(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
+        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, self.silent)
         tpc_prep.exctract_thr_eff()
 
     def calc_time_and_time_walk(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
+        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, self.silent)
         tpc_prep.apply_time_walk_corr_run()
 
     def tpc_position_clusters(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder)
+        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, self.silent)
         tpc_prep.calc_tpc_pos()
 
 ##############################################################################################
