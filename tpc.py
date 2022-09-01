@@ -432,6 +432,6 @@ class tpc_prep:
 
         cluster_pd_micro.reset_index(inplace=True, drop=True)
         hit_pd_micro.reset_index(inplace=True, drop=True)
-
+        print (cluster_pd_micro.dtype)
         cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
         hit_pd_micro.to_feather(os.path.join(self.tpc_dir, f"hit_pd_TPC-zstd.feather"), compression='zstd')
