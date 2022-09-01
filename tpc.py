@@ -321,7 +321,7 @@ class tpc_prep:
         subrun = hit_pd.subRunNo.values[0]
         hit_pd_evts = hit_pd.groupby("count")
 
-        for count in cluster_pd_evts.groups:
+        for count in tqdm(cluster_pd_evts.groups, desc=f"Events subrun = {subrun}", leave=False ):
             clusters = cluster_pd_evts.get_group(count)
             events_hits = hit_pd_evts.get_group(count)
             for cl_index, cluster in clusters.iterrows():
@@ -419,8 +419,8 @@ class tpc_prep:
                     for i, x in enumerate(pool.imap_unordered(self.calc_tpc_pos_subrun, sub_list)):
                         return_list_cl.append(x[0])
                         return_list_hits.append(x[1])
-
                         pbar.update()
+
         cluster_pd_micro = pd.concat(return_list_cl)
         hit_pd_micro = pd.concat(return_list_hits)
 

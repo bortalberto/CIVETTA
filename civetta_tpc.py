@@ -32,7 +32,7 @@ class runner:
 
     def tpc_position_clusters(self):
         tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, self.silent)
-        tpc_prep.calc_tpc_pos()
+        tpc_prep.calc_tpc_pos(cpus=34)
 
 ##############################################################################################
 ##																							##
