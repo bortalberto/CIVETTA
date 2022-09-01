@@ -126,7 +126,8 @@ class tpc_prep:
             url = f"https://raw.githubusercontent.com/fabio-cossio/TIGER/master/TimeWalk/{time}/timeWalk_0f5_{time}ns.txt"
         page = requests.get(url)
         if "404: Not Found" in page.text:
-            print("Calibration ot found")
+            print(url)
+            print("\nCalibration not found")
             return 0
         two_col = [row.split("\t") for row in page.text.split("\n")]
         x = [float(row[0]) for row in two_col[:-1]]
