@@ -410,7 +410,7 @@ class tpc_prep:
         cluster_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root",f"{self.run_number}", "cluster_pd_1D-zstd.feather"))
         cluster_pd = cluster_pd.query("cl_pos_x>-1")
         sub_data = cluster_pd.groupby(["subrun"])
-        hit_pd_sub = hit_pd.groupby(["subrun"])
+        hit_pd_sub = hit_pd.groupby(["subRunNo"])
         sub_list = []
         return_list_cl = []
         return_list_hits = []
