@@ -139,7 +139,8 @@ class tpc_prep:
         """
         Calculate and saves the effective thr, saves the nearest thr for the tmw calibration.
         """
-        hit_pd = pd.read_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data.pickle.gzip"), compression="gzip")
+        # hit_pd = pd.read_pickle(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data.pickle.gzip"), compression="gzip")
+        hit_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
         hit_pd = hit_pd.query("charge_SH<10")
         thr_eff = hit_pd.groupby(["gemroc", "tiger", "channel"]).charge_SH.agg(self.thr_eff)
         thr_tmw = thr_eff.apply(self.thr_tmw)
