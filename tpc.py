@@ -299,13 +299,15 @@ class tpc_prep:
                 hit_pd_x.loc[event_hits.index[-1], "dropped"] = "Final"
 
         return (event_hits)
-    def calc_tpc_pos_subrun(self, cluster_pd):
+    def calc_tpc_pos_subrun(self, input):
         """
         Perform the tpc calculation on 1 subrun
         :return:
         """
+        cluster_pd=input[0]
+        hit_pd=input[1]
         cluster_pd_evts = cluster_pd.groupby("count")
-        hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
+        # hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
         hit_pd["pos_g"] = np.nan
         hit_pd["dropped"] = False
 
@@ -377,8 +379,8 @@ class tpc_prep:
         return hit_pd, cluster_pd
 
     def calc_tpc_pos(self, cpus=30):
-        self.hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
-        self.hit_pd = self.hit_pd.sort_values(["subRunNo", "count", "planar", "strip_x"]).reset_index(drop=True) ## Sorting the values for later use
+        hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
+        hit_pd = hit_pd.sort_values(["subRunNo", "count", "planar", "strip_x"]).reset_index(drop=True) ## Sorting the values for later use
         self.vel_list = []
         self.ref_time_list = []
         if not self.silent:
@@ -388,7 +390,7 @@ class tpc_prep:
             cluster_pd_eff_cc = pd.read_feather(os.path.join(self.data_folder,"perf_out", f"{self.run_number}",f"match_cl_{pl}-zstd.feather"))
             ## Selecting only hit inside clusters (only in X)
             cluster_pd_eff_cc = cluster_pd_eff_cc.query(f"cl_pos_x>-2")
-            hit_pd_c = self.hit_pd.query(f"planar=={pl}")
+            hit_pd_c = hit_pd.query(f"planar=={pl}")
             hit_pd_c = hit_pd_c.query(f"strip_x>-1")
             total_mask = hit_pd_c.charge_SH > 1000
             for subrun in tqdm(cluster_pd_eff_cc.subrun.unique(), leave = False):
@@ -408,12 +410,13 @@ class tpc_prep:
         cluster_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root",f"{self.run_number}", "cluster_pd_1D-zstd.feather"))
         cluster_pd = cluster_pd.query("cl_pos_x>-1")
         sub_data = cluster_pd.groupby(["subrun"])
+        hit_pd_sub = hit_pd.groupby(["subrun"])
         sub_list = []
         return_list_cl = []
         return_list_hits = []
 
         for key in sub_data.groups:
-            sub_list.append(sub_data.get_group(key))
+            sub_list.append([sub_data.get_group(key), hit_pd_sub.get_group(key)])
         if len(sub_list) > 0:
             with Pool(processes=cpus) as pool:
                 with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
