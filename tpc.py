@@ -13,7 +13,8 @@ import warnings
 import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
 from scipy.signal import savgol_filter
-
+import math
+from scipy.odr import ODR, Model, Data, RealData
 
 warnings.filterwarnings('ignore')
 
@@ -77,7 +78,11 @@ def minus_errorfunc(x, x0, sig, c):
 def errorfunc(x, x0, sig, c):
     y = (special.erf((x - x0) / (1.4142 * sig))) * c / 2 + 0.5 * c
     return y
-
+def linear_func(p, x):
+    """ Linear function to use like model for ODR fitting"""
+    m, c = p
+    return m*x + c
+fit_model = Model(linear_func)
 class tpc_prep:
     """
     Class to run before TPC
@@ -92,6 +97,7 @@ class tpc_prep:
         self.tpc_dir = os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"tpc")
         if not os.path.isdir(self.tpc_dir):
             os.mkdir(self.tpc_dir)
+        self.cut = 0.15
 
     def thr_tmw(self,row):
         """
@@ -253,32 +259,125 @@ class tpc_prep:
         ax.legend()
         figplot.savefig(os.path.join(self.tpc_dir, f"fit_time_pl_{pl}.png"))
 
+    def check_capacitive_border(self, event_hits, hit_pd_x):
+        """
+        Check if there is a capacitivly induced hit on the borders of the clusters
+        """
+        if event_hits.charge_SH.values[0] / event_hits.charge_SH.values[1] < self.cut:
+            #         print ("capacitive coupling init")
+            event_hits = event_hits[1:]
+            hit_pd_x.loc[event_hits.index[0], "dropped"] = "Init"
+
+        if event_hits.charge_SH.values[-1] / event_hits.charge_SH.values[-2] < self.cut:
+            #         print ("capacitive coupling final")
+            event_hits = event_hits[:-1]
+            hit_pd_x.loc[event_hits.index[-1], "dropped"] = "Final"
+
+        return (event_hits)
+
+    def check_capacitive_border_two_strips(self, event_hits, hit_pd_x):
+        """
+        Checks for capacitive effects on the last and first 2 strips.
+        """
+        if event_hits.charge_SH[0:2].sum() / event_hits.charge_SH[3:4].sum() < self.cut:
+            event_hits = event_hits[2:]
+            hit_pd_x.loc[event_hits.index[0:2], "dropped"] = "Init"
+
+        else:
+            if event_hits.charge_SH.values[0] / event_hits.charge_SH.values[1] < self.cut:
+                event_hits = event_hits[1:]
+                hit_pd_x.loc[event_hits.index[0], "dropped"] = "Init"
+
+        if event_hits.charge_SH[-2:].sum() / event_hits.charge_SH[-4:-2].sum() < self.cut:
+            event_hits = event_hits[:-2]
+            hit_pd_x.loc[event_hits.index[-2:], "dropped"] = "Final"
 
 
+        else:
+            if event_hits.charge_SH.values[-1] / event_hits.charge_SH.values[-2] < self.cut:
+                event_hits = event_hits[:-1]
+                hit_pd_x.loc[event_hits.index[-1], "dropped"] = "Final"
 
+        return (event_hits)
     def calc_tpc_pos_subrun(self, cluster_pd):
         """
         Perform the tpc calculation on 1 subrun
-        :param cluster_pd:
-        :param hit_pd:
-        :param vel_list:
-        :param ref_time_list:
         :return:
         """
         cluster_pd_evts = cluster_pd.groupby("count")
         hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
+        hit_pd["pos_g"] = np.nan
+        hit_pd["dropped"] = False
+
+        count_list = []
+        pos_utpc_list = []
+        pos_utpc_no_cor_list = []
+        prev_pos_list = []
+        pos_cc_list = []
+        fit0_list = []
+        fit1_list = []
+        pitch = 0.650
+        sx_coeff = (pitch / math.sqrt(12)) ** 2
+        subrun = hit_pd.subRunNo.values[0]
         hit_pd_evts = hit_pd.groupby("count")
+
         for count in cluster_pd_evts.groups:
-            cluster_pd_evt = cluster_pd_evts.get_group(count)
-            hit_pd_evt = hit_pd_evts.get_group(count)
-            cluster_pd.loc[cluster_pd_evt.index, "pos_utpc"] = cluster_pd_evt.apply(
-                axis=1,
-                func=lambda x: calc_tpc_pos(x, hit_pd_evt, self.vel_list, self.ref_time_list),
-            )
-        return cluster_pd
+            clusters = cluster_pd_evts.get_group(count)
+            events_hits = hit_pd_evts.get_group(count)
+            for cl_index, cluster in clusters.iterrows():
+
+                ref_time = self.ref_time_list[cluster.planar]
+                vel = self.vel_list[cluster.planar]
+
+                cluster_hits = events_hits[events_hits.hit_id.isin(cluster.hit_ids)]
+
+                hit_pd.loc[cluster_hits.index, "pos_g"] = (cluster_hits.hit_time - ref_time) * vel
+
+                cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
+                cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
+                cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
+                cluster_hits["error_from_diff"] = 0
+
+                ## Capacitive corrections
+                if cluster_hits.shape[0] > 3:
+                    cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
+                avg_charge = cluster_hits.charge_SH.sum() / cluster_hits.charge_SH.shape[0]
+                if cluster_hits.shape[0] > 1:
+                    cluster_hits.loc[cluster_hits.index, "previous_strip_charge"] = cluster_hits.charge_SH.shift()
+                    cluster_hits["charge_ratio_p"] = cluster_hits["charge_SH"] / cluster_hits["previous_strip_charge"]
+                    cluster_hits.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
+
+                    pos_x_fit = np.float64(cluster_hits.strip_x.values) * pitch
+                    pos_x_fit[0] = pos_x_fit[0] + 0.5
+                    pos_x_fit[-1] = pos_x_fit[-1] - 0.5
+                    data = RealData(pos_x_fit,
+                                    np.float64(cluster_hits.pos_g.values),
+                                    sx=np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH)),
+                                    sy=cluster_hits.error_from_t.values)
+
+                    odr = ODR(data, fit_model, beta0=[0.5, -20])
+                    out = odr.run()
+                    fit = out.beta
+
+
+                    hit_pd.loc[cluster_hits.index, "residual_tpc"] = cluster_hits.pos_g - cluster_hits.strip_x * pitch * fit[0] - fit[1]
+                    hit_pd.loc[cluster_hits.index, "strip_min"] = cluster_hits.strip_x.values[0]
+                    hit_pd.loc[cluster_hits.index, "strip_max"] = cluster_hits.strip_x.values[-1]
+                    hit_pd.loc[cluster_hits.index, "next_strip_charge"] = cluster_hits.charge_SH.shift(-1)
+                    hit_pd.loc[cluster_hits.index, "previous_strip_charge"] = cluster_hits.charge_SH.shift()
+                    hit_pd.loc[cluster_hits.index, "total_charge"] = cluster_hits.charge_SH.sum()
+                    hit_pd.loc[cluster_hits.index, "cl_size"] = cluster_hits.charge_SH.shape[0]
+                    hit_pd.loc[cluster_hits.index, "residual_tpc_sum"] = np.sum(cluster_hits.pos_g.values - cluster_hits.strip_x.values * pitch * fit[0] - fit[1])
+                    cluster_pd.loc[cl_index, "pos_tpc"] = (2.5 - fit[1]) / fit[0]
+                    #         hit_pd.loc[]
+
+                    ## Tagliando i bordi
+
+        return hit_pd, cluster_pd
 
     def calc_tpc_pos(self, cpus=30):
         self.hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
+        self.hit_pd = self.hit_pd.sort_values(["subRunNo", "count", "planar", "strip_x"]).reset_index(drop=True) ## Sorting the values for later use
         self.vel_list = []
         self.ref_time_list = []
         ### Calc ref time and vel
@@ -307,16 +406,24 @@ class tpc_prep:
         cluster_pd = cluster_pd.query("cl_pos_x>-1")
         sub_data = cluster_pd.groupby(["subrun"])
         sub_list = []
-        return_list = []
+        return_list_cl = []
+        return_list_hits = []
+
         for key in sub_data.groups:
             sub_list.append(sub_data.get_group(key))
         if len(sub_list) > 0:
             with Pool(processes=cpus) as pool:
                 with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
                     for i, x in enumerate(pool.imap_unordered(self.calc_tpc_pos_subrun, sub_list)):
-                        return_list.append(x)
-                        pbar.update()
-        cluster_pd_micro = pd.concat(return_list)
-        cluster_pd_micro.reset_index(inplace=True, drop=True)
-        cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
+                        return_list_cl.append(x[0])
+                        return_list_hits.append(x[1])
 
+                        pbar.update()
+        cluster_pd_micro = pd.concat(return_list_cl)
+        hit_pd_micro = pd.concat(return_list_hits)
+
+        cluster_pd_micro.reset_index(inplace=True, drop=True)
+        hit_pd_micro.reset_index(inplace=True, drop=True)
+
+        cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
+        hit_pd_micro.to_feather(os.path.join(self.tpc_dir, f"hit_pd_TPC-zstd.feather"), compression='zstd')
