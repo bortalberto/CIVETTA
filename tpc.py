@@ -410,6 +410,7 @@ class tpc_prep:
             self.vel_list.append(vel)
             self.ref_time_list.append(ref_time)
         cluster_pd = pd.read_feather(os.path.join(self.data_folder, "raw_root",f"{self.run_number}", "cluster_pd_1D-zstd.feather"))
+        cluster_pd_y = cluster_pd.query("cl_pos_y>-1")
         cluster_pd = cluster_pd.query("cl_pos_x>-1")
         sub_data = cluster_pd.groupby(["subrun"])
         hit_pd_sub = hit_pd.groupby(["subRunNo"])
@@ -426,7 +427,7 @@ class tpc_prep:
                         return_list_cl.append(x[1])
                         return_list_hits.append(x[0])
                         pbar.update()
-
+        return_list_cl.append(cluster_pd_y)
         cluster_pd_micro = pd.concat(return_list_cl)
         hit_pd_micro = pd.concat(return_list_hits)
 
