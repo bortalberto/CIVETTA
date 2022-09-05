@@ -678,16 +678,20 @@ def save_evt_display(run, data_folder, planar, nevents):
         save_html_event(fig_x, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_x.html"))
         save_html_event(fig_y, os.path.join(evt_folder_ineff, f"Evt_{evt}_planar_{planar}_y.html"))
 
-def extract_eff_and_res(run, data_folder, planar_list):
+def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     """
     Calculate efficiency end resolution
     """
+    if tpc:
+        tpc_string = "_tpc"
+    else:
+        tpc_string = ""
     perf_path = os.path.join(data_folder, "perf_out", f"{run}")
     log_file = os.path.join(perf_path, "logfile")
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     eff_pd_l = []
     for planar in planar_list:
-        eff_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}-zstd.feather" ))
+        eff_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}"+tpc_string+"-zstd.feather" ))
         eff_pd = eff_pd[(eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7)]
         eff_pd_l.append(eff_pd)
     eff_pd = pd.concat(eff_pd_l)
@@ -705,8 +709,8 @@ def extract_eff_and_res(run, data_folder, planar_list):
     trk_pd_l = {}
     cl_pd_l = {}
     for planar in planar_list:
-        trk_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}.gzip" ), compression="gzip")
-        cl_pd_l[planar] = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}-zstd.feather" ))
+        trk_pd_l[planar] = pd.read_pickle(os.path.join(data_folder,"perf_out", f"{run}", f"tracks_pd_{planar}"+tpc_string+".gzip" ), compression="gzip")
+        cl_pd_l[planar] = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"match_cl_{planar}"+tpc_string+"-zstd.feather" ))
 
     res_calc = res_measure(cl_pd=cl_pd_l, tracks_pd=trk_pd_l, eff_pd=eff_pd, planar_list=planar_list)
     logger = perf.log_writer(elab_folder, 0, "resolution.txt")

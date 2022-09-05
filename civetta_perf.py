@@ -45,7 +45,7 @@ class runner:
             planar_list = [put,]
         else:
             planar_list=[0,1,2,3]
-        perfo.extract_eff_and_res(self.run_number, self.data_folder, planar_list)
+        perfo.extract_eff_and_res(self.run_number, self.data_folder, planar_list, self.tpc)
 
 ##############################################################################################
 ##																							##

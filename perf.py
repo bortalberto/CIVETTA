@@ -433,6 +433,10 @@ class log_writer():
 
 def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False, tpc=False):
     runs = run
+    if tpc:
+        tpc_string = "_tpc"
+    else:
+        tpc_string = ""
     #Create directories to store the outputs
     if not os.path.isdir(os.path.join(data_folder,"perf_out")):
         os.mkdir(os.path.join(data_folder,"perf_out"))
@@ -614,11 +618,11 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         if len(cl_list)>0:
             matching_clusters = pd.concat(cl_list)
             matching_clusters.reset_index(drop=True, inplace=True)
-            matching_clusters.to_feather(os.path.join(path_out_eff, f"match_cl_{put}-zstd.feather"), compression="zstd")
+            matching_clusters.to_feather(os.path.join(path_out_eff, f"match_cl_{put}"+tpc_string+"-zstd.feather"), compression="zstd")
 
         eff_pd = pd.concat([x[1] for x in return_list])
         eff_pd.reset_index(drop=True, inplace=True)
-        eff_pd.to_feather(os.path.join(path_out_eff, f"eff_pd_{put}-zstd.feather"), compression="zstd")
+        eff_pd.to_feather(os.path.join(path_out_eff, f"eff_pd_{put}"+tpc_string+"-zstd.feather"), compression="zstd")
         eff_pd_c = eff_pd
         eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process(x, correction), axis=1))
         k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
@@ -636,7 +640,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
         logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}\n")
         print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}\n")
-        tracks_pd.to_pickle(os.path.join(path_out_eff, f"tracks_pd_{put}.gzip"), compression="gzip")
+        tracks_pd.to_pickle(os.path.join(path_out_eff, f"tracks_pd_{put}"+tpc_string+".gzip"), compression="gzip")
         del eff_pd
         del tracks_pd
         del cl_pd_1D
