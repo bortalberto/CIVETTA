@@ -373,7 +373,7 @@ class tpc_prep:
                     hit_pd.loc[cluster_hits.index, "total_charge"] = cluster_hits.charge_SH.sum()
                     hit_pd.loc[cluster_hits.index, "cl_size"] = cluster_hits.charge_SH.shape[0]
                     hit_pd.loc[cluster_hits.index, "residual_tpc_sum"] = np.sum(cluster_hits.pos_g.values - cluster_hits.strip_x.values * pitch * fit[0] - fit[1])
-                    cluster_pd.loc[cl_index, "pos_tpc"] = (2.5 - fit[1]) / fit[0]
+                    cluster_pd.loc[cl_index, "pos_tpc"] = ((2.5 - fit[1]) / fit[0])/0.650
                     #         hit_pd.loc[]
 
                     ## Tagliando i bordi
@@ -423,8 +423,8 @@ class tpc_prep:
             with Pool(processes=cpus) as pool:
                 with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
                     for i, x in enumerate(pool.imap_unordered(self.calc_tpc_pos_subrun, sub_list)):
-                        return_list_cl.append(x[0])
-                        return_list_hits.append(x[1])
+                        return_list_cl.append(x[1])
+                        return_list_hits.append(x[0])
                         pbar.update()
 
         cluster_pd_micro = pd.concat(return_list_cl)
@@ -432,6 +432,56 @@ class tpc_prep:
 
         cluster_pd_micro.reset_index(inplace=True, drop=True)
         hit_pd_micro.reset_index(inplace=True, drop=True)
-        print (cluster_pd_micro.dtypes)
+        # print (cluster_pd_micro.dtypes)
         cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
         hit_pd_micro.to_feather(os.path.join(self.tpc_dir, f"hit_pd_TPC-zstd.feather"), compression='zstd')
+        pd_2d_return_list=[]
+        if not self.silent:
+            print ("Clusters 2-D")
+        if len(sub_list) > 0:
+            with Pool(processes=self.cpu_to_use) as pool:
+                with tqdm(total=len(sub_list), disable=self.silent) as pbar_2:
+                    for i, x in enumerate(pool.imap_unordered(self.build_2D_clusters, return_list_cl)):
+                        pd_2d_return_list.append(x)
+                        pbar_2.update()
+        cluster_pd_2D = pd.concat(pd_2d_return_list)
+        cluster_pd_2D.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_2D_TPC-zstd.feather"), compression='zstd')
+
+    def build_2D_clusters(self, cluster_pd):
+        dict_4_pd = {
+            "run"        : [],
+            "subrun"     : [],
+            "count"      : [],
+            "planar"     : [],
+            "cl_pos_x"   : [],
+            "cl_pos_x_tpc": [],
+            "cl_pos_y"   : [],
+            "cl_charge"  : [],
+            "cl_charge_x": [],
+            "cl_charge_y": [],
+            "cl_size_x"  : [],
+            "cl_size_y"  : [],
+            "cl_size_tot": []
+        }
+        events_pd_clusters = cluster_pd.groupby(["count", "planar"])
+        for key in events_pd_clusters.groups:
+            event_pd_cl = events_pd_clusters.get_group(key)
+            cls_x = event_pd_cl[event_pd_cl.cl_pos_x.notna()]
+            cls_y = event_pd_cl[event_pd_cl.cl_pos_y.notna()]
+            if (cls_x.shape[0] > 0) and (cls_y.shape[0] > 0):
+                cl_x = event_pd_cl.loc[cls_x.cl_charge.idxmax(axis=0)]
+                cl_y = event_pd_cl.loc[cls_y.cl_charge.idxmax(axis=0)]
+                dict_4_pd["run"].append(self.run_number)
+                dict_4_pd["subrun"].append(cl_x.subrun)
+                dict_4_pd["count"].append(key[0])
+                dict_4_pd["planar"].append(key[1])
+                dict_4_pd["cl_pos_x"].append(cl_x.cl_pos_x)
+                dict_4_pd["cl_pos_x_tpc"].append(cl_x.cl_pos_x/0.650)
+                dict_4_pd["cl_pos_y"].append(cl_y.cl_pos_y)
+                dict_4_pd["cl_charge"].append(cl_x.cl_charge + cl_y.cl_charge)
+                dict_4_pd["cl_charge_x"].append(cl_x.cl_charge)
+                dict_4_pd["cl_charge_y"].append(cl_y.cl_charge)
+                dict_4_pd["cl_size_x"].append(cl_x.cl_size)
+                dict_4_pd["cl_size_y"].append(cl_y.cl_size)
+                dict_4_pd["cl_size_tot"].append(cl_x.cl_size + cl_y.cl_size)
+        return (pd.DataFrame(dict_4_pd))

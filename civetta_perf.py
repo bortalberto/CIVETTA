@@ -18,7 +18,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_squared=False, multi_tracks_suppresion=False, hit_efficiency=False):
+    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, sigmas_trackers=1, sigmas_DUT=5, chi_squared=False, multi_tracks_suppresion=False, hit_efficiency=False, tpc=False):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
@@ -28,12 +28,14 @@ class runner:
         self.chi_squared = chi_squared
         self.multi_tracks_suppresion=multi_tracks_suppresion
         self.hit_efficiency = hit_efficiency
+        self.tpc = tpc
 
     def eval_perf(self,put):
         print (f"Sigmas trackers: {self.sigmas_trackers}, sigmas DUT: {self.sigmas_DUT}")
 
         perf.calculte_eff(self.run_number, self.data_folder, put, self.cpu_to_use,
-                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.chi_squared, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency)
+                        nsigma_put=self.sigmas_DUT, nsigma_trackers=self.sigmas_trackers, chi_sq_trackers=self.chi_squared, multi_tracks_suppresion=self.multi_tracks_suppresion, hit_efficiency=self.hit_efficiency,
+                          tpc=self.tpc)
 
     def save_events(self, put, nevents):
         perfo.save_evt_display(self.run_number, self.data_folder, put, nevents)
@@ -115,6 +117,9 @@ def main(run, **kwargs):
         op_list.append("save_events")
     if args.save_eff:
         op_list.append("save_eff")
+    if args.tpc:
+        options["tpc"] = True
+
 
     if len (op_list)>0:
         main_runner = runner(data_folder, run, **options)
@@ -147,6 +152,8 @@ if __name__=="__main__":
     parser.add_argument('-perf','--performance', help='Performance evaluation ', action="store_true")
     parser.add_argument('-mt','--multi_tracks_suppresion', help='Activate suppression of multi tracks events',action="store_true")
     parser.add_argument('-ht','--hit_efficiency', help='Calculate efficiency with hits',action="store_true")
+    parser.add_argument('-tpc','--tpc', help='Use TPC position for X view',action="store_true")
+
 
     ## Options about saving the output
     parser.add_argument('-Se','--save_events', help='Save the html file of some events, specify the planar and the number of events',type=int, nargs=2)
