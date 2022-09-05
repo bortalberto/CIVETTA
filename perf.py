@@ -11,7 +11,7 @@ import  sys
 import configparser
 import root_fit_lib as r_fit
 
-def get_run_data(runs, dtype="h", data_folder=""):
+def get_run_data(runs, dtype="h", data_folder="", tpc=False):
     """
     Generic functions to load data
     :param runs:
@@ -33,17 +33,24 @@ def get_run_data(runs, dtype="h", data_folder=""):
         filename="cluster_pd_2D"
 
     data_list=[]
-    for run in runs:
-        data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/{filename}-zstd.feather"))
+    if tpc:
+        for run in runs:
+            data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/tpc/{filename}_TPC-zstd.feather"))
+    else:
+        for run in runs:
+            data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/tpc/{filename}-zstd.feather"))
 
     return pd.concat(data_list)
 
-def load_cluster_2D_align(runs, data_folder):
+def load_cluster_2D_align(runs, data_folder, tpc):
     #Load cluster data
-    cl_pd_2D=get_run_data([runs],'2D', data_folder)
+    cl_pd_2D=get_run_data([runs],'2D', data_folder, tpc)
 #     cl_pd_2D=cl_pd_2D[0:100000]
     #Calculate standard position
-    cl_pd_2D["cl_pos_x_cm"] = cl_pd_2D.cl_pos_x * 0.0650
+    if tpc:
+        cl_pd_2D["cl_pos_x_cm"] = cl_pd_2D.cl_pos_x_tpc * 0.0650
+    else:
+        cl_pd_2D["cl_pos_x_cm"] = cl_pd_2D.cl_pos_x * 0.0650
     cl_pd_2D["cl_pos_y_cm"] = cl_pd_2D.cl_pos_y * 0.0650
     cl_pd_2D["cl_pos_z_cm"] = cl_pd_2D.planar * 10
     #Drop old position to save memory
@@ -436,7 +443,7 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         os.mkdir(os.path.join(path_out_eff,"res_fit"))
     logger=log_writer(path_out_eff, run)
     # Caricamento dei cluster 2D per i tracciatori
-    cl_pd_2D_ori = load_cluster_2D_align(runs, data_folder)
+    cl_pd_2D_ori = load_cluster_2D_align(runs, data_folder, tpc)
     #Carica la correzione più vicina al run (minore del run)
     correction = load_nearest_correction(os.path.join(data_folder,"alignment"), runs, logger)
     # Applica la correzione dell'allineamento al cluster 2D
@@ -454,6 +461,8 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         # Seleziona gli eventi con 4 cluster
         if multi_tracks_suppresion:
             cl_pd_2D = cl_pd_2D.groupby(["subrun", "count", "planar"]).filter(lambda x: x.shape[0]==1)  # Filtering away events with more than 1 cluster per view
+        if tpc:
+            cl_pd_2D["cl_pos_x"] = cl_pd_2D["cl_pos_x_tpc"]
         cl_pd_2D_res = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: set(x["planar"]) == {0, 1, 2, 3})
 
         # Seleziona gli eventi che hanno i 3 tracciatori
@@ -533,10 +542,13 @@ def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracker
         logger.write_log(f"Measuring efficiency on {tracks_pd_c.shape[0]} tracks")
 
         # Carico i cluster 1D per misurare l'efficienza
-        cl_pd_1D = get_run_data([runs], '1D', data_folder)
+        cl_pd_1D = get_run_data([runs], '1D', data_folder, tpc)
         # cl_pd_1D=cl_pd_1D[cl_pd_1D.planar==put]
         ## Carico la posizione in cm non allineata
-        cl_pd_1D["cl_pos_x_cm"] = cl_pd_1D.cl_pos_x * 0.0650
+        if tpc:
+            cl_pd_1D["cl_pos_x_cm"] = cl_pd_1D.pos_tpc * 0.0650
+        else:
+            cl_pd_1D["cl_pos_x_cm"] = cl_pd_1D.cl_pos_x * 0.0650
         cl_pd_1D["cl_pos_y_cm"] = cl_pd_1D.cl_pos_y * 0.0650
         cl_pd_1D["cl_pos_z_cm"] = cl_pd_1D.planar * 10
         tracks_pd_c_sub = tracks_pd_c.groupby(["subrun"])
