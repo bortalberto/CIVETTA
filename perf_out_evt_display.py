@@ -683,7 +683,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     Calculate efficiency end resolution
     """
     if tpc:
-        tpc_string = "_tpc"
+        tpc_string = "_TPC"
     else:
         tpc_string = ""
     perf_path = os.path.join(data_folder, "perf_out", f"{run}")

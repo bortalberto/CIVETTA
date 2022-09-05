@@ -431,10 +431,10 @@ class log_writer():
         with open(os.path.join(str(self.path), self.log_name), "a") as logfile:
             logfile.write(text+"\n")
 
-def calculte_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False, tpc=False):
+def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False, tpc=False):
     runs = run
     if tpc:
-        tpc_string = "_tpc"
+        tpc_string = "_TPC"
     else:
         tpc_string = ""
     #Create directories to store the outputs
