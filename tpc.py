@@ -436,13 +436,16 @@ class tpc_prep:
         # print (cluster_pd_micro.dtypes)
         cluster_pd_micro.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_1D_TPC_pos-zstd.feather"), compression='zstd')
         hit_pd_micro.to_feather(os.path.join(self.tpc_dir, f"hit_pd_TPC-zstd.feather"), compression='zstd')
-        pd_2d_return_list=[]
+        pd_2d_return_list = []
+        sub_data = cluster_pd_micro.groupby(["subrun"])
+        for key in sub_data.groups:
+            sub_list.append(sub_data.get_group(key))
         if not self.silent:
             print ("Clusters 2-D")
         if len(sub_list) > 0:
             with Pool(processes=self.cpu_to_use) as pool:
                 with tqdm(total=len(sub_list), disable=self.silent) as pbar_2:
-                    for i, x in enumerate(pool.imap_unordered(self.build_2D_clusters, return_list_cl)):
+                    for i, x in enumerate(pool.imap_unordered(self.build_2D_clusters, sub_list)):
                         pd_2d_return_list.append(x)
                         pbar_2.update()
         print ("Concatenating")
