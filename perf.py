@@ -107,7 +107,8 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     x = x.sort_values("planar")
     if tracking_fit:
         x = x[x.planar != put]
-
+    print (x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna())
+    print (x[x.planar != put]["cl_pos_x_cm"].dropna())
     fit_x, cov = np.polyfit(x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_x_cm"].dropna(), 1,cov=True)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
@@ -471,8 +472,6 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
 
         # Seleziona gli eventi che hanno i 3 tracciatori
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
-        print (cl_pd_2D_tracking.shape)
-        print (cl_pd_2D_tracking[0:1])
 
         # Fit them to extract the put sigma and mean
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True, cpus=cpu_to_use)
