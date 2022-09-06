@@ -484,7 +484,7 @@ class tpc_prep:
                 dict_4_pd["count"].append(key[0])
                 dict_4_pd["planar"].append(key[1])
                 dict_4_pd["cl_pos_x"].append(cl_x.cl_pos_x)
-                dict_4_pd["cl_pos_x_tpc"].append(cl_x.pos_tpc/0.650)
+                dict_4_pd["cl_pos_x_tpc"].append(cl_x.pos_tpc)
                 dict_4_pd["cl_pos_y"].append(cl_y.cl_pos_y)
                 dict_4_pd["cl_charge"].append(cl_x.cl_charge + cl_y.cl_charge)
                 dict_4_pd["cl_charge_x"].append(cl_x.cl_charge)
