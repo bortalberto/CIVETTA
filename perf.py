@@ -508,7 +508,7 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
             if any([R < 0.9 for R in R_list]):
                 logger.write_log(
                     f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
-                raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
+                # raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
         if chi_sq_trackers:
             tracks_pd_c["chi_sqrt"] = tracks_pd_c.apply(lambda x: calc_chi_sqrt(x, res_sigma_dict), 1)
             tracks_pd_c = tracks_pd_c[tracks_pd_c["chi_sqrt"]< nsigma_trck ]
@@ -530,7 +530,7 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
         print (R_list[put])
         if R_list[put] < 0.9:
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
-            raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
+            # raise Warning(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
 
 
         view = "y"
@@ -542,7 +542,7 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
 
         if R_list[put] < 0.9:
             logger.write_log(f"One R2 in PUT fit is less than 0.9,  verify the fits on view {view}, put {put}")
-            raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
+            # raise Warning(f"One R2 in PUT fit is less than 0.9, verify the fits on view {view}, put {put}")
 
         logger.write_log(f"Pl{put}, sigma_x{put_sigma_x}, sigma_y{put_sigma_y}")
 
