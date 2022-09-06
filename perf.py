@@ -49,6 +49,7 @@ def load_cluster_2D_align(runs, data_folder, tpc):
     #Calculate standard position
     if tpc:
         cl_pd_2D["cl_pos_x_cm"] = cl_pd_2D.cl_pos_x_tpc * 0.0650
+        cl_pd_2D.loc[~cl_pd_2D.cl_pos_x_tpc.notna(), "cl_pos_x_tpc"] = cl_pd_2D[~cl_pd_2D.cl_pos_x_tpc.notna()].cl_pos_x ## if there is no TPC position stored use cc position
     else:
         cl_pd_2D["cl_pos_x_cm"] = cl_pd_2D.cl_pos_x * 0.0650
     cl_pd_2D["cl_pos_y_cm"] = cl_pd_2D.cl_pos_y * 0.0650
@@ -107,9 +108,9 @@ def fit_tracks_process_row(x, put="None", tracking_fit=False):
     x = x.sort_values("planar")
     if tracking_fit:
         x = x[x.planar != put]
-    print (x["count"])
-    print (x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna())
-    print (x[x.planar != put]["cl_pos_x_cm"].dropna())
+    # print (x["count"])
+    # print (x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna())
+    # print (x[x.planar != put]["cl_pos_x_cm"].dropna())
     fit_x, cov = np.polyfit(x[(x.planar != put) & (x.cl_pos_x_cm.notna())]["cl_pos_z_cm"].dropna(), x[x.planar != put]["cl_pos_x_cm"].dropna(), 1,cov=True)
     pos_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values
     res_x = fit_x[1] + fit_x[0] * x["cl_pos_z_cm"].values - x["cl_pos_x_cm"].values
