@@ -97,9 +97,9 @@ class fit_tracks_process_pd(object):
     def __call__(self, cl_pd):
         cl_pd = cl_pd.reset_index()
         if self.put == "None":
-            tracks_pd = cl_pd.groupby(["count"])[["run", "subrun", "cl_pos_x_cm", "cl_pos_y_cm", "cl_pos_z_cm", "planar"]].apply(fit_tracks_process_row)
+            tracks_pd = cl_pd.groupby(["count"])[["count","run", "subrun", "cl_pos_x_cm", "cl_pos_y_cm", "cl_pos_z_cm", "planar"]].apply(fit_tracks_process_row)
         else:
-            tracks_pd = cl_pd.groupby(["count"])[["run", "subrun", "cl_pos_x_cm", "cl_pos_y_cm", "cl_pos_z_cm", "planar"]].apply(lambda x: fit_tracks_process_row(x, self.put, self.tracking_fit))
+            tracks_pd = cl_pd.groupby(["count"])[["count","run", "subrun", "cl_pos_x_cm", "cl_pos_y_cm", "cl_pos_z_cm", "planar"]].apply(lambda x: fit_tracks_process_row(x, self.put, self.tracking_fit))
         return tracks_pd
 
 
