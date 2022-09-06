@@ -471,6 +471,7 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
 
         # Seleziona gli eventi che hanno i 3 tracciatori
         cl_pd_2D_tracking = cl_pd_2D.groupby(["subrun", "count"]).filter(lambda x: all([i in set(x["planar"]) for i in trackers_list]))
+        print (cl_pd_2D_tracking.shape)
         # Fit them to extract the put sigma and mean
         tracks_pd = fit_tracks_manager(cl_pd_2D_tracking, put, True, cpus=cpu_to_use)
         del cl_pd_2D_tracking
