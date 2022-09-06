@@ -452,6 +452,7 @@ class tpc_prep:
         print ("Concatenating")
         cluster_pd_2D = pd.concat(pd_2d_return_list)
         print ("Saving")
+        cluster_pd_2D.reset_index(inplace=True, drop=True)
         cluster_pd_2D.to_feather(os.path.join(self.tpc_dir, f"cluster_pd_2D_TPC-zstd.feather"), compression='zstd')
 
     def build_2D_clusters(self, cluster_pd):
