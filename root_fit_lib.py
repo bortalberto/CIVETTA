@@ -263,15 +263,28 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
 
 def estimate_sigma_def(data):
     std = np.std(data)
-    print (std)
+    print (f"std {std}")
+    print (f"data:  ({len(data)})")
     z_scores = zscore(data)
     std = np.std(data[np.abs(z_scores) < 2])
-    print (std)
     data=data[np.abs(z_scores) < 2]
+    print (f"std {std}")
+    print (f"data:  ({len(data)})")
     z_scores = zscore(data)
     std = np.std(data[np.abs(z_scores) < 2])
-    print (std)
     data=data[np.abs(z_scores) < 2]
+    print (f"std {std}")
+    print (f"data:  ({len(data)})")
+    z_scores = zscore(data)
+    std = np.std(data[np.abs(z_scores) < 2])
+    data=data[np.abs(z_scores) < 2]
+    print (f"std {std}")
+    print (f"data:  ({len(data)})")
+    z_scores = zscore(data)
+    std = np.std(data[np.abs(z_scores) < 2])
+    data=data[np.abs(z_scores) < 2]
+    print (f"std {std}")
+    print (f"data:  ({len(data)})")
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data, std*2)
     # f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*2)
     # f.savefig("/media/disk2T/VM_work_zone/data/perf_out/566/res_fit/prova.png")
