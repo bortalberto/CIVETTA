@@ -266,23 +266,23 @@ def estimate_sigma_def(data):
     print (f"std {std}")
     print (f"data:  ({len(data)})")
     z_scores = zscore(data)
-    std = np.std(data[np.abs(z_scores) < 2])
-    data=data[np.abs(z_scores) < 2]
+    std = np.std(data[np.abs(z_scores) < 1])
+    data=data[np.abs(z_scores) < 1]
     print (f"std {std}")
     print (f"data:  ({len(data)})")
     z_scores = zscore(data)
-    std = np.std(data[np.abs(z_scores) < 2])
-    data=data[np.abs(z_scores) < 2]
+    std = np.std(data[np.abs(z_scores) < 1])
+    data=data[np.abs(z_scores) < 1]
     print (f"std {std}")
     print (f"data:  ({len(data)})")
     z_scores = zscore(data)
-    std = np.std(data[np.abs(z_scores) < 2])
-    data=data[np.abs(z_scores) < 2]
+    std = np.std(data[np.abs(z_scores) < 1])
+    data=data[np.abs(z_scores) < 1]
     print (f"std {std}")
     print (f"data:  ({len(data)})")
     z_scores = zscore(data)
-    std = np.std(data[np.abs(z_scores) < 2])
-    data=data[np.abs(z_scores) < 2]
+    std = np.std(data[np.abs(z_scores) < 1])
+    data=data[np.abs(z_scores) < 1]
     print (f"std {std}")
     print (f"data:  ({len(data)})")
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data, std*2)
