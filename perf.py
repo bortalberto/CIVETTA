@@ -38,7 +38,7 @@ def get_run_data(runs, dtype="h", data_folder="", tpc=False):
             data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/tpc/{filename}_TPC-zstd.feather"))
     else:
         for run in runs:
-            data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/tpc/{filename}-zstd.feather"))
+            data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}{filename}-zstd.feather"))
 
     return pd.concat(data_list)
 
@@ -436,7 +436,6 @@ class log_writer():
 
 def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False, tpc=False):
     runs = run
-    print (tpc)
     if tpc:
         tpc_string = "_TPC"
     else:
