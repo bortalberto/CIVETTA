@@ -120,6 +120,9 @@ def main(run, **kwargs):
         op_list.append("save_eff")
     if args.tpc:
         options["tpc"] = True
+    else:
+        options["tpc"] = False
+
 
 
     if len (op_list)>0:
