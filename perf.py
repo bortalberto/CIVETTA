@@ -38,7 +38,7 @@ def get_run_data(runs, dtype="h", data_folder="", tpc=False):
             data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/tpc/{filename}_TPC-zstd.feather"))
     else:
         for run in runs:
-            data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}{filename}-zstd.feather"))
+            data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/{filename}-zstd.feather"))
 
     return pd.concat(data_list)
 
