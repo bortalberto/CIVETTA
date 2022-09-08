@@ -436,6 +436,7 @@ class log_writer():
 
 def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_trackers=1, chi_sq_trackers=0, multi_tracks_suppresion=False, hit_efficiency=False, tpc=False):
     runs = run
+    print (tpc)
     if tpc:
         tpc_string = "_TPC"
     else:
