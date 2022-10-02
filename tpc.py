@@ -88,10 +88,13 @@ class tpc_prep:
     Class to run before TPC
     """
 
-    def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80, silent=False):
+    def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80, silent=False,
+                 errors= True, first_last_shift=0.5, capacitive=True, drift_velocity=0, time_walk_corr=True,
+                 border_correction=True, prev_strip_charge_correction=True):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
+
         self.cylinder = cylinder
         self.signal_width = signal_width
         self.tpc_dir = os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"tpc")
@@ -99,9 +102,17 @@ class tpc_prep:
             os.mkdir(self.tpc_dir)
         self.cut = 0.15
         self.silent = silent
+        self.errors = errors
+        self.first_last_shift = first_last_shift
+        self.capacitive = capacitive
+        self.drift_velocity = drift_velocity
+        self.time_walk_corr = time_walk_corr
+        self.border_correction = border_correction
+        self.prev_strip_charge_correction = prev_strip_charge_correction
+
     def thr_tmw(self,row):
         """
-        Extract the nearest calibration value to the the thr_eff
+        Extract the nearest calibration value to the thr_eff
         """
         thr_poss = np.array([0.5, 1, 2, 3])
         return thr_poss[np.argmin(abs(row - thr_poss))]
@@ -313,13 +324,7 @@ class tpc_prep:
         hit_pd["pos_g"] = np.nan
         hit_pd["dropped"] = "Not"
 
-        count_list = []
-        pos_utpc_list = []
-        pos_utpc_no_cor_list = []
-        prev_pos_list = []
-        pos_cc_list = []
-        fit0_list = []
-        fit1_list = []
+
         pitch = 0.650
         sx_coeff = (pitch / math.sqrt(12)) ** 2
         subrun = hit_pd.subRunNo.values[0]
@@ -332,39 +337,51 @@ class tpc_prep:
             for cl_index, cluster in clusters.iterrows():
 
                 ref_time = self.ref_time_list[cluster.planar]
-                vel = self.vel_list[cluster.planar]
+                if self.drift_velocity == 0: ## Option to select the speed origin
+                    vel = self.vel_list[cluster.planar]
+                else:
+                    vel = self.drift_velocity
 
                 cluster_hits = events_hits[events_hits.hit_id.isin(cluster.hit_ids)]
-
-                hit_pd.loc[cluster_hits.index, "pos_g"] = (cluster_hits.hit_time - ref_time) * vel
-
-                cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
+                if self.time_walk_corr: ## time walk correction option
+                    cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
+                else:
+                    cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
                 cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
                 cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
                 cluster_hits["error_from_diff"] = 0
 
                 ## Capacitive corrections
-                if cluster_hits.shape[0] > 3:
-                    cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
+                if self.capacitive: ## Capacitive correction option
+                    if cluster_hits.shape[0] > 3:
+                        cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
                 avg_charge = cluster_hits.charge_SH.sum() / cluster_hits.charge_SH.shape[0]
                 if cluster_hits.shape[0] > 1:
                     cluster_hits.loc[cluster_hits.index, "previous_strip_charge"] = cluster_hits.charge_SH.shift()
                     cluster_hits["charge_ratio_p"] = cluster_hits["charge_SH"] / cluster_hits["previous_strip_charge"]
-                    cluster_hits.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
+                    if self.prev_strip_charge_correction:
+                        cluster_hits.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
 
+                    if self.errors:
+                        error_x = np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH))
+                        error_y = cluster_hits.error_from_t.values
+                    else:
+                        error_x = cluster_hits.error_from_t.values*0 + 1
+                        error_y = cluster_hits.error_from_t.values*0 + 1
                     pos_x_fit = np.float64(cluster_hits.strip_x.values) * pitch
-                    pos_x_fit[0] = pos_x_fit[0] + 0.5
-                    pos_x_fit[-1] = pos_x_fit[-1] - 0.5
+                    pos_x_fit[0] = pos_x_fit[0] + self.first_last_shift
+                    pos_x_fit[-1] = pos_x_fit[-1] - self.first_last_shift
+
                     data = RealData(pos_x_fit,
                                     np.float64(cluster_hits.pos_g.values),
-                                    sx=np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH)),
-                                    sy=cluster_hits.error_from_t.values)
+                                    sx = error_x,
+                                    sy = error_y)
 
                     odr = ODR(data, fit_model, beta0=[0.5, -20])
                     out = odr.run()
                     fit = out.beta
 
-
+                    hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
                     hit_pd.loc[cluster_hits.index, "residual_tpc"] = cluster_hits.pos_g - cluster_hits.strip_x * pitch * fit[0] - fit[1]
                     hit_pd.loc[cluster_hits.index, "strip_min"] = cluster_hits.strip_x.values[0]
                     hit_pd.loc[cluster_hits.index, "strip_max"] = cluster_hits.strip_x.values[-1]

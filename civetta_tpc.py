@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import planar_analysis_lib as pl_lib
 from multiprocessing import Pool,cpu_count
 import glob2
 import os
@@ -20,6 +19,7 @@ class runner:
         self.run_number = run
         self.cylinder = cylinder
         self.silent = Silent
+        self.tpc_opt = []
 
 
     def calc_and_save_thr_eff(self):
@@ -31,7 +31,7 @@ class runner:
         tpc_prep.apply_time_walk_corr_run()
 
     def tpc_position_clusters(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, silent=self.silent)
+        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, silent=self.silent, **self.tpc_opt)
         tpc_prep.calc_tpc_pos(cpus=34)
 
 ##############################################################################################
@@ -104,6 +104,8 @@ def main(run, **kwargs):
         main_runner.calc_time_and_time_walk()
     if "tpc_position_clusters" in (op_list):
         main_runner.tpc_position_clusters()
+    # main_runner.tpc_opt = args.__dict__
+    print (args.__dict__)
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="CIVETTA perf: Tools to measure the performances of TIGER data",)
@@ -116,6 +118,13 @@ if __name__=="__main__":
     parser.add_argument('-thr', '--thr_eff', help='Calculate and save effective thr ', action="store_true")
     parser.add_argument('-tw', '--time_walk', help='Correct time walk ', action="store_true")
     parser.add_argument('-tpc_pos', '--tpc_position_clusters', help='Calculate TPC position on all clusters ', action="store_true")
+    parser.add_argument('-errors', help="Use errors or not in TPC", action="store_true")
+    parser.add_argument('first_last_shift', help = "Shifts first and last strip toward the center", action="store_true")
+    parser.add_argument('capacitive', help="Use capacitive corrections", action = "store_true")
+    parser.add_argument('-drift_velocity', help="Value to be used for drift velocity", type=float)
+    parser.add_argument('-time_walk_corr', help="Use time walk correction", action = "store_true")
+    parser.add_argument('-border_correction', help="Use border_correction correction", action = "store_true")
+    parser.add_argument('-prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
 
     args = parser.parse_args()
 

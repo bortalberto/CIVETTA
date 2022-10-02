@@ -4,33 +4,7 @@ from tqdm import tqdm
 import os
 import numpy as np
 from multiprocessing import Pool
-
-def get_run_data(runs, dtype="h", data_folder=""):
-    """
-    Generic functions to load data
-    :param runs:
-    :param dtype:
-    :param data_folder:
-    :return:
-    """
-    if dtype=="h":
-        filename="hit_data"
-    if dtype=="t":
-        filename="tracks_pd_1D"
-    if dtype=="ta":
-        filename="tracks_pd_1D_align"
-    if dtype=="s":
-        filename="sel_cluster_pd_1D"
-    if dtype=="1D":
-        filename="cluster_pd_1D"
-    if dtype=="2D":
-        filename="cluster_pd_2D"
-
-    data_list=[]
-    for run in runs:
-        data_list.append(pd.read_feather(f"{data_folder}/raw_root/{run}/{filename}-zstd.feather"))
-
-    return pd.concat(data_list)
+from perf import get_run_data
 
 class alignment_class():
     """
