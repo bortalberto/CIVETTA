@@ -551,7 +551,7 @@ class res_measure:
 
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
-            plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list)
+            plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list, itype="list")
 
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
 
@@ -732,8 +732,11 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
                                      f"{sol[-1]}")
 
 
-def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
-    data = cl_pd_res[f"res_{view}"]
+def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, itype="pd"):
+    if itype=="pd":
+        data = cl_pd_res[f"res_{view}"]
+    else:
+        data=cl_pd_res
     sigma_def = r_fit.estimate_sigma_def(data)
     data = data[abs(data) < sigma_def]
     # if data.shape[0] > 20000:
