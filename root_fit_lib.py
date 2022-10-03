@@ -222,7 +222,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     sigma_0 = estimate_sigma_def(data)
     data = data[abs(data) < sigma_0]
     nbins = 200
-    y, x = np.histogram(data, bins=nbins, range=[-sigma_0, sigma_0])
+    y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_0, np.mean(data)+sigma_0])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
     # y = np.insert(y, 0, 0)

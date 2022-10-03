@@ -743,7 +743,7 @@ def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, i
     # else:
     #     nbins = 200
     nbins=200
-    y, x = np.histogram(data, bins=nbins, range=[-sigma_def, sigma_def])
+    y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_def, np.mean(data)+sigma_def])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
     # y = np.insert(y, 0, 0)
