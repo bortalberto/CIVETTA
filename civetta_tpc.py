@@ -56,7 +56,7 @@ def main(run, **kwargs):
     config.read(os.path.join(sys.path[0], config_file))
     config_file="TPC_config.ini"
     config.read(os.path.join(sys.path[0], config_file))
-    print (config.items())
+    print (config.items("TPC"))
     try:
         data_folder=config["GLOBAL"].get("data_folder")
         if data_folder=="TER":
