@@ -56,7 +56,7 @@ def main(run, **kwargs):
     config.read(os.path.join(sys.path[0], config_file))
     config_file="TPC_config.ini"
     config.read(os.path.join(sys.path[0], config_file))
-    print (config.items("TPC"))
+    print({section: dict(config[section]) for section in config.sections()})
     try:
         data_folder=config["GLOBAL"].get("data_folder")
         if data_folder=="TER":
