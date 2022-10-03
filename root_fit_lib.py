@@ -117,8 +117,8 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
 
 def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
     nbins = 200
-    mean = np.mean(data)
-    data = {"res": data}
+    mean = np.mean(data.values.astype(np.float32))
+    data = {"res": data.values.astype(np.float32)}
     rdf = R.RDF.MakeNumpyDataFrame(data)
     amodel = R.RDF.TH1DModel("h1", "h1", nbins, mean - sigma_def, mean + sigma_def)
     h1 = rdf.Histo1D(amodel, "res")

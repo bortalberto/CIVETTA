@@ -548,11 +548,10 @@ class res_measure:
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
             count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
-            print (type(residual_list))
-            print(residual_list)
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
             popt_list.extend([0,0,0])
+            residual_list_plot=residual_list.rename(f"res_{view}")
             plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list, itype="list")
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
 
@@ -734,10 +733,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
 
 
 def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, itype="pd"):
-    if itype=="pd":
-        data = cl_pd_res[f"res_{view}"]
-    else:
-        data = cl_pd_res.values
+    data = cl_pd_res[f"res_{view}"]
     sigma_def = r_fit.estimate_sigma_def(data)
     # data = data[abs(data) < sigma_def]
     # if data.shape[0] > 20000:
