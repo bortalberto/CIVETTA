@@ -20,6 +20,13 @@ class runner:
         self.cylinder = cylinder
         self.silent = Silent
         self.tpc_opt = []
+        self.no_error = False
+        self.no_first_last_shift = False
+        self.no_capacitive = False
+        self.drift_velocity = 0
+        self.no_time_walk_corr = False
+        self.no_border_correction = False
+        self.no_prev_strip_charge_correction = False
 
 
     def calc_and_save_thr_eff(self):
@@ -49,7 +56,8 @@ def main(run, **kwargs):
 
     config=configparser.ConfigParser()
     config_file="config.ini"
-
+    config.read(os.path.join(sys.path[0], config_file))
+    config_file="TPC_config.ini"
     config.read(os.path.join(sys.path[0], config_file))
     try:
         data_folder=config["GLOBAL"].get("data_folder")
@@ -105,7 +113,33 @@ def main(run, **kwargs):
     if "tpc_position_clusters" in (op_list):
         main_runner.tpc_position_clusters()
     # main_runner.tpc_opt = args.__dict__
-    print (args.__dict__)
+
+    ### TPC options
+    # Default from ini
+    main_runner.no_errors = config["TPC"].get("no_errors")
+    main_runner.no_first_last_shift = config["TPC"].get("no_first_last_shift")
+    main_runner.no_capacitive = config["TPC"].get("no_capacitive")
+    main_runner.drift_velocity = config["TPC"].get("drift_velocity")
+    main_runner.no_time_walk_corr = config["TPC"].get("no_time_walk_corr")
+    main_runner.no_border_correction = config["TPC"].get("no_border_correction")
+    main_runner.no_prev_strip_charge_correction = config["TPC"].get("no_prev_strip_charge_correction")
+    # Changes from options
+    if args.no_errors:
+        main_runner.no_errors = args.no_errors
+    if args.no_first_last_shift:
+        main_runner.no_first_last_shift = args.no_first_last_shift
+    if args.no_capacitive:
+        main_runner.no_capacitive = args.no_capacitive
+    if args.drift_velocity:
+        main_runner.drift_velocity = args.drift_velocity
+    if args.no_time_walk_corr:
+        main_runner.no_time_walk_corr = args.no_time_walk_corr
+    if args.no_border_correction:
+        main_runner.no_border_correction = args.no_border_correction
+    if args.no_prev_strip_charge_correction:
+        main_runner.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
+
+
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="CIVETTA perf: Tools to measure the performances of TIGER data",)
@@ -118,13 +152,13 @@ if __name__=="__main__":
     parser.add_argument('-thr', '--thr_eff', help='Calculate and save effective thr ', action="store_true")
     parser.add_argument('-tw', '--time_walk', help='Correct time walk ', action="store_true")
     parser.add_argument('-tpc_pos', '--tpc_position_clusters', help='Calculate TPC position on all clusters ', action="store_true")
-    parser.add_argument('-errors', help="Use errors or not in TPC", action="store_true")
-    parser.add_argument('first_last_shift', help = "Shifts first and last strip toward the center", action="store_true")
-    parser.add_argument('capacitive', help="Use capacitive corrections", action = "store_true")
+    parser.add_argument('-no_errors', help="Use errors or not in TPC", action="store_true")
+    parser.add_argument('-no_first_last_shift', help = "Shifts first and last strip toward the center", action="store_true")
+    parser.add_argument('-no_capacitive', help="Use capacitive corrections", action = "store_true")
     parser.add_argument('-drift_velocity', help="Value to be used for drift velocity", type=float)
-    parser.add_argument('-time_walk_corr', help="Use time walk correction", action = "store_true")
-    parser.add_argument('-border_correction', help="Use border_correction correction", action = "store_true")
-    parser.add_argument('-prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
+    parser.add_argument('-no_time_walk_corr', help="Use time walk correction", action = "store_true")
+    parser.add_argument('-no_border_correction', help="Use border_correction correction", action = "store_true")
+    parser.add_argument('-no_prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
 
     args = parser.parse_args()
 
