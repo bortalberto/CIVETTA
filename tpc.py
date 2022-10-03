@@ -368,6 +368,7 @@ class tpc_prep:
                         error_x = np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH))
                         error_y = cluster_hits.error_from_t.values
                     else:
+                        print ("SBOBBAO")
                         error_x = cluster_hits.error_from_t.values*0 + 1
                         error_y = cluster_hits.error_from_t.values*0 + 1
                     pos_x_fit = np.float64(cluster_hits.strip_x.values) * pitch
