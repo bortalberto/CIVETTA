@@ -554,6 +554,7 @@ class res_measure:
             popt_list.extend([0,0,0])
             plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list, itype="list")
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
+
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
             chi_list.append(chi/deg_list)
@@ -737,7 +738,7 @@ def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, i
     else:
         data = cl_pd_res.values
     sigma_def = r_fit.estimate_sigma_def(data)
-    data = data[abs(data) < sigma_def]
+    # data = data[abs(data) < sigma_def]
     # if data.shape[0] > 20000:
     #     nbins = 1000
     # else:
