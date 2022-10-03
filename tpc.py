@@ -354,17 +354,17 @@ class tpc_prep:
                 cluster_hits["error_from_diff"] = 0
 
                 ## Capacitive corrections
-                if self.no_capacitive: ## Capacitive correction option
+                if ~self.no_capacitive: ## Capacitive correction option
                     if cluster_hits.shape[0] > 3:
                         cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
                 avg_charge = cluster_hits.charge_SH.sum() / cluster_hits.charge_SH.shape[0]
                 if cluster_hits.shape[0] > 1:
                     cluster_hits.loc[cluster_hits.index, "previous_strip_charge"] = cluster_hits.charge_SH.shift()
                     cluster_hits["charge_ratio_p"] = cluster_hits["charge_SH"] / cluster_hits["previous_strip_charge"]
-                    if self.no_prev_strip_charge_correction:
+                    if ~self.no_prev_strip_charge_correction:
                         cluster_hits.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
 
-                    if self.no_errors:
+                    if ~self.no_errors:
                         error_x = np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH))
                         error_y = cluster_hits.error_from_t.values
                     else:
