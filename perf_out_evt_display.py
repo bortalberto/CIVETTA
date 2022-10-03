@@ -550,7 +550,7 @@ class res_measure:
             count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
-            popt_list.extend([0,0,0])
+            popt_list.extend([0,1,1])
             residual_list_plot=pd.DataFrame(residual_list.rename(f"res_{view}"))
             plot = plot_residuals(residual_list_plot, view, popt_list, R_list, pls, chi, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
