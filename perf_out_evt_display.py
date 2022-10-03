@@ -684,7 +684,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
         for view in ("x","y"):
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
             errror_tracking = (res_calc.cl_pds[f"{planar}{view}"].error_tracking**(1/2)).mean()
-            plot = plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
+            plot = plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list.extend([0,0,0]), R_list, planar, chi_list, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
             logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um, "
                               f"error tracking: {errror_tracking * 10000:.2f} um" )
