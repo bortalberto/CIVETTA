@@ -552,7 +552,7 @@ class res_measure:
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
             popt_list.extend([0,0,0])
-            plot = plot_residuals(residual_list, view, popt_list.extend, R_list, pls, chi, deg_list, itype="list")
+            plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list, itype="list")
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
