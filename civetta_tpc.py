@@ -56,6 +56,7 @@ def main(run, **kwargs):
     config.read(os.path.join(sys.path[0], config_file))
     config_file="TPC_config.ini"
     config.read(os.path.join(sys.path[0], config_file))
+    print (config)
     try:
         data_folder=config["GLOBAL"].get("data_folder")
         if data_folder=="TER":
@@ -101,16 +102,6 @@ def main(run, **kwargs):
         main_runner = runner(data_folder, run, **options)
     else:
         sys.exit(0)
-
-    if "thr_eff" in (op_list):
-        main_runner.calc_and_save_thr_eff()
-
-    if "time_walk" in (op_list):
-        main_runner.calc_time_and_time_walk()
-    if "tpc_position_clusters" in (op_list):
-        main_runner.tpc_position_clusters()
-    # main_runner.tpc_opt = args.__dict__
-
     ### TPC options
     # Default from ini
     main_runner.no_errors = config["TPC"].get("no_errors")
@@ -135,6 +126,16 @@ def main(run, **kwargs):
         main_runner.tpc_prep.no_border_correction = args.no_border_correction
     if args.no_prev_strip_charge_correction:
         main_runner.tpc_prep.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
+    if "thr_eff" in (op_list):
+        main_runner.calc_and_save_thr_eff()
+
+    if "time_walk" in (op_list):
+        main_runner.calc_time_and_time_walk()
+    if "tpc_position_clusters" in (op_list):
+        main_runner.tpc_position_clusters()
+    # main_runner.tpc_opt = args.__dict__
+
+
 
 
 if __name__=="__main__":
