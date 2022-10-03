@@ -3,10 +3,8 @@ import pandas as pd
 import os
 import requests
 from scipy.optimize import curve_fit
-from multiprocessing import Pool,cpu_count
+from multiprocessing import Pool
 from tqdm import tqdm
-from itertools import chain
-import root_fit_lib
 import time
 from scipy import special
 import warnings
@@ -89,8 +87,8 @@ class tpc_prep:
     """
 
     def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80, silent=False,
-                 errors= True, first_last_shift=0.5, capacitive=True, drift_velocity=0, time_walk_corr=True,
-                 border_correction=True, prev_strip_charge_correction=True):
+                 no_errors= True, no_first_last_shift=0.5, no_capacitive=True, drift_velocity=0, no_time_walk_corr=True,
+                 no_border_correction=True, no_prev_strip_charge_correction=True):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
@@ -102,13 +100,13 @@ class tpc_prep:
             os.mkdir(self.tpc_dir)
         self.cut = 0.15
         self.silent = silent
-        self.errors = errors
-        self.first_last_shift = first_last_shift
-        self.capacitive = capacitive
+        self.no_errors = no_errors
+        self.no_first_last_shift = no_first_last_shift
+        self.no_capacitive = no_capacitive
         self.drift_velocity = drift_velocity
-        self.time_walk_corr = time_walk_corr
-        self.border_correction = border_correction
-        self.prev_strip_charge_correction = prev_strip_charge_correction
+        self.no_time_walk_corr = no_time_walk_corr
+        self.no_border_correction = no_border_correction
+        self.no_prev_strip_charge_correction = no_prev_strip_charge_correction
 
     def thr_tmw(self,row):
         """

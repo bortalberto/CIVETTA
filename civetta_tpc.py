@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-from multiprocessing import Pool,cpu_count
-import glob2
+from multiprocessing import cpu_count
 import os
-from tqdm import tqdm
 import configparser
 import sys
 import argparse
@@ -20,26 +18,25 @@ class runner:
         self.cylinder = cylinder
         self.silent = Silent
         self.tpc_opt = []
-        self.no_error = False
-        self.no_first_last_shift = False
-        self.no_capacitive = False
-        self.drift_velocity = 0
-        self.no_time_walk_corr = False
-        self.no_border_correction = False
-        self.no_prev_strip_charge_correction = False
+        self.tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, silent=self.silent)
+
+        self.tpc_prep.no_error = False
+        self.tpc_prep.no_first_last_shift = False
+        self.tpc_prep.no_capacitive = False
+        self.tpc_prep.drift_velocity = 0
+        self.tpc_prep.no_time_walk_corr = False
+        self.tpc_prep.no_border_correction = False
+        self.tpc_prep.no_prev_strip_charge_correction = False
 
 
     def calc_and_save_thr_eff(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, silent=self.silent)
-        tpc_prep.exctract_thr_eff()
+        self.tpc_prep.exctract_thr_eff()
 
     def calc_time_and_time_walk(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, silent=self.silent)
-        tpc_prep.apply_time_walk_corr_run()
+        self.tpc_prep.apply_time_walk_corr_run()
 
     def tpc_position_clusters(self):
-        tpc_prep = tpc_lib.tpc_prep(self.data_folder, self.cpu_to_use, self.run_number, self.cylinder, silent=self.silent, **self.tpc_opt)
-        tpc_prep.calc_tpc_pos(cpus=34)
+        self.tpc_prep.calc_tpc_pos(cpus=34)
 
 ##############################################################################################
 ##																							##
@@ -125,19 +122,19 @@ def main(run, **kwargs):
     main_runner.no_prev_strip_charge_correction = config["TPC"].get("no_prev_strip_charge_correction")
     # Changes from options
     if args.no_errors:
-        main_runner.no_errors = args.no_errors
+        main_runner.tpc_prep.no_errors = args.no_errors
     if args.no_first_last_shift:
-        main_runner.no_first_last_shift = args.no_first_last_shift
+        main_runner.tpc_prep.no_first_last_shift = args.no_first_last_shift
     if args.no_capacitive:
-        main_runner.no_capacitive = args.no_capacitive
+        main_runner.tpc_prep.no_capacitive = args.no_capacitive
     if args.drift_velocity:
-        main_runner.drift_velocity = args.drift_velocity
+        main_runner.tpc_prep.drift_velocity = args.drift_velocity
     if args.no_time_walk_corr:
-        main_runner.no_time_walk_corr = args.no_time_walk_corr
+        main_runner.tpc_prep.no_time_walk_corr = args.no_time_walk_corr
     if args.no_border_correction:
-        main_runner.no_border_correction = args.no_border_correction
+        main_runner.tpc_prep.no_border_correction = args.no_border_correction
     if args.no_prev_strip_charge_correction:
-        main_runner.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
+        main_runner.tpc_prep.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
 
 
 if __name__=="__main__":
