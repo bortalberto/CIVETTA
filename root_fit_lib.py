@@ -64,7 +64,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             # print (sigma_def)
             data = data[abs(data) < sigma_def]
             nbins=200
-            y, x = np.histogram(data, bins=nbins, range=[-sigma_def,sigma_def])
+            y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_def,np.mean(data)+sigma_def])
 
             x = (x[1:] + x[:-1]) / 2
             # x = np.insert(x,0,-0.2)
@@ -280,9 +280,9 @@ def estimate_sigma_def(data):
     data=data[np.abs(z_scores) < 1]
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
-    z_scores = zscore(data)
-    std = np.std(data[np.abs(z_scores) < 1])
-    data=data[np.abs(z_scores) < 1]
+    # z_scores = zscore(data)
+    # std = np.std(data[np.abs(z_scores) < 1])
+    # data=data[np.abs(z_scores) < 1]
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data, std*2)
