@@ -53,9 +53,12 @@ def main(run, **kwargs):
 
     config=configparser.ConfigParser()
     config_file="config.ini"
-    config_file_tpc="TPC_config.ini"
-    config.read([os.path.join(sys.path[0], config_file), os.path.join(sys.path[0], config_file_tpc)])
-    print({section: dict(config[section]) for section in config.sections()})
+    config.read(os.path.join(sys.path[0], config_file))
+    config_file="TPC_config.ini"
+    config_tpc=configparser.ConfigParser()
+
+    config_tpc.read(os.path.join(sys.path[0], config_file))
+    print({section: dict(config_tpc[section]) for section in config_tpc.sections()})
     try:
         data_folder=config["GLOBAL"].get("data_folder")
         if data_folder=="TER":
@@ -103,13 +106,13 @@ def main(run, **kwargs):
         sys.exit(0)
     ### TPC options
     # Default from ini
-    main_runner.no_errors = config["TPC"].get("no_errors")
-    main_runner.no_first_last_shift = config["TPC"].get("no_first_last_shift")
-    main_runner.no_capacitive = config["TPC"].get("no_capacitive")
-    main_runner.drift_velocity = config["TPC"].get("drift_velocity")
-    main_runner.no_time_walk_corr = config["TPC"].get("no_time_walk_corr")
-    main_runner.no_border_correction = config["TPC"].get("no_border_correction")
-    main_runner.no_prev_strip_charge_correction = config["TPC"].get("no_prev_strip_charge_correction")
+    main_runner.no_errors = config_tpc["TPC"].get("no_errors")
+    main_runner.no_first_last_shift = config_tpc["TPC"].get("no_first_last_shift")
+    main_runner.no_capacitive = config_tpc["TPC"].get("no_capacitive")
+    main_runner.drift_velocity = config_tpc["TPC"].get("drift_velocity")
+    main_runner.no_time_walk_corr = config_tpc["TPC"].get("no_time_walk_corr")
+    main_runner.no_border_correction = config_tpc["TPC"].get("no_border_correction")
+    main_runner.no_prev_strip_charge_correction = config_tpc["TPC"].get("no_prev_strip_charge_correction")
     # Changes from options
     if args.no_errors:
         main_runner.tpc_prep.no_errors = args.no_errors
