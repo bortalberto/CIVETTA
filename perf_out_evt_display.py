@@ -738,7 +738,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
 
         couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list)
         for couple, enemy_res in zip(couples, enemy_res_list):
-            logger.write_log(f"Couple: {couple}: {enemy_res} um")
+            logger.write_log(f"Couple: {couple}: {enemy_res*10000:.2f} um")
         if len (couples)>4:
             sol=sym.solve([(s0**2+s1**2+sb**2)**(1/2)-enemy_res_list[0],
            (s1**2+s2**2+sb**2)**(1/2)-enemy_res_list[1],
