@@ -521,46 +521,6 @@ class res_measure:
 
         return cl_pd_x, cl_pd_y
 
-    def plot_residuals(self, cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
-        data = cl_pd_res[f"res_{view}"]
-        sigma_def = r_fit.estimate_sigma_def(data)
-        data = data[abs(data) < sigma_def]
-        # if data.shape[0] > 20000:
-        #     nbins = 1000
-        # else:
-        #     nbins = 200
-        nbins=200
-        y, x = np.histogram(data, bins=nbins, range=[-sigma_def, sigma_def])
-        x = (x[1:] + x[:-1]) / 2
-        # x = np.insert(x, 0, -0.2)
-        # y = np.insert(y, 0, 0)
-        popt = popt_list
-        f, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(x, y, 'b*', label='data')
-        x = np.arange(np.min(x), np.max(x), 0.0002)
-        ax.plot(x, r_fit.gaus(x, *popt[0:3]), 'c-', label='fit 0')
-        ax.plot(x, r_fit.gaus(x, *popt[3:6]), 'g-', label='fit 1')
-        ax.plot(x, r_fit.doublegaus(x, *popt), 'r-', label='fit cumulative')
-        ax.grid()
-        # plt.legend()
-        # plt.title('Fig. 3 - Fit for Time Cons§tant')
-        ax.set_ylabel('#')
-        ax.set_xlabel('Residual [cm]')
-        # plt.ion()
-        # plt.show()
-        ax.set_title(f"Fit view {view}, planar{pl}")
-        ax.text(y=np.max(y) * 0.7, x=0 + popt[2],
-                s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
-                  f"\nNorm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
-                  f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
-                fontsize="small")
-        ax.set_xlim([np.min(x), np.max(x)])
-        #     if put==pl:
-        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
-        #     else:
-        #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
-
-        return f, ax
 
     def calc_res(self, planar, view):
         cl_pd = self.cl_pds[f"{planar}{view}"]
@@ -568,7 +528,7 @@ class res_measure:
             pd.DataFrame(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
         return popt_list[0], pcov_list[0], res_list[0], R_list[0], chi_list[0], deg_list[0]
 
-    def calc_enemy(self, view, planars):
+    def calc_enemy(self, view, planars, elab_folder):
         pd_list = []
         for key in self.cl_pds:
             pd_list.append(self.cl_pds[key])
@@ -582,6 +542,7 @@ class res_measure:
         count_list = []
         couples = [(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)]
         couples = [couple for couple in couples if np.all(np.isin(couple, planars))]
+
         for pls in tqdm(couples, desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
@@ -590,6 +551,10 @@ class res_measure:
 
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
+            plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list)
+
+            plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
+
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
             chi_list.append(chi/deg_list)
@@ -719,7 +684,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
         for view in ("x","y"):
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
             errror_tracking = (res_calc.cl_pds[f"{planar}{view}"].error_tracking**(1/2)).mean()
-            plot = res_calc.plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
+            plot = plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
             logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um, "
                               f"error tracking: {errror_tracking * 10000:.2f} um" )
@@ -736,7 +701,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     for view in ("x","y"):
         logger.write_log(f"\n--Enemy residual {view}--\n")
 
-        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list)
+        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list, elab_folder)
         for couple, enemy_res in zip(couples, enemy_res_list):
             logger.write_log(f"Couple: {couple}: {enemy_res*10000:.2f} um")
         if len (couples)>4:
@@ -767,3 +732,43 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
                                      f"{sol[-1]}")
 
 
+def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
+    data = cl_pd_res[f"res_{view}"]
+    sigma_def = r_fit.estimate_sigma_def(data)
+    data = data[abs(data) < sigma_def]
+    # if data.shape[0] > 20000:
+    #     nbins = 1000
+    # else:
+    #     nbins = 200
+    nbins=200
+    y, x = np.histogram(data, bins=nbins, range=[-sigma_def, sigma_def])
+    x = (x[1:] + x[:-1]) / 2
+    # x = np.insert(x, 0, -0.2)
+    # y = np.insert(y, 0, 0)
+    popt = popt_list
+    f, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(x, y, 'b*', label='data')
+    x = np.arange(np.min(x), np.max(x), 0.0002)
+    ax.plot(x, r_fit.gaus(x, *popt[0:3]), 'c-', label='fit 0')
+    ax.plot(x, r_fit.gaus(x, *popt[3:6]), 'g-', label='fit 1')
+    ax.plot(x, r_fit.doublegaus(x, *popt), 'r-', label='fit cumulative')
+    ax.grid()
+    # plt.legend()
+    # plt.title('Fig. 3 - Fit for Time Cons§tant')
+    ax.set_ylabel('#')
+    ax.set_xlabel('Residual [cm]')
+    # plt.ion()
+    # plt.show()
+    ax.set_title(f"Fit view {view}, planar{pl}")
+    ax.text(y=np.max(y) * 0.7, x=0 + popt[2],
+            s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
+              f"\nNorm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
+              f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
+            fontsize="small")
+    ax.set_xlim([np.min(x), np.max(x)])
+    #     if put==pl:
+    #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_DUT_pl{pl}_DUT_{put}{view}.png"))
+    #     else:
+    #         plt.savefig(os.path.join(os.path.join(path_out_eff, "res_fit"), f"fit_res_TRK_pl{pl}_DUT_{put}{view}.png"))
+
+    return f, ax
