@@ -735,7 +735,7 @@ def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list, i
     if itype=="pd":
         data = cl_pd_res[f"res_{view}"]
     else:
-        data=cl_pd_res
+        data = cl_pd_res.values
     sigma_def = r_fit.estimate_sigma_def(data)
     data = data[abs(data) < sigma_def]
     # if data.shape[0] > 20000:
