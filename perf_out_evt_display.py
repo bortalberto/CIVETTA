@@ -551,10 +551,8 @@ class res_measure:
 
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
-            plot = plot_residuals(residual_list, view, popt_list, R_list, pls, chi, deg_list, itype="list")
-
+            plot = plot_residuals(residual_list, view, popt_list.extend([0,0,0]), R_list, pls, chi, deg_list, itype="list")
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
-
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
             chi_list.append(chi/deg_list)
@@ -684,7 +682,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
         for view in ("x","y"):
             popt_list, pcov_list, res_list, R_list, chi_list, deg_list = res_calc.calc_res(planar, view)
             errror_tracking = (res_calc.cl_pds[f"{planar}{view}"].error_tracking**(1/2)).mean()
-            plot = plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list.extend([0,0,0]), R_list, planar, chi_list, deg_list)
+            plot = plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
             logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um, "
                               f"error tracking: {errror_tracking * 10000:.2f} um" )
