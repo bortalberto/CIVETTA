@@ -53,9 +53,8 @@ def main(run, **kwargs):
 
     config=configparser.ConfigParser()
     config_file="config.ini"
-    config.read(os.path.join(sys.path[0], config_file))
-    config_file="TPC_config.ini"
-    config.read(os.path.join(sys.path[0], config_file))
+    config_file_tpc="TPC_config.ini"
+    config.read([os.path.join(sys.path[0], config_file), os.path.join(sys.path[0], config_file_tpc)])
     print({section: dict(config[section]) for section in config.sections()})
     try:
         data_folder=config["GLOBAL"].get("data_folder")
