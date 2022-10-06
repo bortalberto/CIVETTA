@@ -329,7 +329,7 @@ class tpc_prep:
         # hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
         hit_pd["pos_g"] = np.nan
         hit_pd["dropped"] = "Not"
-
+        hit_pd["strip_x_c"]=np.Nan
 
         pitch = 0.650
         sx_coeff = (pitch / math.sqrt(12)) ** 2
