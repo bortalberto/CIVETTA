@@ -349,6 +349,7 @@ class tpc_prep:
                     print (cluster_hits.hit_time)
                     print (cluster_hits.hit_time_corr)
                     print (ref_time)
+                    print (vel)
 
                     cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
