@@ -349,7 +349,7 @@ class tpc_prep:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
-                cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
+                # cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
                 cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
                 cluster_hits["error_from_diff"] = 0
 
@@ -384,6 +384,8 @@ class tpc_prep:
                     fit = out.beta
 
                     hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
+                    hit_pd.loc[cluster_hits.index, "error_x"] = error_x
+                    hit_pd.loc[cluster_hits.index, "error_y"] = error_y
                     hit_pd.loc[cluster_hits.index, "residual_tpc"] = cluster_hits.pos_g - cluster_hits.strip_x * pitch * fit[0] - fit[1]
                     hit_pd.loc[cluster_hits.index, "strip_min"] = cluster_hits.strip_x.values[0]
                     hit_pd.loc[cluster_hits.index, "strip_max"] = cluster_hits.strip_x.values[-1]
@@ -512,3 +514,11 @@ class tpc_prep:
                 dict_4_pd["cl_size_y"].append(cl_y.cl_size)
                 dict_4_pd["cl_size_tot"].append(cl_x.cl_size + cl_y.cl_size)
         return (pd.DataFrame(dict_4_pd))
+
+# class out_plots_class:
+#     """
+#     Post analysis class to assert the scan performances
+#     """
+#     def __init__(self):
+#         self.events_pd_hit=
+#         self.eff_pd=
