@@ -346,11 +346,6 @@ class tpc_prep:
 
                 cluster_hits = events_hits[events_hits.hit_id.isin(cluster.hit_ids)]
                 if self.no_time_walk_corr: ## time walk correction option
-                    print (cluster_hits.hit_time)
-                    print (cluster_hits.hit_time_corr)
-                    print (ref_time)
-                    print (vel)
-
                     cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
