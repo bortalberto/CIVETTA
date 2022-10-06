@@ -395,6 +395,9 @@ class tpc_prep:
                     hit_pd.loc[cluster_hits.index, "cl_size"] = cluster_hits.charge_SH.shape[0]
                     hit_pd.loc[cluster_hits.index, "residual_tpc_sum"] = np.sum(cluster_hits.pos_g.values - cluster_hits.strip_x.values * pitch * fit[0] - fit[1])
                     cluster_pd.loc[cl_index, "pos_tpc"] = ((2.5 - fit[1]) / fit[0])/0.650
+                    cluster_pd.loc[cl_index, "F0"] = fit[1]
+                    cluster_pd.loc[cl_index, "F1"] = fit[0]
+
                     #         hit_pd.loc[]
 
                     ## Tagliando i bordi
