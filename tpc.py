@@ -355,6 +355,7 @@ class tpc_prep:
 
                 ## Capacitive corrections
                 if not self.no_capacitive: ## Capacitive correction option
+                    print ("CIAO, sono un bug")
                     if cluster_hits.shape[0] > 3:
                         cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
                 avg_charge = cluster_hits.charge_SH.sum() / cluster_hits.charge_SH.shape[0]
