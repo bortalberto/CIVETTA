@@ -365,7 +365,7 @@ class tpc_prep:
                     cluster_hits["charge_ratio_p"] = cluster_hits["charge_SH"] / cluster_hits["previous_strip_charge"]
                     if not self.no_prev_strip_charge_correction:
                         cluster_hits.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
-                        hit_pd.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
+                        hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
 
                     if not self.no_errors:
                         error_x = np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH))
