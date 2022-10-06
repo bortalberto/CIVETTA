@@ -380,6 +380,7 @@ class tpc_prep:
                     pos_x_fit = np.float64(cluster_hits.strip_x.values) * pitch
                     pos_x_fit[0] = pos_x_fit[0] + self.first_last_shift
                     pos_x_fit[-1] = pos_x_fit[-1] - self.first_last_shift
+                    hit_pd.loc[cluster_hits.index, "strip_x_c"][0] = pos_x_fit
 
                     data = RealData(pos_x_fit,
                                     np.float64(cluster_hits.pos_g.values),
