@@ -348,7 +348,7 @@ class tpc_prep:
                 if self.no_time_walk_corr: ## time walk correction option
                     print (cluster_hits.hit_time.dtype)
                     print (cluster_hits.hit_time_corr.dtype)
-                    print (cluster_hits.ref_time.dtype)
+                    print (ref_time)
 
                     cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
