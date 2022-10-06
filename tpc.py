@@ -346,7 +346,7 @@ class tpc_prep:
 
                 cluster_hits = events_hits[events_hits.hit_id.isin(cluster.hit_ids)]
                 if self.no_time_walk_corr: ## time walk correction option
-                    cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
+                    cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr.astype(float) - ref_time) * vel
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
                 # cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
