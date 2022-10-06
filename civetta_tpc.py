@@ -106,7 +106,7 @@ def main(run, **kwargs):
     main_runner.tpc_prep.no_errors = config["TPC"].get("no_errors")
     main_runner.tpc_prep.no_first_last_shift = config["TPC"].get("no_first_last_shift")
     main_runner.tpc_prep.no_capacitive = config["TPC"].get("no_capacitive")
-    main_runner.tpc_prep.drift_velocity = config["TPC"].get("drift_velocity")
+    main_runner.tpc_prep.drift_velocity = float(config["TPC"].get("drift_velocity"))
     main_runner.tpc_prep.no_time_walk_corr = config["TPC"].get("no_time_walk_corr")
     main_runner.tpc_prep.no_border_correction = config["TPC"].get("no_border_correction")
     main_runner.tpc_prep.no_prev_strip_charge_correction = config["TPC"].get("no_prev_strip_charge_correction")
