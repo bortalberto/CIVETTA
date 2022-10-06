@@ -352,10 +352,12 @@ class tpc_prep:
                 # cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
                 cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
                 cluster_hits["error_from_diff"] = 0
+                attrs = vars(self)
 
+                print(', '.join("%s: %s" % item for item in attrs.items()))
                 ## Capacitive corrections
                 if not self.no_capacitive: ## Capacitive correction option
-                    print ("CIAO, sono un bug")
+                    print (self.no_capacitive)
                     if cluster_hits.shape[0] > 3:
                         cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
                 avg_charge = cluster_hits.charge_SH.sum() / cluster_hits.charge_SH.shape[0]
