@@ -87,8 +87,7 @@ class tpc_prep:
     """
 
     def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80, silent=False,
-                 no_errors= True, no_first_last_shift=True, no_capacitive=True, drift_velocity=0, no_time_walk_corr=True,
-                 no_border_correction=True, no_prev_strip_charge_correction=True):
+):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
@@ -100,17 +99,13 @@ class tpc_prep:
             os.mkdir(self.tpc_dir)
         self.cut = 0.15
         self.silent = silent
-        self.no_errors = no_errors
-        self.no_first_last_shift = no_first_last_shift
-        if self.no_first_last_shift:
-            self.first_last_shift = 0
-        else:
-            self.first_last_shift=0.5
-        self.no_capacitive = no_capacitive
-        self.drift_velocity = drift_velocity
-        self.no_time_walk_corr = no_time_walk_corr
-        self.no_border_correction = no_border_correction
-        self.no_prev_strip_charge_correction = no_prev_strip_charge_correction
+        self.no_errors = False
+        self.no_first_last_shift = False
+        self.no_capacitive = False
+        self.drift_velocity = False
+        self.no_time_walk_corr = False
+        self.no_border_correction = False
+        self.no_prev_strip_charge_correction = False
 
     def thr_tmw(self,row):
         """
@@ -416,6 +411,10 @@ class tpc_prep:
     def calc_tpc_pos(self, cpus=30):
         hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
         hit_pd = hit_pd.sort_values(["subRunNo", "count", "planar", "strip_x"]).reset_index(drop=True) ## Sorting the values for later use
+        if self.no_first_last_shift:
+            self.first_last_shift = 0
+        else:
+            self.first_last_shift=0.5
         self.vel_list = []
         self.ref_time_list = []
         if not self.silent:
