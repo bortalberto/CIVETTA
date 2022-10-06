@@ -346,15 +346,16 @@ class tpc_prep:
 
                 cluster_hits = events_hits[events_hits.hit_id.isin(cluster.hit_ids)]
                 if self.no_time_walk_corr: ## time walk correction option
-                    cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr.astype(float) - ref_time) * vel
+                    print (cluster_hits.hit_time.dtype)
+                    print (cluster_hits.hit_time_corr.dtype)
+                    print (cluster_hits.ref_time.dtype)
+
+                    cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
                 # cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
                 cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
                 cluster_hits["error_from_diff"] = 0
-                attrs = vars(self)
-
-                print(', '.join("%s: %s" % item for item in attrs.items()))
                 ## Capacitive corrections
                 if not self.no_capacitive: ## Capacitive correction option
                     if cluster_hits.shape[0] > 3:
