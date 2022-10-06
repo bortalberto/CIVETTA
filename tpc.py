@@ -357,7 +357,6 @@ class tpc_prep:
                 print(', '.join("%s: %s" % item for item in attrs.items()))
                 ## Capacitive corrections
                 if not self.no_capacitive: ## Capacitive correction option
-                    print (self.no_capacitive)
                     if cluster_hits.shape[0] > 3:
                         cluster_hits = self.check_capacitive_border_two_strips(cluster_hits, hit_pd)
                 avg_charge = cluster_hits.charge_SH.sum() / cluster_hits.charge_SH.shape[0]
