@@ -349,6 +349,9 @@ class tpc_prep:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
+                hit_pd.loc[cluster_hits.index, "pos_g_pre_cor"] = cluster_hits.pos_g
+                hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
+
                 # cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
                 cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
                 cluster_hits["error_from_diff"] = 0
@@ -362,6 +365,7 @@ class tpc_prep:
                     cluster_hits["charge_ratio_p"] = cluster_hits["charge_SH"] / cluster_hits["previous_strip_charge"]
                     if not self.no_prev_strip_charge_correction:
                         cluster_hits.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
+                        hit_pd.loc[cluster_hits["charge_ratio_p"] < 1, "pos_g"] = cluster_hits["pos_g"] + 1.3 - 1.3 * cluster_hits["charge_ratio_p"]
 
                     if not self.no_errors:
                         error_x = np.sqrt(sx_coeff + sx_coeff * (avg_charge / cluster_hits.charge_SH))
@@ -382,7 +386,6 @@ class tpc_prep:
                     out = odr.run()
                     fit = out.beta
 
-                    hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
                     hit_pd.loc[cluster_hits.index, "error_x"] = error_x
                     hit_pd.loc[cluster_hits.index, "error_y"] = error_y
                     hit_pd.loc[cluster_hits.index, "residual_tpc"] = cluster_hits.pos_g - cluster_hits.strip_x * pitch * fit[0] - fit[1]
