@@ -227,7 +227,11 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
     ### Plot da fare sugli HIT
     signal_lower_limit, signal_upper_limit=load_config_signal_limits(sel_run)
     if plot_opt in ("Charge vs time","Charge vs time x","Charge vs time y", "X strips", "Y strips","Signal ratio","Noise"):
-        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+        try:
+            data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+        except:
+            data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(data_folder,sel_run), compression="gzip")
+
         data_pd_pre_0=data_pd[(data_pd.l1ts_min_tcoarse<1600) & (data_pd.l1ts_min_tcoarse>1300) & (data_pd.charge_SH>0)]
         if window_opt=="Signal":
             data_pd_pre_1=data_pd_pre_0[(data_pd_pre_0.l1ts_min_tcoarse<signal_upper_limit) & (data_pd_pre_0.l1ts_min_tcoarse>signal_lower_limit)]
@@ -289,7 +293,11 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
     ## Plot da fare sui clusters 2D
     if plot_opt in ("Signal heatmap" , "Distr charge clusters", "Clusters vs time"):
         total_clusters = 0
-        cluster_pd_2D = pd.read_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        try:
+            cluster_pd_2D = pd.read_pickle("{}/raw_root/{}/cluster_pd_2D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        except:
+            cluster_pd_2D = pd.read_feather("{}/raw_root/{}/cluster_pd_2D-zstd.feather".format(data_folder, sel_run),)
+
         for planar in range(0, 4):
             cluster_pd_2D_pre_1=cluster_pd_2D[cluster_pd_2D.planar==planar]
             if sel_options == "Last 10":
@@ -326,7 +334,11 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
                 fig_list.append(fig)
 
         # Aggiungi indicazione sul numero di trigger
-        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+
+        try:
+            data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+        except:
+            data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(data_folder,sel_run))
         if sel_options == "Last 10":
             subruns_list = data_pd.subRunNo.unique()
             subruns_list.sort()
@@ -344,7 +356,11 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
     ## Plot da fare sui clusters 1D
     if plot_opt in ("charge_cl_x", "charge_cl_y", "size_cl_x", "size_cl_y"):
         total_clusters = 0
-        cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        try:
+            cluster_pd_1D = pd.read_pickle("{}/raw_root/{}/sel_cluster_pd_1D.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        except:
+            cluster_pd_1D = pd.read_feather("{}/raw_root/{}/sel_cluster_pd_1D-zstd.feather".format(data_folder, sel_run))
+
         for planar in range(0, 4):
             cluster_pd_1D_pre_1 = cluster_pd_1D[cluster_pd_1D.planar == planar]
             if sel_options == "Last 10":
@@ -383,7 +399,11 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
                 fig_list.append(fig)
 
         # Aggiungi indicazione sul numero di trigger
-        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+        try:
+            data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+        except:
+            data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(data_folder,sel_run))
+
         if sel_options == "Last 10":
             subruns_list = data_pd.subRunNo.unique()
             subruns_list.sort()
