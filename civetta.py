@@ -386,8 +386,7 @@ class runner:
         for key in sub_data.groups:
             if key in subruns_to_do:
                 sub_list.append(sub_data.get_group(key))
-        del data_pd
-        del clusterizer.data_pd
+
 
         if not self.silent:
             print ("Single view")
@@ -416,7 +415,8 @@ class runner:
         #         clusterizer.cluster_pd_2D = pd.concat(pd_2d_return_list)
         #
         #     clusterizer.append_cluster_pd_2D()
-
+        del data_pd
+        del clusterizer.data_pd
     def clusterize_subrun(self,subrun, time_limits):
         """
         Clusterize one run
