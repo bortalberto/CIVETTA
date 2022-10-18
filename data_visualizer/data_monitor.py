@@ -559,20 +559,27 @@ def calc_rate_per_sub(row, trig_dict, width):
 def charge_vs_time_plot(data_pd_cut_2, view="e"):
     if view!="e":
         data_pd_cut_2=data_pd_cut_2[data_pd_cut_2[f"strip_{view}"]>0]
-    fig = px.density_heatmap(data_pd_cut_2, x="l1ts_min_tcoarse", y="charge_SH",
-                             title="Charge vs time",
-                             marginal_x="histogram",
-                             marginal_y="histogram",
-                             color_continuous_scale=colorscale,
-                             nbinsx=int(data_pd_cut_2.l1ts_min_tcoarse.max() - (data_pd_cut_2.l1ts_min_tcoarse.min())),
-                             nbinsy=120)
-    fig.update_layout(
-        xaxis_title="Trigger time stamp - hit TCoarse ",
-        yaxis_title="Charge [fC]",
-        height=800
-    )
-    fig.update_xaxes(range=[1300, 1600])
-    fig.update_yaxes(range=[0, 60])
+    if data_pd_cut_2[1]>0:
+        fig = px.density_heatmap(data_pd_cut_2, x="l1ts_min_tcoarse", y="charge_SH",
+                                 title="Charge vs time",
+                                 marginal_x="histogram",
+                                 marginal_y="histogram",
+                                 color_continuous_scale=colorscale,
+                                 nbinsx=int(data_pd_cut_2.l1ts_min_tcoarse.max() - (data_pd_cut_2.l1ts_min_tcoarse.min())),
+                                 nbinsy=120)
+
+        fig.update_xaxes(range=[1300, 1600])
+        fig.update_yaxes(range=[0, 60])
+        fig.update_layout(
+            xaxis_title="Trigger time stamp - hit TCoarse ",
+            yaxis_title="Charge [fC]",
+            height=800
+        )
+    else:
+        fig = go.Figure()
+        fig.update_layout(template=no_data_template)
+
+
     return fig
 
 def strips_plot(data_pd_cut_2, view):
