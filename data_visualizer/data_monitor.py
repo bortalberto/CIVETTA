@@ -559,7 +559,7 @@ def calc_rate_per_sub(row, trig_dict, width):
 def charge_vs_time_plot(data_pd_cut_2, view="e"):
     if view!="e":
         data_pd_cut_2=data_pd_cut_2[data_pd_cut_2[f"strip_{view}"]>0]
-    if data_pd_cut_2.shape[1]>0:
+    if data_pd_cut_2.shape[0]>0:
         fig = px.density_heatmap(data_pd_cut_2, x="l1ts_min_tcoarse", y="charge_SH",
                                  title="Charge vs time",
                                  marginal_x="histogram",
