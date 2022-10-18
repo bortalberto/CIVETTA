@@ -26,7 +26,7 @@ class runner:
         self.sigmas_trackers = sigmas_trackers
         self.sigmas_DUT = sigmas_DUT
         self.chi_squared = chi_squared
-        self.multi_tracks_suppresion=multi_tracks_suppresion
+        self.multi_tracks_suppresion = multi_tracks_suppresion
         self.hit_efficiency = hit_efficiency
         self.tpc = tpc
 

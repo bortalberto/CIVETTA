@@ -230,7 +230,7 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
         try:
             data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
         except:
-            data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(data_folder,sel_run), compression="gzip")
+            data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(data_folder,sel_run))
 
         data_pd_pre_0=data_pd[(data_pd.l1ts_min_tcoarse<1600) & (data_pd.l1ts_min_tcoarse>1300) & (data_pd.charge_SH>0)]
         if window_opt=="Signal":
@@ -462,7 +462,10 @@ def update_graph(n_clicks, sel_run, plot_opt,window_opt, sel_options,sel_subrun,
 
 )
 def update_list(sel_run):
-    data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder,sel_run), compression="gzip")
+    try:
+        data_pd = pd.read_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(data_folder, sel_run), compression="gzip")
+    except:
+        data_pd = pd.read_feather("{}/raw_root/{}/hit_data-zstd.feather".format(data_folder, sel_run))
     available_subs = np.sort(data_pd['subRunNo'].unique())
     avaible_runs=[]
     for (dirpath, dirnames, filenames) in walk(data_folder+"/raw_root"):
