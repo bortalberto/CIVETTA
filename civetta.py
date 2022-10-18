@@ -376,6 +376,7 @@ class runner:
             data_pd = pd.read_feather(path)
             done_subruns = data_pd.subrun.unique()
         else:
+            data_pd=[]
             done_subruns = []
 
         subrun_list = (clusterizer.read_subruns())
