@@ -493,8 +493,8 @@ class res_measure:
 
         duplicated_cl_event = cl_pd["count"].unique()[cl_pd.groupby("count").agg("size") > 2]  # Drop events with 2 efficient clusters
         cl_pd = cl_pd[~cl_pd["count"].isin(duplicated_cl_event)]
-        tracks_pd = tracks_pd[~tracks_pd["count"].isin(duplicated_cl_event)]
 
+        tracks_pd = tracks_pd[~tracks_pd["count"].isin(duplicated_cl_event)]
         tracks_pd = tracks_pd.sort_values("count").reset_index(drop=True)
 
         cl_pd_x = cl_pd.loc[cl_pd.cl_pos_x.notna()].reset_index(drop=True)  # Divides the datatest between x and y and sort them

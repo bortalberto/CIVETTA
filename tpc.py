@@ -25,36 +25,36 @@ def time_walk_rough_corr(charge,signal_width, a,b,c):
         time = signal_width/4+60
     return time
 
-def calc_tpc_pos(cluster, hits, vel_l, ref_l):
-    """
-    Generic function to calc the tpc position on a cluster
-    :param cluster:
-    :param hits:
-    :param vel_l:
-    :param ref_l:
-    :return:
-    """
-    vel = vel_l[cluster.planar]
-    ref_time = ref_l[cluster.planar]
-
-    hits = hits[hits.hit_id.isin(cluster.hit_ids)]
-    hits["pos_g"] = (hits.hit_time - ref_time) * vel
-    if hits.strip_x.nunique() > 1:
-        try:
-            fit = np.polyfit(
-                x=np.float64(hits.strip_x.values),
-                y=np.float64(hits.pos_g.values),
-                w=np.float64(1 / (hits.hit_time_error.values * vel)),
-                deg=1
-            )
-            pos_utpc = (2.5 - fit[1]) / fit[0]
-        except ValueError as E:
-            print (ValueError, "Hits" , hits)
-            print (f"Count: {hits['count'].mean()} ")
-            pos_utpc=cluster.cl_pos_x
-        return pos_utpc
-    else:
-        return cluster.cl_pos_x
+# def calc_tpc_pos(cluster, hits, vel_l, ref_l):
+#     """
+#     Generic function to calc the tpc position on a cluster
+#     :param cluster:
+#     :param hits:
+#     :param vel_l:
+#     :param ref_l:
+#     :return:
+#     """
+#     vel = vel_l[cluster.planar]
+#     ref_time = ref_l[cluster.planar]
+#
+#     hits = hits[hits.hit_id.isin(cluster.hit_ids)]
+#     hits["pos_g"] = (hits.hit_time - ref_time) * vel
+#     if hits.strip_x.nunique() > 1:
+#         try:
+#             fit = np.polyfit(
+#                 x=np.float64(hits.strip_x.values),
+#                 y=np.float64(hits.pos_g.values),
+#                 w=np.float64(1 / (hits.hit_time_error.values * vel)),
+#                 deg=1
+#             )
+#             pos_utpc = (2.5 - fit[1]) / fit[0]
+#         except ValueError as E:
+#             print (ValueError, "Hits" , hits)
+#             print (f"Count: {hits['count'].mean()} ")
+#             pos_utpc=cluster.cl_pos_x
+#         return pos_utpc
+#     else:
+#         return cluster.cl_pos_x
 
 
 def time_walk_rough_corr_calib(charge, a,b,c ):
