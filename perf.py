@@ -510,12 +510,14 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
                     f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
                 # raise Warning(f"One R2 in  trackers fit is less than 0.9,  verify the fits on view {view}, put {put}")
         if chi_sq_trackers:
+            print ("calculation chi sqrt")
             tracks_pd_c["chi_sqrt"] = tracks_pd_c.apply(lambda x: calc_chi_sqrt(x, res_sigma_dict), 1)
             tracks_pd_c = tracks_pd_c[tracks_pd_c["chi_sqrt"]< nsigma_trck ]
 
         good_events = tracks_pd_c["count"].unique()
         # Fitta le tracce
         cl_pd_2D_res = cl_pd_2D_res[cl_pd_2D_res["count"].isin(good_events)]# Solo degli eventi con tracciatori buoni
+        print ("Fitting only on trackers")
         tracks_pd_res = fit_tracks_manager(cl_pd_2D_res, put, cpus=cpu_to_use)
 
         # Estraggo mean e sigma sulla planare sotto test, serve per stabilire l'efficienza
