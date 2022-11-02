@@ -63,6 +63,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             sigma_def = estimate_sigma_def(data)
             print ("---")
             print (view, pl)
+            print (np.mean(data))
             print (sigma_def)
             print ("---")
             # print (sigma_def)
@@ -234,7 +235,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     sigma_0 = estimate_sigma_def(data)
     data = data[abs(data - np.mean(data)) < sigma_def]
     nbins = 200
-    print (sigma_0)
+    print ("a")
     y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_0, np.mean(data)+sigma_0])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
@@ -283,9 +284,9 @@ def estimate_sigma_def(data):
     data=data[np.abs(z_scores) < 1]
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
-    # z_scores = zscore(data)
-    # std = np.std(data[np.abs(z_scores) < 1])
-    # data=data[np.abs(z_scores) < 1]
+    z_scores = zscore(data)
+    std = np.std(data[np.abs(z_scores) < 1])
+    data=data[np.abs(z_scores) < 1]
     # # print (f"std {std}")
     # # print (f"data:  ({len(data)})")
     # z_scores = zscore(data)
