@@ -13,7 +13,7 @@ def gaus(x, a, x0, sigma):
 
 
 
-def root_fit(data, p0, lower_bounds, upper_bounds, sigma_def, nbins=200, mean_0=0):
+def root_fit_double_gaus(data, p0, lower_bounds, upper_bounds, sigma_def, nbins=200, mean_0=0):
     """
     Function to fit or double fit gaussian data
     """
@@ -94,10 +94,10 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             # print ([a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c])
             # print (upper_bound)
             # print ("---")
-            print ("Fit param")
-            print (guess, lower_bound, upper_bound, sigma_def )
-            popt, chi_sqr = root_fit(data, guess, lower_bound, upper_bound, sigma_def )
-            print ("fitted")
+            # print ("Fit param")
+            # print (guess, lower_bound, upper_bound, sigma_def )
+            popt, chi_sqr = root_fit_double_gaus(data, guess, lower_bound, upper_bound, sigma_def)
+            # print ("fitted")
             pcov=0
             popt_list.append(popt)
             pcov_list.append(pcov)
@@ -195,15 +195,18 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     mean_0 = x[np.argmax(y)]
     a_0 = np.max(y)
     sigma_0 = np.std(data)
-    c = 0
+    c = 1
     #             lower_bound=[0, x[np.argmax(y)]-0.01,0,0,x[np.argmax(y)]-0.01,0,0]
     #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
     #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
-
+    guess=[a_0, mean_0, sigma_0, c]
     lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
     upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
+    print ("Fit param")
+    print (guess, lower_bound, upper_bound, sigma_def )
+    print ("fitted")
 
-    popt, chi_sqr, error, ndof = single_root_fit(data, [a_0, mean_0, sigma_0, c],
+    popt, chi_sqr, error, ndof = single_root_fit(data, guess,
                                     lower_bound, upper_bound, sigma_def=sigma_def)
     pcov = 0
     yexp = gaus(x, *popt[0:3]) + popt[3]
@@ -293,7 +296,6 @@ def estimate_sigma_def(data):
     # data=data[np.abs(z_scores) < 1]
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
-    print ("fitting pre fit")
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data, std*2)
     # f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*2)
     # f.savefig("/media/disk2T/VM_work_zone/data/perf_out/566/res_fit/prova.png")
