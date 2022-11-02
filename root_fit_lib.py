@@ -60,6 +60,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             deg_list.append(1)
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
+            print (data.describe())
             sigma_def = estimate_sigma_def(data)
             print ("---")
             print (view, pl)
