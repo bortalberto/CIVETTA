@@ -498,6 +498,7 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
                 mean_res_dict[pl,view] = mean_res
                 res_sigma_dict[pl,view] = res_sigma
                 r_fit.plot_residuals(tracks_pd, view, popt_list, R_list, path_out_eff, put, mean_res, res_sigma, nsigma_trck, pl, chi_list, deg_list, chi_sq_trackers)
+                print ("plotted")
                 # print(f"mean {mean_res},sigma {nsigma_trck*res_sigma} ")
                 # print (tracks_pd_c[f"res_{view}"].apply(lambda x: x[pl]))
                 if not chi_sq_trackers:
