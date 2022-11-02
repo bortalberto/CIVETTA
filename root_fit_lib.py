@@ -61,13 +61,13 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             data = data[abs(data) < 10]
-            print (data.describe())
+            # print (data.describe())
             sigma_def = estimate_sigma_def(data)
-            print ("---")
-            print (view, pl)
-            print (np.mean(data))
-            print (sigma_def)
-            print ("---")
+            # print ("---")
+            # print (view, pl)
+            # print (np.mean(data))
+            # print (sigma_def)
+            # print ("---")
             # print (sigma_def)
             data = data[abs(data - np.mean(data)) < sigma_def]
             nbins=200
@@ -236,9 +236,9 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     data = data[abs(data) < 10]
     sigma_0 = estimate_sigma_def(data)
-    data = data[abs(data - np.mean(data)) < sigma_def]
+    # data = data[abs(data - np.mean(data)) < sigma_def*2]
     nbins = 200
-    print ("a")
+    # print ("a")
     y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_0, np.mean(data)+sigma_0])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
