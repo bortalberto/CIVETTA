@@ -306,6 +306,6 @@ def estimate_sigma_def(data):
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data, std*5)
     f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*5)
     f.savefig(f"/media/disk2T/VM_work_zone/data/perf_out/403/res_fit/{time.time()}.png")
-    f.close()
+    plt.close(f)
     # print (popt_list[2]*7)
     return (abs(popt_list[2]*10))
