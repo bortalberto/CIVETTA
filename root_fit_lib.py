@@ -279,7 +279,7 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
 
 
 def estimate_sigma_def(data):
-    data = data[abs(data) < 10]
+    data = data[abs(data) < 5]
     std= np.std(data)
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
