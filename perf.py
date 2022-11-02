@@ -671,3 +671,4 @@ def calc_chi_sqrt(x, res_sigma_dict):
     for key in res_sigma_dict:
         chi+= (x[f"res_{key[1]}"][key[0]] / res_sigma_dict[key])**2
     return chi
+
