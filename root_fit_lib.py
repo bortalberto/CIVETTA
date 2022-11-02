@@ -88,14 +88,16 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
 
             lower_bound=[np.max(y)/5*4,mean_0-sigma_0/3,       0,             0,mean_0-sigma_0/3,                       0,     0]
             upper_bound=[np.max(y)    ,mean_0+sigma_0/3, sigma_0,   np.max(y)/5,mean_0+sigma_0/3,sigma_def + sigma_def/10,     200]
+            guess=[a_0, mean_0, sigma_0 - sigma_0/10, a_1, mean_1, sigma_1, c]
             # print(pl)
             # print(lower_bound)
             # print ([a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c])
             # print (upper_bound)
             # print ("---")
             print ("Fit param")
-            print ([a_0, mean_0, sigma_0 - sigma_0/10, a_1, mean_1, sigma_1, c], lower_bound, upper_bound, sigma_def )
-            popt, chi_sqr = root_fit(data,[a_0, mean_0, sigma_0 - sigma_0/10, a_1, mean_1, sigma_1, c], lower_bound, upper_bound, sigma_def )
+            print (guess, lower_bound, upper_bound, sigma_def )
+            popt, chi_sqr = root_fit(data, guess, lower_bound, upper_bound, sigma_def )
+            print ("fitted")
             pcov=0
             popt_list.append(popt)
             pcov_list.append(pcov)
