@@ -232,7 +232,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.4):
     return popt, pcov, res, r2, chi_sqr, deg, error
 
 
-def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list,sigma_def=0.2, chi_sq_trackers = False):
+def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list, chi_sq_trackers = False):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     data = data[abs(data) < 10]
     sigma_0 = estimate_sigma_def(data)

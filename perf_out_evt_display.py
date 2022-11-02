@@ -716,7 +716,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
 
         couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list, enemy_pd = res_calc.calc_enemy(view, planar_list, elab_folder)
         enemy_pd.reset_index(drop=True, inplace=True)
-        enemy_pd.drop(columns=["cov"])
+        enemy_pd.drop(columns=["cov"], inplace=True)
         enemy_pd.to_feather(os.path.join(perf_path, f"match_cl_enemy_{view}"+tpc_string+"-zstd.feather"), compression="zstd")
 
         for couple, enemy_res in zip(couples, enemy_res_list):
@@ -752,14 +752,14 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
 def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
     data = cl_pd_res[f"res_{view}"]
     data = data[abs(data) < 12]
-    sigma_def = r_fit.estimate_sigma_def(data)
+    sigma_0 = r_fit.estimate_sigma_def(data)
     # data = data[abs(data) < sigma_def]
     # if data.shape[0] > 20000:
     #     nbins = 1000
     # else:
     #     nbins = 200
     nbins=200
-    y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_def, np.mean(data)+sigma_def])
+    y, x = np.histogram(data, bins=nbins, range=[np.mean(data)-sigma_0, np.mean(data)+sigma_0])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
     # y = np.insert(y, 0, 0)
@@ -778,7 +778,7 @@ def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
     # plt.ion()
     # plt.show()
     ax.set_title(f"Fit view {view}, planar{pl}")
-    ax.text(y=np.max(y) * 0.7, x=0 + popt[2],
+    ax.text(y=np.max(y) * 0.7, x=np.min(x)+0.001,
             s=f"R^2={R_list:.4f}\nNorm_0={popt[0]:.2f}, Mean_0={popt[1] * 10000:.2f}um, Sigma_0={(popt[2]) * 10000:.2f}um"
               f"\nNorm_1={popt[3]:.2f}, Mean_1={popt[4] * 10000:.2f}um, Sigma_1={abs(popt[5]) * 10000:.2f}um"
               f"\nChi_sqrt={chi_list:.3e}, Chi_sqrt/NDoF = {chi_list / deg_list:.3e}",
