@@ -546,6 +546,8 @@ class res_measure:
         for pls in tqdm(couples, desc="Couples", leave=False):
             complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
             residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
+            cluster_pd_1D_match[f"ene_{pls}"] = cluster_pd_1D_match["count"].apply(lambda x: assign_residual(x, residual_list))
+
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
             count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
             sigma_def = r_fit.estimate_sigma_def(residual_list)
@@ -560,7 +562,7 @@ class res_measure:
             chi_list.append(chi/deg_list)
             residual_fit_list.append(residual_list)
             pos_res_list.append(pos_list)
-        return couples,enemy_res_list, chi_list, residual_fit_list, pos_res_list, error_list, count_list
+        return couples,enemy_res_list, chi_list, residual_fit_list, pos_res_list, error_list, count_list, cluster_pd_1D_match
 
     def calc_enemy_align(self, view):
         # pd_list = []
@@ -592,6 +594,14 @@ class res_measure:
         # return enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list
         pass
 
+def assign_residual(x, residual_list):
+    """
+    Function used to store the enemy residual data
+    """
+    if x in residual_list.index:
+        return residual_list[x]
+    else:
+        return np.nan
 def save_html_event(fig, save_path):
     """
     Save the html file from an event figure
@@ -656,7 +666,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     correction = perf.load_nearest_correction(os.path.join(data_folder, "alignment"), run)  # Load the alignment correction
     eff_pd_l = []
     for planar in planar_list:
-        eff_pd = pd.read_feather(os.path.join(data_folder,"perf_out", f"{run}", f"eff_pd_{planar}"+tpc_string+"-zstd.feather" ))
+        eff_pd = pd.read_feather(os.path.join(perf_path, f"eff_pd_{planar}"+tpc_string+"-zstd.feather" ))
         eff_pd = eff_pd[(eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7)]
         eff_pd_l.append(eff_pd)
     eff_pd = pd.concat(eff_pd_l)
@@ -701,7 +711,9 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     for view in ("x","y"):
         logger.write_log(f"\n--Enemy residual {view}--\n")
 
-        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list = res_calc.calc_enemy(view, planar_list, elab_folder)
+        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list, enemy_pd = res_calc.calc_enemy(view, planar_list, elab_folder)
+        enemy_pd.to_feather(os.path.join(perf_path, f"match_cl_enemy_{view}"+tpc_string+"-zstd.feather"), compression="zstd")
+
         for couple, enemy_res in zip(couples, enemy_res_list):
             logger.write_log(f"Couple: {couple}: {enemy_res*10000:.2f} um")
         if len (couples)>4:
