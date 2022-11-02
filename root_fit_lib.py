@@ -60,7 +60,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             deg_list.append(1)
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
-            data = data[data < 8]
+            data = data[data < 10]
             sigma_def = estimate_sigma_def(data)
             print ("---")
             print (view, pl)
@@ -233,7 +233,7 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
 
 def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list,sigma_def=0.2, chi_sq_trackers = False):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
-    data = data[data < 8]
+    data = data[data < 10]
     sigma_0 = estimate_sigma_def(data)
     data = data[abs(data - np.mean(data)) < sigma_def]
     nbins = 200
