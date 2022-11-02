@@ -550,6 +550,8 @@ class res_measure:
 
             pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
             count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
+
+
             residual_list=residual_list[residual_list<20]
             sigma_def = r_fit.estimate_sigma_def(residual_list)
             popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
