@@ -293,6 +293,7 @@ def estimate_sigma_def(data):
     # data=data[np.abs(z_scores) < 1]
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
+    print ("fitting pre fit")
     popt_list, pcov_list, res_list, R_list, chi, deg_list, error = single_gaus_fit_root(data, std*2)
     # f, ax = plot_residuals_single_gauss(data, "x", popt_list, R_list, 2, chi, deg_list, std*2)
     # f.savefig("/media/disk2T/VM_work_zone/data/perf_out/566/res_fit/prova.png")
