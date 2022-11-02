@@ -201,13 +201,14 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.2):
     #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
     guess=[a_0, mean_0, sigma_0, c]
     lower_bound = [0, x[np.argmax(y)] - 0.01, 0, 0]
-    upper_bound = [np.max(y), x[np.argmax(y)] + 0.01, 1, 200]
+    upper_bound = [np.max(y)+10, x[np.argmax(y)] + 0.01, sigma_0*2, 200]
     print ("Fit param")
     print (guess, lower_bound, upper_bound, sigma_def )
-    print ("fitted")
 
     popt, chi_sqr, error, ndof = single_root_fit(data, guess,
                                     lower_bound, upper_bound, sigma_def=sigma_def)
+    print ("fitted")
+
     pcov = 0
     yexp = gaus(x, *popt[0:3]) + popt[3]
     ss_res = np.sum((y - yexp) ** 2)
