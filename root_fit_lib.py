@@ -86,7 +86,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
 #             upper_bound=[np.inf,  x[np.argmax(y)]+0.01, 1, np.inf,x[np.argmax(y)]+0.01,2,100]
 #             popt, pcov = curve_fit(doublegaus, x, y,sigma=error,p0=[a_0, mean_0, sigma_0, a_1, mean_1, sigma_1, c], bounds=(lower_bound, upper_bound))
 
-            lower_bound=[np.max(y)/5*4,mean_0-sigma_0/3,       0,             0,mean_0-sigma_0/3,                       0,     0]
+            lower_bound=[np.max(y)/5*4,mean_0-sigma_0/3,       0,             0,mean_0-sigma_0/3,            sigma_def/10,     0]
             upper_bound=[np.max(y)    ,mean_0+sigma_0/3, sigma_0,   np.max(y)/5,mean_0+sigma_0/3,sigma_def + sigma_def/10,     200]
             guess=[a_0, mean_0, sigma_0 - sigma_0/10, a_1, mean_1, sigma_1, c]
             # print(pl)
