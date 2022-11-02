@@ -712,7 +712,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
         logger.write_log(f"\n--Enemy residual {view}--\n")
 
         couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list, enemy_pd = res_calc.calc_enemy(view, planar_list, elab_folder)
-        enemy_pd.rese_index(drop=True, inplace=True)
+        enemy_pd.reset_index(drop=True, inplace=True)
         enemy_pd.to_feather(os.path.join(perf_path, f"match_cl_enemy_{view}"+tpc_string+"-zstd.feather"), compression="zstd")
 
         for couple, enemy_res in zip(couples, enemy_res_list):
