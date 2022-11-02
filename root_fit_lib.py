@@ -287,9 +287,9 @@ def estimate_sigma_def(data):
     data=data[np.abs(z_scores) < 1]
     # print (f"std {std}")
     # print (f"data:  ({len(data)})")
-    z_scores = zscore(data)
-    std = np.std(data[np.abs(z_scores) < 1])
-    data=data[np.abs(z_scores) < 1]
+    # z_scores = zscore(data)
+    # std = np.std(data[np.abs(z_scores) < 1])
+    # data=data[np.abs(z_scores) < 1]
     # # print (f"std {std}")
     # # print (f"data:  ({len(data)})")
     # z_scores = zscore(data)
