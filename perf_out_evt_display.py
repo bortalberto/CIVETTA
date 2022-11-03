@@ -559,7 +559,7 @@ class res_measure:
             residual_list_plot=pd.DataFrame(residual_list.rename(f"res_{view}"))
             plot = plot_residuals(residual_list_plot, view, popt_list, R_list, pls, chi, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
-            plot[0].close()
+            plt.close(plot[0])
             enemy_res_list.append(popt_list[2])
             error_list.append(error[2])
             chi_list.append(chi/deg_list)
@@ -699,7 +699,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
             errror_tracking = (res_calc.cl_pds[f"{planar}{view}"].error_tracking**(1/2)).mean()
             plot = plot_residuals(res_calc.cl_pds[f"{planar}{view}"], view, popt_list, R_list, planar, chi_list, deg_list)
             plot[0].savefig(os.path.join(elab_folder, f"double_gaus_fit_{planar}{view}.png"))
-            plot[0].close()
+            plt.close(plot[0])
             logger.write_log( f"Planar {planar} view {view}: Sigma_0={(popt_list[2]) * 10000:.2f} um, Sigma_1={popt_list[5] * 10000:.2f} um, "
                               f"error tracking: {errror_tracking * 10000:.2f} um" )
     ## Enemy
