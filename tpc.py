@@ -693,7 +693,7 @@ class plotter_after_tpc():
 
         figplot.savefig(os.path.join(folder, f"evt_{count}_detector_{dut}.png"))
 
-    def save_evts_plots(self, n=10):
+    def save_evts_plots(self, n=5):
         for pl in range(0, 4):
             residuals = self.res_measure.cl_pds[f"{pl}x"].res_x  # Load residuals
             residuals = residuals[residuals < 5]  # cut for absurd residuals
@@ -702,5 +702,15 @@ class plotter_after_tpc():
             bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std]
             good_evts = np.random.choice(good_evts_res.count, n)
             bad_evts = np.random.choice(bad_evts_res.count, n)  # Select good and bad evts
+            ## Folders creation
+            good_folder = os.path.join(self.out_path, "good_evt")
+            bad_folder = os.path.join(self.out_path, "bad_evt")
+            if not os.path.exists(good_folder):
+                os.makedirs(good_folder)
+            if not os.path.exists(bad_folder):
+                os.makedirs(bad_folder)
+            ## Plotto eventi buoni e cattivi
             for evt in good_evts:
-                self.plot_evt_tpc()
+                self.plot_evt_tpc(evt, pl, good_folder)
+            for evt in bad_evts:
+                self.plot_evt_tpc(evt, pl, bad_evts)
