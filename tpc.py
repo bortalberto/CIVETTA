@@ -658,6 +658,7 @@ class plotter_after_tpc():
 
         ax2 = ax[0][0].twinx()
         ax2.bar(x, event_hits.charge_SH.values, width=0.4, color="cyan", alpha=0.1)
+        print (event_hits.charge_SH.values)
         ax[0][0].set_zorder(1)
         ax[0][0].patch.set_visible(False)
         ax[0][0].set_xlabel("Strip")
@@ -678,7 +679,7 @@ class plotter_after_tpc():
         ax3.set_ylabel("Charge [fC]")
         ax[0][1].legend()
         # -------
-        res = y - ((fit[1] + x * 0.650 * fit[0]))
+        res = y - ( (fit[1] + x * 0.650 * fit[0]) )
         ax[1][0].errorbar(
             x=x, y=res, fmt='o', label="Residual")
 
