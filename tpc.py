@@ -785,6 +785,7 @@ class plotter_after_tpc():
 
     def plot_residuals_vs_pos(self):
         fig = make_subplots(rows=4, cols=2,
+                            row_heights=700,
                             subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3","Detector 0", "Detector 1", "Detector 2", "Detector 3"))
         for pl in range(0, 4):
             fig.add_trace(
@@ -807,8 +808,6 @@ class plotter_after_tpc():
 
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
-        fig.update_layout(height=900, width=1200
-                          )
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]")
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs = "directory")
