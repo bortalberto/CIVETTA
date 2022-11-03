@@ -560,7 +560,7 @@ class plotter_after_tpc():
         self.data_folder = data_folder
         self.run = run_number
 
-        self.out_path = os.path.join([f"{self.data_folder}", "elaborated_output", f"{self.run}", "output_plot_TPC"])
+        self.out_path = os.path.join(f"{self.data_folder}", "elaborated_output", f"{self.run}", "output_plot_TPC")
         if not os.path.isdir(self.out_path):
             os.mkdir(self.out_path)
         self.tracks_pd = pd.read_pickle(
