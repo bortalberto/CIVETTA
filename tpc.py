@@ -563,34 +563,34 @@ class plotter_after_tpc():
         self.out_path = os.path.join(f"{self.data_folder}", "elaborated_output", f"{self.run}", "output_plot_TPC")
         if not os.path.isdir(self.out_path):
             os.mkdir(self.out_path)
-        self.tracks_pd = pd.read_pickle(
-            os.path.join(data_folder, "perf_out", f"{self.run}", f"tracks_pd_{2}.gzip"),
-            compression="gzip")
+        # self.tracks_pd = pd.read_pickle(
+        #     os.path.join(data_folder, "perf_out", f"{self.run}", f"tracks_pd_{2}.gzip"),
+        #     compression="gzip")
 
         self.correction = load_nearest_correction(os.path.join(data_folder, "alignment"), self.run)
         self.hit_pd_x = pd.read_feather(
             os.path.join(data_folder, "raw_root", f"{self.run}", "tpc", "hit_pd_TPC-zstd.feather"))
         self.cl_pd_x = pd.read_feather(
             os.path.join(data_folder, "raw_root", f"{self.run}", "tpc", "cluster_pd_1D_TPC-zstd.feather"))
-        self.hit_pd_x = self.hit_pd_x.query("strip_x>-1 and planar ==2")
-        self.cl_pd_x = self.cl_pd_x.query("cl_pos_x>-1 and planar ==2")
-        self.cl_pd_x_g = self.cl_pd_x.groupby("count")
-        self.hit_pd_x_g = self.hit_pd_x.groupby("count")
+        self.hit_pd_x = self.hit_pd_x.query("strip_x>-1")
+        self.cl_pd_x = self.cl_pd_x.query("cl_pos_x>-1")
+        self.cl_pd_x_g = self.cl_pd_x.groupby("count", "planar")
+        self.hit_pd_x_g = self.hit_pd_x.groupby("count", "planar")
         self.pitch = 0.650
         self.angle = angle
         cl_pd_list = []
-        track_pd_list = []
+        self.track_pd_list = []
         eff_pd_l = []
         for p in range(0, 4):
             cl_pd_list.append(
                 pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/match_cl_{p}_TPC-zstd.feather"))
-            track_pd_list.append(
+            self.track_pd_list.append(
                 pd.read_pickle(f"/media/disk2T/VM_work_zone/data/perf_out/403/tracks_pd_{p}_TPC.gzip",
                                compression="gzip"))
             eff_pd_l.append(
                 pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/eff_pd_{p}_TPC-zstd.feather"))
         self.res_measure = res_measure(cl_pd=cl_pd_list, eff_pd=pd.concat(eff_pd_l), planar_list=[0, 1, 2, 3],
-                                       tracks_pd=track_pd_list)
+                                       tracks_pd=self.track_pd_list)
 
     def apply_correction_x(self, cl_pos_x_cm, epos_y, planar):
         """
@@ -607,8 +607,8 @@ class plotter_after_tpc():
         return cl_pos_x_cm
 
     def plot_evt_tpc(self, count, dut, folder):
-        event_hits = self.hit_pd_x_g.get_group(count)
-        event_cluster = self.cl_pd_x_g.get_group(count)
+        event_hits = self.hit_pd_x_g.get_group(count, dut)
+        event_cluster = self.cl_pd_x_g.get_group(count, dut)
         event_cluster = event_cluster.loc[event_cluster["cl_charge"].idxmax()]
         event_hits = event_hits[event_hits.hit_id.isin(event_cluster.hit_ids)]
         event_hits = event_hits[~event_hits.pos_g.isna()]
@@ -618,8 +618,8 @@ class plotter_after_tpc():
         sx = event_hits.error_x
         sy = event_hits.error_y
         fit = [event_cluster.F1, event_cluster.F0]
-        fit_x = self.tracks_pd.query(f"count == {count}").fit_x.values[0]
-        fit_y = self.tracks_pd.query(f"count == {count}").fit_y.values[0]
+        fit_x = self.track_pd_list[dut].query(f"count == {count}").fit_x.values[0]
+        fit_y = self.track_pd_list[dut].query(f"count == {count}").fit_y.values[0]
         prev_pos = fit_x[1] + fit_x[0] * dut * 10
 
         figplot, ax = plt.subplots(2, 2, figsize=(20, 20))
