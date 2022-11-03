@@ -27,7 +27,7 @@ class runner:
         self.tpc_prep.no_time_walk_corr = False
         self.tpc_prep.no_border_correction = False
         self.tpc_prep.no_prev_strip_charge_correction = False
-        self.angle=angle
+        self.angle = angle
 
 
     def calc_and_save_thr_eff(self):
@@ -40,7 +40,6 @@ class runner:
         self.tpc_prep.calc_tpc_pos(cpus=34)
 
     def plot_evts(self):
-        print (self.angle)
         self.plotter_after_tpc = tpc_lib.plotter_after_tpc(self.data_folder, self.run_number, self.angle)
 
 
