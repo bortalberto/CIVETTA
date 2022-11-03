@@ -743,5 +743,5 @@ class plotter_after_tpc():
                              name=f"Planare {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1)
         fig.update_xaxes(range=[-0.5, 0.5], dtick=0.1)
-        fig.write_html(os.path.join("self.plt_path", "residuals.html"), include_plotlyjs = "directory")
+        fig.write_html(os.path.join(self.plt_path, "residuals.html"), include_plotlyjs = "directory")
         # fig.show("notebook")
