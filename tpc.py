@@ -658,6 +658,8 @@ class plotter_after_tpc():
 
         ax2 = ax[0][0].twinx()
         ax2.bar(x, event_hits.charge_SH.values, width=0.4, color="cyan", alpha=0.1)
+        print (count)
+        print (dut)
         print (event_hits.charge_SH.values)
         ax[0][0].set_zorder(1)
         ax[0][0].patch.set_visible(False)
