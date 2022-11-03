@@ -700,8 +700,8 @@ class plotter_after_tpc():
             std = residuals.std()
             good_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std / 2]
             bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std]
-            good_evts = np.random.choice(good_evts_res.count, n)
-            bad_evts = np.random.choice(bad_evts_res.count, n)  # Select good and bad evts
+            good_evts = np.random.choice(good_evts_res["count"], n)
+            bad_evts = np.random.choice(bad_evts_res["count"], n)  # Select good and bad evts
             ## Folders creation
             good_folder = os.path.join(self.out_path, "good_evt")
             bad_folder = os.path.join(self.out_path, "bad_evt")
