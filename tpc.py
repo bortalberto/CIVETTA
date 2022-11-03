@@ -700,7 +700,7 @@ class plotter_after_tpc():
             std = residuals.std()
             print (std)
             good_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std / 2]
-            bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std ]
+            bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][(abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std ) and (abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std*3)]
             very_bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 5]
 
             good_evts = np.random.choice(good_evts_res["count"], n)
