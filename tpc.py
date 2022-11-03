@@ -657,7 +657,7 @@ class plotter_after_tpc():
         ## Adding correction notes~~~~~~~~~~~~:
 
         ax2 = ax[0][0].twinx()
-        ax2.bar(x, event_hits.charge_SH.values, width=0.4, color="cyan", alpha=0.1)
+        ax2.bar(event_hits.strip_x, event_hits.charge_SH.values, width=0.4, color="cyan", alpha=0.1)
         print (count)
         print (dut)
         print (event_hits.charge_SH.values)
@@ -674,7 +674,7 @@ class plotter_after_tpc():
             x=event_hits.strip_x_c, y=event_hits.pos_g, marker='x', label="Post-correction", s=100, alpha=0.7)
 
         ax3 = ax[0][1].twinx()
-        ax3.bar(event_hits.strip_x_c, event_hits.charge_SH.values, width=0.4, color="cyan", alpha=0.1)
+        ax3.bar(event_hits.strip_x, event_hits.charge_SH.values, width=0.4, color="cyan", alpha=0.1)
         ax[0][1].set_zorder(1)
         ax[0][1].patch.set_visible(False)
         ax[0][1].set_xlabel("Strip")
