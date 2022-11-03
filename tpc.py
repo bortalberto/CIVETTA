@@ -13,6 +13,9 @@ from scipy.signal import argrelextrema
 from scipy.signal import savgol_filter
 import math
 from scipy.odr import ODR, Model, Data, RealData
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
 
 warnings.filterwarnings('ignore')
 
@@ -724,3 +727,21 @@ class plotter_after_tpc():
                 self.plot_evt_tpc(evt, pl, bad_folder)
             for evt in very_bad_evts:
                 self.plot_evt_tpc(evt, pl, very_bad_folder)
+
+    def produce_plots(self):
+        self.plt_path = os.path.join(self.out_path, "plots")
+        if not os.path.isdir(self.plt_path):
+            os.mkdir(self.plt_path)
+        self.plot_residuals()
+
+    def plot_residuals(self):
+        fig = make_subplots(rows=2, cols=2)
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                             xbins={"start": -0.8, "end": 0.8, "size": 1.6 / 200},
+                             name=f"Planare {pl}"),
+                col=pl // 2 + 1, row=pl % 2 + 1)
+        fig.update_xaxes(range=[-0.5, 0.5], dtick=0.1)
+        fig.write_html(os.path.join("self.plt_path", "residuals.html"), include_plotlyjs = "directory")
+        # fig.show("notebook")
