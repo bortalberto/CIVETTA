@@ -691,7 +691,7 @@ class plotter_after_tpc():
         ax[1][1].set_xlabel("Time [ns]")
         ax[1][1].set_ylabel("Res")
 
-        figplot.savefig(os.path.join(folder, f"evt_{count}_detector_{dut}.png"))
+        figplot.savefig(os.path.join(folder, f"evt_{count}_detector_{dut}.png") )
 
     def save_evts_plots(self, n=5):
         for pl in range(0, 4):
@@ -713,4 +713,4 @@ class plotter_after_tpc():
             for evt in good_evts:
                 self.plot_evt_tpc(evt, pl, good_folder)
             for evt in bad_evts:
-                self.plot_evt_tpc(evt, pl, bad_evts)
+                self.plot_evt_tpc(evt, pl, bad_folder)
