@@ -700,18 +700,27 @@ class plotter_after_tpc():
             std = residuals.std()
             print (std)
             good_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std / 2]
-            bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 2]
+            bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std ]
+            very_bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 5]
+
             good_evts = np.random.choice(good_evts_res["count"], n)
             bad_evts = np.random.choice(bad_evts_res["count"], n)  # Select good and bad evts
+            very_bad_evts = np.random.choice(very_bad_evts_res["count"], n)  # Select good and bad evts
+
             ## Folders creation
             good_folder = os.path.join(self.out_path, "good_evt")
             bad_folder = os.path.join(self.out_path, "bad_evt")
+            very_bad_folder = os.path.join(self.out_path, "very_bad_evts")
             if not os.path.exists(good_folder):
                 os.makedirs(good_folder)
             if not os.path.exists(bad_folder):
                 os.makedirs(bad_folder)
+            if not os.path.exists(very_bad_folder):
+                os.makedirs(very_bad_folder)
             ## Plotto eventi buoni e cattivi
             for evt in good_evts:
                 self.plot_evt_tpc(evt, pl, good_folder)
             for evt in bad_evts:
                 self.plot_evt_tpc(evt, pl, bad_folder)
+            for evt in very_bad_evts:
+                self.plot_evt_tpc(evt, pl, very_bad_folder)
