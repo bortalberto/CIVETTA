@@ -785,7 +785,7 @@ class plotter_after_tpc():
 
     def plot_residuals_vs_pos(self):
         fig = make_subplots(rows=4, cols=2,
-                            row_heights=[800,800,800,800],
+                            # row_heights=[800,800,800,800],
                             subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3","Detector 0", "Detector 1", "Detector 2", "Detector 3"))
         for pl in range(0, 4):
             fig.add_trace(
