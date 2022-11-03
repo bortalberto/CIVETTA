@@ -574,8 +574,8 @@ class plotter_after_tpc():
             os.path.join(data_folder, "raw_root", f"{self.run}", "tpc", "cluster_pd_1D_TPC-zstd.feather"))
         self.hit_pd_x = self.hit_pd_x.query("strip_x>-1")
         self.cl_pd_x = self.cl_pd_x.query("cl_pos_x>-1")
-        self.cl_pd_x_g = self.cl_pd_x.groupby("count", "planar")
-        self.hit_pd_x_g = self.hit_pd_x.groupby("count", "planar")
+        self.cl_pd_x_g = self.cl_pd_x.groupby(["count", "planar"])
+        self.hit_pd_x_g = self.hit_pd_x.groupby(["count", "planar"])
         self.pitch = 0.650
         self.angle = angle
         cl_pd_list = []
@@ -607,8 +607,8 @@ class plotter_after_tpc():
         return cl_pos_x_cm
 
     def plot_evt_tpc(self, count, dut, folder):
-        event_hits = self.hit_pd_x_g.get_group(count, dut)
-        event_cluster = self.cl_pd_x_g.get_group(count, dut)
+        event_hits = self.hit_pd_x_g.get_group((count, dut))
+        event_cluster = self.cl_pd_x_g.get_group((count, dut))
         event_cluster = event_cluster.loc[event_cluster["cl_charge"].idxmax()]
         event_hits = event_hits[event_hits.hit_id.isin(event_cluster.hit_ids)]
         event_hits = event_hits[~event_hits.pos_g.isna()]
