@@ -532,3 +532,127 @@ class tpc_prep:
 #     def __init__(self):
 #         self.events_pd_hit=
 #         self.eff_pd=
+
+
+from perf import load_nearest_correction, apply_correction
+class plotter_after_tpc():
+    def __init__(self, data_folder, run_number, angle):
+        self.run_number = run_number
+        self.tracks_pd = pd.read_pickle(os.path.join(data_folder, "perf_out", f"{self.run_number}", f"tracks_pd_{2}.gzip"),
+                                   compression="gzip")
+
+        self.correction = load_nearest_correction(os.path.join(data_folder, "alignment"), self.run_number)
+        self.hit_pd_x = pd.read_feather(os.path.join(data_folder,"raw_root", f"{self.run_number}","tpc", "hit_pd_TPC-zstd.feather"))
+        self.cl_pd_x = pd.read_feather(os.path.join(data_folder,"raw_root", f"{self.run_number}","tpc", "cluster_pd_1D_TPC-zstd.feather"))
+        self.hit_pd_x = self.hit_pd_x.query("strip_x>-1 and planar ==2")
+        self.cl_pd_x = self.cl_pd_x.query("cl_pos_x>-1 and planar ==2")
+        self.cl_pd_x_g = self.cl_pd_x.groupby("count")
+        self.hit_pd_x_g = self.hit_pd_x.groupby("count")
+        self.pitch = 0.650
+        self.angle = angle
+
+
+    def apply_correction_x(self,cl_pos_x_cm,  epos_y, planar):
+        """
+        Fucntion used to apply 2D correction to the dataset
+        :param row:
+        :param planar:
+        :param correction:
+        :return:
+        """
+        corrections = self.correction
+        for correction in corrections:
+            angle = (correction[f"{int(planar)}_x"][0] - correction[f"{int(planar)}_y"][0]) / 2
+            cl_pos_x_cm = cl_pos_x_cm - angle * (epos_y) + correction[f"{int(planar)}_y"][1]
+        return cl_pos_x_cm
+
+    def plot_evt_tpc(self, count, dut , folder):
+        event_hits = self.hit_pd_x_g.get_group(count)
+        event_cluster = self.cl_pd_x_g.get_group(count)
+        event_cluster = event_cluster.loc[event_cluster["cl_charge"].idxmax()]
+        event_hits = event_hits[event_hits.hit_id.isin(event_cluster.hit_ids)]
+        event_hits = event_hits[~event_hits.pos_g.isna()]
+        x=event_hits.strip_x_c
+        y=event_hits.pos_g
+        y_no_tw = event_hits.pos_g + event_hits.hit_time_corr*0.040
+        sx=event_hits.error_x
+        sy=event_hits.error_y
+        fit=[event_cluster.F1,event_cluster.F0]
+        fit_x = self.tracks_pd.query(f"count == {count}").fit_x.values[0]
+        fit_y = self.tracks_pd.query(f"count == {count}").fit_y.values[0]
+        prev_pos = fit_x[1] + fit_x[0]*dut*10
+
+        figplot, ax = plt.subplots(2,2,figsize=(20, 20))
+        figplot.suptitle(f"Event {int(count)}, planar {2}", fontsize=26)
+        figplot.set_facecolor("white")
+        pos_utpc=event_cluster.pos_tpc
+        ax[0][0].errorbar(
+            x=x, y=y, yerr=sy, xerr=sx, fmt='o', label= "TW correction", markersize=0.1)
+        ax[0][0].errorbar(
+            x=x, y=y_no_tw, yerr=sy, xerr=sx, fmt='o', label="No TW correction", markersize=0.1)
+
+
+        ax[0][0].plot(x, (fit[1] + x*0.650*fit[0]),"r--", label="Fit")
+        ax[0][0].plot([x.min(),x.max()] ,[0, 0], "b--")
+        ax[0][0].plot([x.min(),x.max()] ,[5, 5], "b--")
+
+        # ax[0][0].plot([pos_utpc_corr/0.0650,pos_utpc_corr/0.0650], [0, 5], "y--", label="Pos_utcp corrected")
+        ax[0][0].plot([pos_utpc,pos_utpc], [0, 5], "r--", label="Pos_utcp")
+
+        # ax[0][0].plot([prev_pos/0.0650,prev_pos/0.0650], [0, 5], "y-", label="prev_pos corrected")
+        pos_utpc_corr = self.apply_correction_x(pos_utpc*0.0650, fit_y[1] +fit_y[0]*dut*10, planar=dut)
+        corr=(pos_utpc_corr/0.0650)-pos_utpc
+
+        ax[0][0].plot([prev_pos/0.0650-corr,prev_pos/0.0650-corr], [0, 5], "g-", label="prev_pos")
+        ## Retta passante per y = 2.5, x= prev_pos/0.0650
+        ax[0][0].plot([((prev_pos-corr*0.0650)-np.tan(self.angle*np.pi/180)*0.25)/0.0650, ((prev_pos-corr*0.0650)+np.tan(self.angle*np.pi/180)*0.25)/0.0650],
+                      [0, 5], "g-", label="Prev track")
+
+        ax[0][0].plot([x.min(), x.max()],
+                      [2.5, 2.5], "k--", label="Half gap")
+        ## Adding correction notes~~~~~~~~~~~~:
+        dropped=event_hits.query('dropped!="Not"')
+        ax[0][0].scatter(x=dropped.strip_x, y=dropped.pos_g, label="Capacitive corr",marker='x', c="green", s=400)
+
+
+        ## Adding correction notes~~~~~~~~~~~~:
+
+        ax2 = ax[0][0].twinx()
+        ax2.bar(x, event_hits.charge_SH.values,width=0.4,  color="cyan",alpha=0.1)
+        ax[0][0].set_zorder(1)
+        ax[0][0].patch.set_visible(False)
+        ax[0][0].set_xlabel("Strip")
+        ax2.set_ylabel("Charge [fC]")
+        ax[0][0].legend()
+
+        #--------
+        ax[0][1].scatter(
+            x=event_hits.strip_x, y=event_hits.pos_g_pre_cor, marker='+', label= "Pre-correction", s=100, alpha=0.7)
+        ax[0][1].scatter(
+            x=event_hits.strip_x_c, y=event_hits.pos_g, marker='x', label= "Post-correction", s=100, alpha=0.7)
+
+        ax3 = ax[0][1].twinx()
+        ax3.bar(event_hits.strip_x_c, event_hits.charge_SH.values,width=0.4,  color="cyan",alpha=0.1)
+        ax[0][1].set_zorder(1)
+        ax[0][1].patch.set_visible(False)
+        ax[0][1].set_xlabel("Strip")
+        ax3.set_ylabel("Charge [fC]")
+        ax[0][1].legend()
+        #-------
+        res= y-((fit[1] + x*0.650*fit[0]))
+        ax[1][0].errorbar(
+            x=x, y=res, fmt='o', label= "Residual")
+
+        ax[1][0].set_xlabel("Strip")
+        ax[1][0].set_ylabel("Res")
+
+        ax[1][1].errorbar(
+            x=y/0.42, y=res, fmt='o', label= "Residual")
+        # ax[0][0].set_yticks(np.arange(y.min()//1, y.max(), 0.5))
+        ax[1][1].set_xlabel("Time [ns]")
+        ax[1][1].set_ylabel("Res")
+
+        figplot.savefig(os.path.join(folder, f"evt_{count}_detector_{dut}.png"))
+
+
+

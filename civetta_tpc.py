@@ -11,7 +11,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, Silent=False):
+    def __init__(self, data_folder,run,cpu_to_use=cpu_count(), cylinder=False, Silent=False, angle=0):
         self.data_folder = data_folder
         self.cpu_to_use = cpu_to_use
         self.run_number = run
@@ -27,6 +27,7 @@ class runner:
         self.tpc_prep.no_time_walk_corr = False
         self.tpc_prep.no_border_correction = False
         self.tpc_prep.no_prev_strip_charge_correction = False
+        self.angle=angle
 
 
     def calc_and_save_thr_eff(self):
@@ -37,6 +38,11 @@ class runner:
 
     def tpc_position_clusters(self):
         self.tpc_prep.calc_tpc_pos(cpus=34)
+
+    def plot_evts(self):
+        print (self.angle)
+        self.plotter_after_tpc = tpc_lib.plotter_after_tpc(self.data_folder, self.run_number, self.angle)
+
 
 ##############################################################################################
 ##																							##
@@ -89,6 +95,8 @@ def main(run, **kwargs):
         op_list.append("time_walk")
     if args.tpc_position_clusters:
         op_list.append("tpc_position_clusters")
+    if args.plot_evts:
+        op_list.append("plot_evts")
     # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv | args.performance):
     #     op_list=["D","A","C", "T","S"]
 
@@ -132,6 +140,8 @@ def main(run, **kwargs):
         main_runner.calc_time_and_time_walk()
     if "tpc_position_clusters" in (op_list):
         main_runner.tpc_position_clusters()
+    if "plot_evts" in (op_list):
+        main_runner.plot_evts()
     # main_runner.tpc_opt = args.__dict__
 
 
@@ -156,6 +166,8 @@ if __name__=="__main__":
     parser.add_argument('-no_time_walk_corr', help="Use time walk correction", action = "store_true")
     parser.add_argument('-no_border_correction', help="Use border_correction correction", action = "store_true")
     parser.add_argument('-no_prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
+    parser.add_argument('-plot_evts', help="Plot some good and bad events after complete analysis", action = "store_true")
+    parser.add_argument('-angle', help="Angle of acquisition", type=float)
 
     args = parser.parse_args()
 
