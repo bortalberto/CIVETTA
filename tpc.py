@@ -810,6 +810,6 @@ class plotter_after_tpc():
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]")
         fig.update_layout(showlegend=False)
-        fig.update_layout(width=1200, heigth=2000)
+        fig.update_layout(width=1200, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs = "directory")
