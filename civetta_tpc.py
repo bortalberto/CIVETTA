@@ -104,7 +104,8 @@ def main(run, **kwargs):
         options["cpu_to_use"] = args.cpu
     if args.Silent:
         options["Silent"] = args.Silent
-
+    if args.angle:
+        options["angle"] = args.angle
     if len (op_list)>0:
         main_runner = runner(data_folder, run, **options)
     else:
