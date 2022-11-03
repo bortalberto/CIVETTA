@@ -561,16 +561,16 @@ class plotter_after_tpc():
         self.out_path = os.path.join([f"{self.data_folder}", "elaborated_output", f"{self.run}", "output_plot_TPC"])
         if not os.path.isdir(self.out_path):
             os.mkdir(self.out_path)
-        self.run_number = run_number
+        self.run = run_number
         self.tracks_pd = pd.read_pickle(
-            os.path.join(data_folder, "perf_out", f"{self.run_number}", f"tracks_pd_{2}.gzip"),
+            os.path.join(data_folder, "perf_out", f"{self.run}", f"tracks_pd_{2}.gzip"),
             compression="gzip")
 
-        self.correction = load_nearest_correction(os.path.join(data_folder, "alignment"), self.run_number)
+        self.correction = load_nearest_correction(os.path.join(data_folder, "alignment"), self.run)
         self.hit_pd_x = pd.read_feather(
-            os.path.join(data_folder, "raw_root", f"{self.run_number}", "tpc", "hit_pd_TPC-zstd.feather"))
+            os.path.join(data_folder, "raw_root", f"{self.run}", "tpc", "hit_pd_TPC-zstd.feather"))
         self.cl_pd_x = pd.read_feather(
-            os.path.join(data_folder, "raw_root", f"{self.run_number}", "tpc", "cluster_pd_1D_TPC-zstd.feather"))
+            os.path.join(data_folder, "raw_root", f"{self.run}", "tpc", "cluster_pd_1D_TPC-zstd.feather"))
         self.hit_pd_x = self.hit_pd_x.query("strip_x>-1 and planar ==2")
         self.cl_pd_x = self.cl_pd_x.query("cl_pos_x>-1 and planar ==2")
         self.cl_pd_x_g = self.cl_pd_x.groupby("count")
@@ -702,4 +702,4 @@ class plotter_after_tpc():
             good_evts = np.random.choice(good_evts_res.count, n)
             bad_evts = np.random.choice(bad_evts_res.count, n)  # Select good and bad evts
             for evt in good_evts:
-                self.plotter_after_tpc()
+                self.plot_evt_tpc()
