@@ -589,7 +589,7 @@ class plotter_after_tpc():
                                compression="gzip"))
             eff_pd_l.append(
                 pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/eff_pd_{p}_TPC-zstd.feather"))
-        self.res_measure = res_measure(cl_pd=cl_pd_list, eff_pd=eff_pd_l, planar_list=[0, 1, 2, 3],
+        self.res_measure = res_measure(cl_pd=cl_pd_list, eff_pd=pd.concat(eff_pd_l), planar_list=[0, 1, 2, 3],
                                        tracks_pd=track_pd_list)
 
     def apply_correction_x(self, cl_pos_x_cm, epos_y, planar):
