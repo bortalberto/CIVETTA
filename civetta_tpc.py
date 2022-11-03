@@ -41,6 +41,7 @@ class runner:
 
     def plot_evts(self):
         self.plotter_after_tpc = tpc_lib.plotter_after_tpc(self.data_folder, self.run_number, self.angle)
+        self.plotter_after_tpc.save_evts_plots()
 
 
 ##############################################################################################
