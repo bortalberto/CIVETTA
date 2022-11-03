@@ -697,7 +697,7 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             residuals = self.res_measure.cl_pds[f"{pl}x"].res_x  # Load residuals
             residuals = residuals[residuals < 5]  # cut for absurd residuals
-            std = residuals.std
+            std = residuals.std()
             good_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std / 2]
             bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std]
             good_evts = np.random.choice(good_evts_res.count, n)
