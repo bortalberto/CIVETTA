@@ -16,7 +16,7 @@ from scipy.odr import ODR, Model, Data, RealData
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-
+import root_fit_lib
 warnings.filterwarnings('ignore')
 
 
@@ -732,10 +732,17 @@ class plotter_after_tpc():
         self.plt_path = os.path.join(self.out_path, "plots")
         if not os.path.isdir(self.plt_path):
             os.mkdir(self.plt_path)
+
         self.plot_residuals()
+        self.plot_residuals_w_fit()
+        self.plot_residuals_vs_pos()
+
 
     def plot_residuals(self):
-        fig = make_subplots(rows=2, cols=2)
+        fig = make_subplots(rows=2, cols=2,
+                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"))
+
+
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].res_x,
@@ -745,3 +752,63 @@ class plotter_after_tpc():
         fig.update_xaxes(range=[-0.5, 0.5], dtick=0.1)
         fig.write_html(os.path.join(self.plt_path, "residuals.html"), include_plotlyjs = "directory")
         # fig.show("notebook")
+
+    def plot_residuals_w_fit(self):
+        fig = make_subplots(rows=2, cols=2,
+                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"))
+        for pl in range(0, 4):
+            popt, chi2, error, ndof = root_fit_lib.single_root_fit(self.res_measure.cl_pds[f"{pl}x"].res_x,
+                                                                   p0=[100, 0, 0.1, 1],
+                                                                   lower_bounds=[0, -2, 0, 0],
+                                                                   upper_bounds=[5000, 2, 1, 1000], sigma_def=1)
+            y, x = np.histogram(self.res_measure.cl_pds[f"{pl}x"].res_x, bins=200, range=[-1, 1])
+            x = (x[1:] + x[:-1]) / 2
+            fig.add_trace(
+                go.Scatter(x=x, y=y,
+                           line=dict(width=2, shape='hvh'), name=f"Detector {pl}"),
+                col=pl // 2 + 1, row=pl % 2 + 1)
+            fig.add_trace(
+                go.Scatter(
+                    x=np.arange(-1, 1, 0.01),
+                    y=root_fit_lib.gaus(np.arange(-1, 1, 0.01), *popt[0:3]) + popt[3],
+                    name=f"Fit {pl}, m={popt[1]:.2e}, s={popt[2]:.2e}, cr={chi2 / ndof:.1e}"
+                ), col=pl // 2 + 1, row=pl % 2 + 1)
+        fig.update_xaxes(title="Res x [cm]")
+        fig.update_yaxes(title="#")
+
+        fig.update_xaxes(range=[-0.5, 0.5], dtick=0.1)
+
+        fig.update_layout(legend=dict(
+            orientation="h"
+        ))
+        fig.write_html(os.path.join(self.plt_path, "residuals_w_fit.html"), include_plotlyjs = "directory")
+
+    def plot_residuals_vs_pos(self):
+        fig = make_subplots(rows=4, cols=2,
+                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3","Detector 0", "Detector 1", "Detector 2", "Detector 3"))
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Histogram2d(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650,
+                               y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                               ybins={"start": -0.8, "end": 0.8, "size": 1.6 / 200},
+                               xbins={"start": -1, "end": 10, "size": 10 / 128},
+                               colorscale="viridis",
+                               name=f"Planare {pl}",
+                               showscale=False),
+                col=pl // 2 + 1, row=pl % 2 + 1)
+
+        for pl in range (0,4):
+            for pl in range(0, 4):
+                fig.add_trace(
+                    go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
+                           y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                           name=f"Planare {pl}"),
+                    col=pl // 2 + 1, row=pl % 2 + 1 +2 )
+
+
+        fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
+        fig.update_layout(height=900, width=1200
+                          )
+        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]")
+
+        fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs = "directory")
