@@ -558,10 +558,11 @@ from perf_out_evt_display import res_measure
 class plotter_after_tpc():
     def __init__(self, data_folder, run_number, angle):
         self.data_folder = data_folder
+        self.run = run_number
+
         self.out_path = os.path.join([f"{self.data_folder}", "elaborated_output", f"{self.run}", "output_plot_TPC"])
         if not os.path.isdir(self.out_path):
             os.mkdir(self.out_path)
-        self.run = run_number
         self.tracks_pd = pd.read_pickle(
             os.path.join(data_folder, "perf_out", f"{self.run}", f"tracks_pd_{2}.gzip"),
             compression="gzip")
