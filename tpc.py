@@ -869,18 +869,18 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 0.5 * 0.5,
+                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 1,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 0.5 * 0.5,
+                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 1,
                              name=f"Hist det {pl}", opacity=0.15),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range, dtick=1, title="Cl charge [fC]")
+        fig.update_xaxes(range=x_range, title="Cl charge [fC]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="#", secondary_y=True)
         fig.update_layout( height=2000)
