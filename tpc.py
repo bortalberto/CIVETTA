@@ -791,12 +791,14 @@ class plotter_after_tpc():
         fig = make_subplots(rows=4, cols=2,
                             # row_heights=[800,800,800,800],
                             subplot_titles=(
-                            "Detector 0", "Detector 1", "Detector 2", "Detector 3", "Detector 0", "Detector 1",
-                            "Detector 2", "Detector 3"),
-                            specs=[[{"secondary_y": False}, {"secondary_y": False}, {"secondary_y": False},
-                                    {"secondary_y": False}],
-                                   [{"secondary_y": True}, {"secondary_y": True}, {"secondary_y": True},
-                                    {"secondary_y": True}]
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3",
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3"
+                            ),
+                            specs=[
+                                [{"secondary_y": False}, {"secondary_y": False},
+                                 {"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": True}, {"secondary_y": True},
+                                 {"secondary_y": True}, {"secondary_y": True}]
                                    ]
                             )
         for pl in range(0, 4):
@@ -830,3 +832,29 @@ class plotter_after_tpc():
         fig.update_layout(width=1200, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs="directory")
+
+    def plot_residual_vs_charge(self):
+        fig = make_subplots(rows=4, cols=2,
+                            # row_heights=[800,800,800,800],
+                            subplot_titles=(
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3", "Detector 0", "Detector 1",
+                                "Detector 2", "Detector 3"),
+                            specs=[[{"secondary_y": False}, {"secondary_y": False}, {"secondary_y": False},
+                                    {"secondary_y": False}],
+                                   [{"secondary_y": True}, {"secondary_y": True}, {"secondary_y": True},
+                                    {"secondary_y": True}]
+                                   ]
+                            )
+        x_range = [0, 200]
+        y_range = [-0.5, 0.5]
+
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Histogram2d(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge,
+                               y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                               ybins={"start": y_range[0], "end": y_range[1], "size": (y_range[1] - y_range[0]) / 100},
+                               xbins={"start": x_range[0], "end": x_range[1], "size": (x_range[1] - x_range[0]) / 100},
+                               colorscale="viridis",
+                               name=f"Planare {pl}",
+                               showscale=False),
+                col=pl // 2 + 1, row=pl % 2 + 1)
