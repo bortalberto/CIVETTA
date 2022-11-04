@@ -955,7 +955,7 @@ class plotter_after_tpc():
                             )
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram2d(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pots_tpc) * self.pitch,
+                go.Histogram2d(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch,
                                y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                                ybins={"start": y_range[0], "end": y_range[1], "size": (y_range[1] - y_range[0]) / 100},
                                xbins={"start": x_range[0], "end": x_range[1], "size": (x_range[1] - x_range[0]) / x_range[1]},
@@ -966,14 +966,14 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pots_tpc) * self.pitch,
+                go.Box(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pots_tpc) * self.pitch,
+                go.Histogram(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch,
                              name=f"Hist det {pl}", opacity=0.15),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
