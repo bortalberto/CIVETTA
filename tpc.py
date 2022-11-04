@@ -17,6 +17,10 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import root_fit_lib
+import plotly.io as pio
+
+pio.templates.default = "plotly_white"
+
 warnings.filterwarnings('ignore')
 
 
@@ -681,7 +685,7 @@ class plotter_after_tpc():
         ax3.set_ylabel("Charge [fC]")
         ax[0][1].legend()
         # -------
-        res = y - ( (fit[1] + x * 0.650 * fit[0]) )
+        res = y - ((fit[1] + x * 0.650 * fit[0]))
         ax[1][0].errorbar(
             x=x, y=res, fmt='o', label="Residual")
 
@@ -694,17 +698,19 @@ class plotter_after_tpc():
         ax[1][1].set_xlabel("Time [ns]")
         ax[1][1].set_ylabel("Res")
 
-        figplot.savefig(os.path.join(folder, f"evt_{count}_detector_{dut}.png") )
+        figplot.savefig(os.path.join(folder, f"evt_{count}_detector_{dut}.png"))
 
     def save_evts_plots(self, n=5):
         for pl in range(0, 4):
             residuals = self.res_measure.cl_pds[f"{pl}x"].res_x  # Load residuals
             residuals = residuals[residuals < 5]  # cut for absurd residuals
             std = residuals.std()
-            print (std)
+            print(std)
             good_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std / 2]
-            bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][(abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std ) & (abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std*3)]
-            very_bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 5]
+            bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][(abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std) & (
+                        abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std * 3)]
+            very_bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][
+                abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 5]
 
             good_evts = np.random.choice(good_evts_res["count"], n)
             bad_evts = np.random.choice(bad_evts_res["count"], n)  # Select good and bad evts
@@ -737,11 +743,9 @@ class plotter_after_tpc():
         self.plot_residuals_w_fit()
         self.plot_residuals_vs_pos()
 
-
     def plot_residuals(self):
         fig = make_subplots(rows=2, cols=2,
                             subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"))
-
 
         for pl in range(0, 4):
             fig.add_trace(
@@ -750,7 +754,7 @@ class plotter_after_tpc():
                              name=f"Planare {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1)
         fig.update_xaxes(range=[-0.5, 0.5], dtick=0.1)
-        fig.write_html(os.path.join(self.plt_path, "residuals.html"), include_plotlyjs = "directory")
+        fig.write_html(os.path.join(self.plt_path, "residuals.html"), include_plotlyjs="directory")
         # fig.show("notebook")
 
     def plot_residuals_w_fit(self):
@@ -781,13 +785,19 @@ class plotter_after_tpc():
         fig.update_layout(legend=dict(
             orientation="h"
         ))
-        fig.write_html(os.path.join(self.plt_path, "residuals_w_fit.html"), include_plotlyjs = "directory")
+        fig.write_html(os.path.join(self.plt_path, "residuals_w_fit.html"), include_plotlyjs="directory")
 
     def plot_residuals_vs_pos(self):
         fig = make_subplots(rows=4, cols=2,
                             # row_heights=[800,800,800,800],
-                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3","Detector 0", "Detector 1", "Detector 2", "Detector 3"),
-                            specs = ("","","","",{"secondary_y": True},{"secondary_y": True},{"secondary_y": True},{"secondary_y": True}))
+                            subplot_titles=(
+                            "Detector 0", "Detector 1", "Detector 2", "Detector 3", "Detector 0", "Detector 1",
+                            "Detector 2", "Detector 3"),
+                            specs=([{}, {}, {}, {}],
+                                   [{"secondary_y": True}, {"secondary_y": True}, {"secondary_y": True},
+                                    {"secondary_y": True}]
+                                   )
+                            )
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram2d(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650,
@@ -799,18 +809,23 @@ class plotter_after_tpc():
                                showscale=False),
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
-        for pl in range (0,4):
+        for pl in range(0, 4):
             for pl in range(0, 4):
                 fig.add_trace(
                     go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
                            y=self.res_measure.cl_pds[f"{pl}x"].res_x,
-                           name=f"Planare {pl}"),
-                    col=pl // 2 + 1, row=pl % 2 + 1 +2 )
+                           name=f"Box det {pl}"),
+                    col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
 
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
+                             name=f"Hist det {pl}", opacity=0.2),
+                col=pl // 2 + 1, row=pl % 2 + 1)
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
-        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]")
-        fig.update_layout(showlegend=False)
+        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=True)
+        fig.update_yaxes(title="#", secondary_y=False)
         fig.update_layout(width=1200, height=2000)
 
-        fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs = "directory")
+        fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs="directory")
