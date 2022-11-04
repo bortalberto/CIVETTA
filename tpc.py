@@ -744,8 +744,7 @@ class plotter_after_tpc():
         self.plot_residuals_vs_pos()
         self.plot_residual_vs_charge()
         self.plot_residual_vs_size()
-
-
+        self.plot_residual_vs_diff_with_cc()
     def plot_residuals(self):
         fig = make_subplots(rows=2, cols=2,
                             subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"),
@@ -935,3 +934,52 @@ class plotter_after_tpc():
         fig.update_layout( height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_size.html"), include_plotlyjs="directory")
+
+    def plot_residual_vs_diff_with_cc(self):
+        x_range = [-2, 2]
+        y_range = [-0.5, 0.5]
+
+        fig = make_subplots(rows=4, cols=2,
+                            # row_heights=[800,800,800,800],
+                            subplot_titles=(
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3",
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3"
+                            ),
+                            specs=[
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": True}, {"secondary_y": True}],
+                                [{"secondary_y": True}, {"secondary_y": True}]
+                            ],
+                            horizontal_spacing=0.10
+                            )
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Histogram2d(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pots_tpc) * self.pitch,
+                               y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                               ybins={"start": y_range[0], "end": y_range[1], "size": (y_range[1] - y_range[0]) / 100},
+                               xbins={"start": x_range[0], "end": x_range[1], "size": (x_range[1] - x_range[0]) / x_range[1]},
+                               colorscale="viridis",
+                               showlegend=False,
+                               showscale=False, ),
+                col=pl // 2 + 1, row=pl % 2 + 1)
+
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Box(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pots_tpc) * self.pitch,
+                       y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                       name=f"Box det {pl}"),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
+
+        for pl in range(0, 4):
+            fig.add_trace(
+                go.Histogram(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pots_tpc) * self.pitch,
+                             name=f"Hist det {pl}", opacity=0.15),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
+
+        fig.update_xaxes(range=x_range, dtick=1, title="Diff btw CC and TPC [mm]")
+        fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
+        fig.update_yaxes(title="#", secondary_y=True)
+        fig.update_layout( height=2000)
+
+        fig.write_html(os.path.join(self.plt_path, "residuals_vs_diff.html"), include_plotlyjs="directory")

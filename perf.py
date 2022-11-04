@@ -369,8 +369,8 @@ def calc_eff_process(tracks_pd, cl_pd_1D, res_dict, nsimga_eff, put, corrections
     put_mean_y = res_dict["put_mean_y"]
     put_sigma_y = res_dict["put_sigma_y"]
     tracks_pd_c_event = tracks_pd.groupby(["count"])
-
     cl_pd_1D_event = cl_pd_1D.groupby(["count"])
+
     for event in tracks_pd_c_event.groups:
         #         if event in (cl_pd_1D_event.groups):
         eff_y_lb = False
