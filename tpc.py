@@ -793,7 +793,8 @@ class plotter_after_tpc():
                             subplot_titles=(
                             "Detector 0", "Detector 1", "Detector 2", "Detector 3", "Detector 0", "Detector 1",
                             "Detector 2", "Detector 3"),
-                            specs=[[{}, {}, {}, {}],
+                            specs=[[{"secondary_y": False}, {"secondary_y": False}, {"secondary_y": False},
+                                    {"secondary_y": False}],
                                    [{"secondary_y": True}, {"secondary_y": True}, {"secondary_y": True},
                                     {"secondary_y": True}]
                                    ]
