@@ -492,7 +492,7 @@ class res_measure:
             lambda x: x[1])  # Calculate supposed position
 
         duplicated_cl_event = cl_pd["count"].unique()[cl_pd.groupby("count").agg("size") > 2]  # Drop events with 2 efficient clusters
-        cl_pd = cl_pd[~cl_pd["count"].isin(duplicated_cl_event)]
+        cl_pd = cl_pd[~cl_pd["count"].isin(duplicated_cl_event)] # Possiamo fare diveramente?
 
         tracks_pd = tracks_pd[~tracks_pd["count"].isin(duplicated_cl_event)]
         tracks_pd = tracks_pd.sort_values("count").reset_index(drop=True)
@@ -504,6 +504,9 @@ class res_measure:
 
         cl_pd_x.loc[:, "prev_pos_x_cm"] = tracks_pd.prev_pos_put_x
         cl_pd_y.loc[:, "prev_pos_y_cm"] = tracks_pd.prev_pos_put_y
+
+        cl_pd_x.loc[:, "angle_trk_x"] = tracks_pd.tracks_pd["fit_x"].apply(lambda x: x[1])
+        cl_pd_y.loc[:, "angle_trk_y"] = tracks_pd.tracks_pd["fit_y"].apply(lambda x: x[1])
 
         cl_pd_x.loc[:, "res_x"] = tracks_pd.prev_pos_put_x - cl_pd_x.loc[:, "cl_pos_x_cm"]
         cl_pd_y.loc[:, "res_y"] = tracks_pd.prev_pos_put_y - cl_pd_y.loc[:, "cl_pos_y_cm"]
