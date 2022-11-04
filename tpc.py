@@ -869,7 +869,7 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 1,
+                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 10 * 10,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
