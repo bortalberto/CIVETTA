@@ -505,8 +505,8 @@ class res_measure:
         cl_pd_x.loc[:, "prev_pos_x_cm"] = tracks_pd.prev_pos_put_x
         cl_pd_y.loc[:, "prev_pos_y_cm"] = tracks_pd.prev_pos_put_y
 
-        cl_pd_x.loc[:, "angle_trk_x"] = tracks_pd["fit_x"].apply(lambda x: x[1])
-        cl_pd_y.loc[:, "angle_trk_y"] = tracks_pd["fit_y"].apply(lambda x: x[1])
+        cl_pd_x.loc[:, "angle_trk_x"] = tracks_pd["fit_x"].apply(lambda x: x[0])
+        cl_pd_y.loc[:, "angle_trk_y"] = tracks_pd["fit_y"].apply(lambda x: x[0])
 
         cl_pd_x.loc[:, "res_x"] = tracks_pd.prev_pos_put_x - cl_pd_x.loc[:, "cl_pos_x_cm"]
         cl_pd_y.loc[:, "res_y"] = tracks_pd.prev_pos_put_y - cl_pd_y.loc[:, "cl_pos_y_cm"]
