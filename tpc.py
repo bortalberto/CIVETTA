@@ -824,7 +824,7 @@ class plotter_after_tpc():
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
                              name=f"Hist det {pl}", opacity=0.2),
-                col=pl // 2 + 1, row=pl % 2 + 1)
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=True)
