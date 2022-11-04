@@ -876,7 +876,7 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 1,
+                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge ,
                              name=f"Hist det {pl}", opacity=0.15),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
