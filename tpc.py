@@ -795,10 +795,10 @@ class plotter_after_tpc():
                                 "Detector 0", "Detector 1", "Detector 2", "Detector 3"
                             ),
                             specs=[
-                                [{"secondary_y": False}, {"secondary_y": False},
-                                 {"secondary_y": False}, {"secondary_y": False}],
-                                [{"secondary_y": True}, {"secondary_y": True},
-                                 {"secondary_y": True}, {"secondary_y": True}]
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": True}, {"secondary_y": True}],
+                                [{"secondary_y": True}, {"secondary_y": True}]
                                    ]
                             )
         for pl in range(0, 4):
