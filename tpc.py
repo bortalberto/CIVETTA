@@ -748,7 +748,8 @@ class plotter_after_tpc():
 
     def plot_residuals(self):
         fig = make_subplots(rows=2, cols=2,
-                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"))
+                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"),
+                            horizontal_spacing=0.05)
 
         for pl in range(0, 4):
             fig.add_trace(
@@ -762,7 +763,8 @@ class plotter_after_tpc():
 
     def plot_residuals_w_fit(self):
         fig = make_subplots(rows=2, cols=2,
-                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"))
+                            subplot_titles=("Detector 0", "Detector 1", "Detector 2", "Detector 3"),
+                            horizontal_spacing=0.05)
         for pl in range(0, 4):
             popt, chi2, error, ndof = root_fit_lib.single_root_fit(self.res_measure.cl_pds[f"{pl}x"].res_x,
                                                                    p0=[100, 0, 0.1, 1],
@@ -802,7 +804,8 @@ class plotter_after_tpc():
                                 [{"secondary_y": False}, {"secondary_y": False}],
                                 [{"secondary_y": True}, {"secondary_y": True}],
                                 [{"secondary_y": True}, {"secondary_y": True}]
-                                   ]
+                                   ],
+                            horizontal_spacing=0.05
                             )
         for pl in range(0, 4):
             fig.add_trace(
@@ -850,7 +853,8 @@ class plotter_after_tpc():
                                 [{"secondary_y": False}, {"secondary_y": False}],
                                 [{"secondary_y": True}, {"secondary_y": True}],
                                 [{"secondary_y": True}, {"secondary_y": True}]
-                            ]
+                            ],
+                            horizontal_spacing=0.05
                             )
         for pl in range(0, 4):
             fig.add_trace(
@@ -898,7 +902,8 @@ class plotter_after_tpc():
                                 [{"secondary_y": False}, {"secondary_y": False}],
                                 [{"secondary_y": True}, {"secondary_y": True}],
                                 [{"secondary_y": True}, {"secondary_y": True}]
-                            ]
+                            ],
+                            horizontal_spacing=0.05
                             )
         for pl in range(0, 4):
             fig.add_trace(
