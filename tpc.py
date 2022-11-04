@@ -813,24 +813,24 @@ class plotter_after_tpc():
                                colorscale="viridis",
                                showlegend = False,
                                showscale = False),
-                col=pl // 2 + 1, row=pl % 2 + 1, secondary_y=True)
+                col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
                              name=f"Hist det {pl}", opacity=0.2),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
-        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=True)
-        fig.update_yaxes(title="#", secondary_y=False)
+        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=False)
+        fig.update_yaxes(title="#", secondary_y=True)
         fig.update_layout(width=1400, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs="directory")
@@ -861,24 +861,24 @@ class plotter_after_tpc():
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False),
-                col=pl // 2 + 1, row=pl % 2 + 1, secondary_y=True)
+                col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 0.5 * 0.5,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge // 0.5 * 0.5,
-                             name=f"Hist det {pl}", opacity=0.2),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
+                             name=f"Hist det {pl}", opacity=0.15),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Cl charge [fC]")
-        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=True)
-        fig.update_yaxes(title="#", secondary_y=False)
+        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=False)
+        fig.update_yaxes(title="#", secondary_y=True)
         fig.update_layout(width=1400, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_charge.html"), include_plotlyjs="directory")
@@ -909,24 +909,24 @@ class plotter_after_tpc():
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False, ),
-                col=pl // 2 + 1, row=pl % 2 + 1, secondary_y=True)
+                col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_size ,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_size,
-                             name=f"Hist det {pl}", opacity=0.2),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
+                             name=f"Hist det {pl}", opacity=0.15),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Cl size [strips]")
-        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=True)
-        fig.update_yaxes(title="#", secondary_y=False)
+        fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=False)
+        fig.update_yaxes(title="#", secondary_y=True)
         fig.update_layout(width=1400, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_size.html"), include_plotlyjs="directory")
