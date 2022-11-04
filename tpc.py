@@ -809,7 +809,8 @@ class plotter_after_tpc():
                                xbins={"start": -1, "end": 10, "size": 10 / 128},
                                colorscale="viridis",
                                name=f"Planare {pl}",
-                               showscale=False),
+                               showlegend = False,
+                               showscale = False),
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
