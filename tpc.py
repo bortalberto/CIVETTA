@@ -813,12 +813,11 @@ class plotter_after_tpc():
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
-            for pl in range(0, 4):
-                fig.add_trace(
-                    go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
-                           y=self.res_measure.cl_pds[f"{pl}x"].res_x,
-                           name=f"Box det {pl}"),
-                    col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
+            fig.add_trace(
+                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
+                       y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                       name=f"Box det {pl}"),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
 
         for pl in range(0, 4):
             fig.add_trace(
@@ -829,7 +828,7 @@ class plotter_after_tpc():
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=True)
         fig.update_yaxes(title="#", secondary_y=False)
-        fig.update_layout(width=1200, height=2000)
+        fig.update_layout(width=1400, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs="directory")
 
