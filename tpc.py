@@ -832,7 +832,7 @@ class plotter_after_tpc():
 
         fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=False)
-        fig.update_yaxes(title="#", secondary_y=True)
+        fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(width=1400, height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_pos_x.html"), include_plotlyjs="directory")
@@ -876,12 +876,12 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge ,
-                             name=f"Hist det {pl}", opacity=0.15),
+                             name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=x_range, title="Cl charge [fC]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
-        fig.update_yaxes(title="#", secondary_y=True)
+        fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout( height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_charge.html"), include_plotlyjs="directory")
@@ -925,12 +925,12 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_size,
-                             name=f"Hist det {pl}", opacity=0.15),
+                             name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=x_range, dtick=1, title="Cl size [strips]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
-        fig.update_yaxes(title="#", secondary_y=True)
+        fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout( height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_size.html"), include_plotlyjs="directory")
@@ -974,12 +974,12 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch,
-                             name=f"Hist det {pl}", opacity=0.15),
+                             name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=x_range, dtick=1, title="Diff btw CC and TPC [mm]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
-        fig.update_yaxes(title="#", secondary_y=True)
+        fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout( height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_diff.html"), include_plotlyjs="directory")
