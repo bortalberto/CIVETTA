@@ -1581,7 +1581,7 @@ class plotter_after_tpc():
                             )
         for pl in range(0,3):
             fig.add_trace(
-                go.Histogram2d(x=self.cl_pd_x_enemy.charge_SH,
+                go.Histogram2d(x=self.cl_pd_x_enemy.cl_charge,
                                y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
                                ybins={"start": y_range[0], "end": y_range[1],
                                       "size": (y_range[1] - y_range[0]) / 80},
@@ -1594,19 +1594,19 @@ class plotter_after_tpc():
 
         for pl in range(0, 3):
             fig.add_trace(
-                go.Box(x = (self.cl_pd_x_enemy.charge_SH//5)*5,
+                go.Box(x = (self.cl_pd_x_enemy.cl_charge//5)*5,
                       y = self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
                        name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 3):
             fig.add_trace(
-                go.Histogram(x=self.cl_pd_x_enemy.charge_SH,
+                go.Histogram(x=self.cl_pd_x_enemy.cl_charge,
                              y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
                              name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range, title=f"Cluster charge [fC")
+        fig.update_xaxes(range=x_range, title=f"Cluster charge [fC]")
         fig.update_yaxes(range=y_range, title="Res enemy [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
