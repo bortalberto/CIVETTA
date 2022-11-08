@@ -1392,7 +1392,7 @@ class plotter_after_tpc():
 
     def plot_residual_TPC_vs_near_strip_ratio(self, field=""):
 
-        x_range = [0, 15]
+        x_range = [0, 5]
         y_range = [-2, 2]
         fig = make_subplots(rows=4, cols=2,
                             # row_heights=[800,800,800,800],
@@ -1428,7 +1428,7 @@ class plotter_after_tpc():
             hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
 
             fig.add_trace(
-                go.Box(x=((hit_pd_c[f"{field}"]/hit_pd_c.charge_SH )// 0.1) *0.1,
+                go.Box(x=((hit_pd_c[f"{field}"]/hit_pd_c.charge_SH )// 0.5) *0.5,
                        y=hit_pd_c.residual_tpc,
                        name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
