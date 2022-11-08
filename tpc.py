@@ -755,7 +755,7 @@ class plotter_after_tpc():
         self.plot_residual_TPC_vs_pos_g()
         self.plot_residual_TPC_vs_near_strip_charge("next_strip_charge")
         self.plot_residual_TPC_vs_near_strip_charge("previous_strip_charge")
-        self.plot_residual_TPC_vs_near_strip_index()
+        self.plot_residual_TPC_vs_strip_index()
         self.plot_residual_TPC_vs_near_strip_ratio("next_strip_charge")
         self.plot_residual_TPC_vs_near_strip_ratio("previous_strip_charge")
 
@@ -1150,11 +1150,11 @@ class plotter_after_tpc():
                              name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range, title="Track_angle [°]")
-        fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
+        fig.update_xaxes(range=x_range, title="Track angle [°]")
+        fig.update_yaxes(range=y_range, title="Fit angle [°]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
-        fig.write_html(os.path.join(self.plt_path, "residuals_vs_track_angle.html"), include_plotlyjs="directory")
+        fig.write_html(os.path.join(self.plt_path, "fit_angle_vs_track_angle.html"), include_plotlyjs="directory")
 
     ## Plots about TPC fit residuals ##################################################################################
 
@@ -1332,7 +1332,7 @@ class plotter_after_tpc():
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
         fig.write_html(os.path.join(self.plt_path, f"residuals_tpc_vs_{field}.html"), include_plotlyjs="directory")
-    def plot_residual_TPC_vs_near_strip_index(self):
+    def plot_residual_TPC_vs_strip_index(self):
         x_range = [-1, 15]
         y_range = [-2, 2]
 
