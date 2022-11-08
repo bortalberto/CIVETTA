@@ -27,6 +27,7 @@ class runner:
         self.tpc_prep.no_time_walk_corr = False
         self.tpc_prep.no_border_correction = False
         self.tpc_prep.no_prev_strip_charge_correction = False
+        self.tpc_prep.fixed_angle = -1
         self.angle = angle
 
 
@@ -125,6 +126,8 @@ def main(run, **kwargs):
     main_runner.tpc_prep.no_time_walk_corr = config["TPC"].getboolean("no_time_walk_corr")
     main_runner.tpc_prep.no_border_correction = config["TPC"].getboolean("no_border_correction")
     main_runner.tpc_prep.no_prev_strip_charge_correction = config["TPC"].getboolean("no_prev_strip_charge_correction")
+    main_runner.tpc_prep.fixed_angle = config["TPC"].getboolean("fixed_angle")
+
     # Changes from options
     if args.no_errors:
         main_runner.tpc_prep.no_errors = args.no_errors
@@ -140,9 +143,11 @@ def main(run, **kwargs):
         main_runner.tpc_prep.no_border_correction = args.no_border_correction
     if args.no_prev_strip_charge_correction:
         main_runner.tpc_prep.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
+    if args.fixed_angle:
+        main_runner.tpc_prep.fixed_angle = args.fixed_angle
+
     if "thr_eff" in (op_list):
         main_runner.calc_and_save_thr_eff()
-
     if "time_walk" in (op_list):
         main_runner.calc_time_and_time_walk()
     if "tpc_position_clusters" in (op_list):
@@ -177,6 +182,7 @@ if __name__=="__main__":
     parser.add_argument('-no_prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
     parser.add_argument('-plot_evts', help="Plot some good and bad events after complete analysis", action = "store_true")
     parser.add_argument('-post_plot', help="Produce post analysis plots", action = "store_true")
+    parser.add_argument('-Fixed angle', help="Fixes the TPC angle (free = -1)", action = "store_true")
 
     parser.add_argument('-angle', help="Angle of acquisition", type=float)
 

@@ -100,7 +100,7 @@ fit_model = Model(linear_func)
 
 class tpc_prep:
     """
-    Class to run before TPC
+    Class to run TPC
     """
 
     def __init__(self, data_folder, cpu_to_use, run, cylinder, signal_width=80, silent=False,
@@ -123,6 +123,10 @@ class tpc_prep:
         self.no_time_walk_corr = False
         self.no_border_correction = False
         self.no_prev_strip_charge_correction = False
+        self.fixed_angle = -1
+
+        self.beta0 = [0.5, -20]  # initial guess
+        self.ifixb = [1, 1]  # free parameter
 
     def thr_tmw(self, row):
         """
@@ -192,6 +196,10 @@ class tpc_prep:
         """
 
         """
+        if self.fixed_angle>-1:
+            self.beta0 = [np.tan(self.fixed_angle*(np.pi/180)), -20]  # initial guess
+            self.ifixb = [0, 1]  # free parameter
+
         hit_pd = pd.read_feather(
             os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
         sub_list = []
@@ -401,7 +409,8 @@ class tpc_prep:
                                     sx=error_x,
                                     sy=error_y)
 
-                    odr = ODR(data, fit_model, beta0=[0.5, -20])
+
+                    odr = ODR(data, fit_model, beta0=self.beta0, ifixb=self.ifixb)
                     out = odr.run()
                     fit = out.beta
 
@@ -548,14 +557,6 @@ class tpc_prep:
                 dict_4_pd["cl_size_tot"].append(cl_x.cl_size + cl_y.cl_size)
         return (pd.DataFrame(dict_4_pd))
 
-
-# class out_plots_class:
-#     """
-#     Post analysis class to assert the scan performances
-#     """
-#     def __init__(self):
-#         self.events_pd_hit=
-#         self.eff_pd=
 
 
 from perf import load_nearest_correction, apply_correction
