@@ -984,7 +984,7 @@ class plotter_after_tpc():
                              name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range, dtick=1, title="Diff btw CC and TPC [mm]")
+        fig.update_xaxes(range=x_range,  title="Diff btw CC and TPC [mm]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout( height=2000)
@@ -1036,7 +1036,7 @@ class plotter_after_tpc():
                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range, dtick=1, title="Diff btw CC and TPC [mm]")
+        fig.update_xaxes(range=x_range, title="Fit angle [°]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
@@ -1046,7 +1046,7 @@ class plotter_after_tpc():
 
     def plot_residual_TPC_vs_charge(self):
         x_range = [-1, 50]
-        y_range = [-1, 1]
+        y_range = [-2, 2]
 
         fig = make_subplots(rows=4, cols=2,
                             # row_heights=[800,800,800,800],
@@ -1077,7 +1077,7 @@ class plotter_after_tpc():
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
-            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl} and residual_tpc<10 and pos_g<15 and pos_g <10")
             fig.add_trace(
                 go.Box(x=(hit_pd_c.charge_SH//5) * 5,
                        y=hit_pd_c.residual_tpc,
@@ -1100,7 +1100,7 @@ class plotter_after_tpc():
 
     def plot_residual_TPC_vs_pos_g(self):
         x_range = [-5, 10]
-        y_range = [-1, 1]
+        y_range = [-2, 2]
 
         fig = make_subplots(rows=4, cols=2,
                             # row_heights=[800,800,800,800],
@@ -1131,7 +1131,7 @@ class plotter_after_tpc():
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
-            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl} and residual_tpc<10 and pos_g<15 and pos_g <10")
             fig.add_trace(
                 go.Box(x=hit_pd_c.pos_g//1,
                        y=hit_pd_c.residual_tpc,
