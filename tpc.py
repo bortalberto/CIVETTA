@@ -747,6 +747,8 @@ class plotter_after_tpc():
         self.plot_residual_vs_size()
         self.plot_residual_vs_diff_with_cc()
         self.plot_residual_vs_fit_angle()
+        self.plot_residual_vs_angle_track()
+        self.plot_angle_fit_vs_angle_track()
 
         self.plot_residual_TPC_vs_charge()
         self.plot_residual_TPC_vs_pos_g()
