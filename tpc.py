@@ -601,6 +601,11 @@ class plotter_after_tpc():
         self.res_measure = res_measure(cl_pd=cl_pd_list, eff_pd=pd.concat(eff_pd_l), planar_list=[0, 1, 2, 3],
                                        tracks_pd=self.track_pd_list)
 
+        self.cl_pd_x_enemy = pd.read_feather(
+            os.path.join(data_folder, "raw_root", f"{self.run}","/match_cl_enemy_x_TPC-zstd.feather"))
+        self.cl_pd_y_enemy = pd.read_feather(
+            os.path.join(data_folder, "raw_root", f"{self.run}","/match_cl_enemy_y_TPC-zstd.feather"))
+
     def apply_correction_x(self, cl_pos_x_cm, epos_y, planar):
         """
         Fucntion used to apply 2D correction to the dataset
@@ -758,6 +763,8 @@ class plotter_after_tpc():
         self.plot_residual_TPC_vs_strip_index()
         self.plot_residual_TPC_vs_near_strip_ratio("next_strip_charge")
         self.plot_residual_TPC_vs_near_strip_ratio("previous_strip_charge")
+
+        self.plot_enemy_angle_track()
 
     ## Plot about residuals
 
@@ -1447,3 +1454,55 @@ class plotter_after_tpc():
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
         fig.write_html(os.path.join(self.plt_path, f"residuals_tpc_vs_{field}_ratio.html"), include_plotlyjs="directory")
+
+    def plot_enemy_angle_track(self):
+
+        x_range = [0.5, 2]
+        y_range = [-0.6, 0]
+
+        fig = make_subplots(rows=4, cols=2,
+                            # row_heights=[800,800,800,800],
+                            subplot_titles=(
+                                "Enemy_01", "Enemy_12", "Enemey_23", "--",
+                                "Enemy_01", "Enemy_12", "Enemey_23", "--"
+                            ),
+                            specs=[
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": True}, {"secondary_y": True}],
+                                [{"secondary_y": True}, {"secondary_y": True}]
+                            ],
+                            horizontal_spacing=0.10
+                            )
+        for pl in range(0,3):
+            fig.add_trace(
+                go.Histogram2d(x=(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.angle_trk_x),
+                               y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
+                               ybins={"start": y_range[0], "end": y_range[1],
+                                      "size": (y_range[1] - y_range[0]) / 80},
+                               xbins={"start": x_range[0], "end": x_range[1],
+                                      "size": (x_range[1] - x_range[0]) / 80},
+                               colorscale="viridis",
+                               showlegend=False,
+                               showscale=False, ),
+                col=pl // 2 + 1, row=pl % 2 + 1)
+
+        for pl in range(0, 3):
+            fig.add_trace(
+                go.Box(x=(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.angle_trk_x),
+                               y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
+                       name=f"Box det {pl}", boxpoints=False),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
+
+        for pl in range(0, 3):
+            fig.add_trace(
+                go.Histogram(x=(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.angle_trk_x),
+                               y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
+                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
+
+        fig.update_xaxes(range=x_range, title=f"Trk angle [°]")
+        fig.update_yaxes(range=y_range, title="Res enemy [cm]", secondary_y=False)
+        fig.update_yaxes(title="%", secondary_y=True)
+        fig.update_layout(height=2000)
+        fig.write_html(os.path.join(self.plt_path, f"enemy_vs_trk_angle.html"), include_plotlyjs="directory")
