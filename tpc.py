@@ -708,7 +708,7 @@ class plotter_after_tpc():
             print(std)
             good_evts_res = self.res_measure.cl_pds[f"{pl}x"][abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std / 2]
             bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][(abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std) & (
-                        abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std * 3)]
+                    abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std * 3)]
             very_bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][
                 abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 5]
 
@@ -748,7 +748,6 @@ class plotter_after_tpc():
         self.plot_residual_vs_fit_angle()
         self.plot_residual_TPC_vs_charge()
         self.plot_residual_TPC_vs_pos_g()
-
 
     ## Plot about residuals
 
@@ -810,7 +809,7 @@ class plotter_after_tpc():
                                 [{"secondary_y": False}, {"secondary_y": False}],
                                 [{"secondary_y": True}, {"secondary_y": True}],
                                 [{"secondary_y": True}, {"secondary_y": True}]
-                                   ],
+                            ],
                             horizontal_spacing=0.10
                             )
         for pl in range(0, 4):
@@ -820,8 +819,8 @@ class plotter_after_tpc():
                                ybins={"start": -0.8, "end": 0.8, "size": 1.6 / 200},
                                xbins={"start": -1, "end": 10, "size": 10 / 128},
                                colorscale="viridis",
-                               showlegend = False,
-                               showscale = False),
+                               showlegend=False,
+                               showscale=False),
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
@@ -835,7 +834,7 @@ class plotter_after_tpc():
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_pos_x * 0.0650 // 0.5 * 0.5,
                              name=f"Hist det {pl}", opacity=0.2),
-                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=[-1, 9], title="Pos x [cm]")
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=False)
@@ -882,14 +881,14 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge ,
-                             name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
+                go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_charge,
+                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=x_range, title="Cl charge [fC]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
-        fig.update_layout( height=2000)
+        fig.update_layout(height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_charge.html"), include_plotlyjs="directory")
 
@@ -916,7 +915,8 @@ class plotter_after_tpc():
                 go.Histogram2d(x=self.res_measure.cl_pds[f"{pl}x"].cl_size,
                                y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                                ybins={"start": y_range[0], "end": y_range[1], "size": (y_range[1] - y_range[0]) / 100},
-                               xbins={"start": x_range[0], "end": x_range[1], "size": (x_range[1] - x_range[0]) / x_range[1]},
+                               xbins={"start": x_range[0], "end": x_range[1],
+                                      "size": (x_range[1] - x_range[0]) / x_range[1]},
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False, ),
@@ -924,7 +924,7 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_size ,
+                go.Box(x=self.res_measure.cl_pds[f"{pl}x"].cl_size,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
@@ -932,13 +932,13 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=self.res_measure.cl_pds[f"{pl}x"].cl_size,
-                             name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
+                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=x_range, dtick=1, title="Cl size [strips]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
-        fig.update_layout( height=2000)
+        fig.update_layout(height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_size.html"), include_plotlyjs="directory")
 
@@ -962,7 +962,8 @@ class plotter_after_tpc():
                             )
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram2d(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch,
+                go.Histogram2d(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[
+                    f"{pl}x"].pos_tpc) * self.pitch,
                                y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                                ybins={"start": y_range[0], "end": y_range[1], "size": (y_range[1] - y_range[0]) / 100},
                                xbins={"start": x_range[0], "end": x_range[1], "size": (x_range[1] - x_range[0]) / 100},
@@ -973,21 +974,23 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=((self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch//0.10)*0.10,
+                go.Box(x=((self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[
+                    f"{pl}x"].pos_tpc) * self.pitch // 0.10) * 0.10,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[f"{pl}x"].pos_tpc) * self.pitch,
-                             name=f"Hist det {pl}", opacity=0.15, histnorm = "percent"),
+                go.Histogram(x=(self.res_measure.cl_pds[f"{pl}x"].cl_pos_x - self.res_measure.cl_pds[
+                    f"{pl}x"].pos_tpc) * self.pitch,
+                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range,  title="Diff btw CC and TPC [mm]")
+        fig.update_xaxes(range=x_range, title="Diff btw CC and TPC [mm]")
         fig.update_yaxes(range=y_range, title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
-        fig.update_layout( height=2000)
+        fig.update_layout(height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_diff.html"), include_plotlyjs="directory")
 
@@ -1024,16 +1027,16 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1)//5) * 5,
+                go.Box(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1) // 5) * 5,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1)//5) * 5,
-                            y=self.res_measure.cl_pds[f"{pl}x"].res_x,
-                            name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
+                go.Histogram(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1) // 5) * 5,
+                             y=self.res_measure.cl_pds[f"{pl}x"].res_x,
+                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
         fig.update_xaxes(range=x_range, title="Fit angle [°]")
@@ -1042,7 +1045,7 @@ class plotter_after_tpc():
         fig.update_layout(height=2000)
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_fit_angle.html"), include_plotlyjs="directory")
 
-    ## Plots about TPC fit residuals
+    ## Plots about TPC fit residuals ##################################################################################
 
     def plot_residual_TPC_vs_charge(self):
         x_range = [-1, 50]
@@ -1064,28 +1067,33 @@ class plotter_after_tpc():
                             )
         for pl in range(0, 4):
             hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
             fig.add_trace(
                 go.Histogram2d(x=hit_pd_c.charge_SH,
                                y=hit_pd_c.residual_tpc,
                                ybins={"start": y_range[0], "end": y_range[1],
-                                      "size": (y_range[1] - y_range[0]) / 60},
+                                      "size": (y_range[1] - y_range[0]) / 80},
                                xbins={"start": x_range[0], "end": x_range[1],
-                                      "size": (x_range[1] - x_range[0]) / 51},
+                                      "size": (x_range[1] - x_range[0]) / 80},
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False, ),
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
-            hit_pd_c = self.hit_pd_x.query(f"planar == {pl} and residual_tpc<10 and pos_g<15 and pos_g <10")
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
+
             fig.add_trace(
-                go.Box(x=(hit_pd_c.charge_SH//5) * 5,
+                go.Box(x=(hit_pd_c.charge_SH // 5) * 5,
                        y=hit_pd_c.residual_tpc,
                        name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
+
             fig.add_trace(
                 go.Histogram(x=hit_pd_c.charge_SH,
                              y=hit_pd_c.residual_tpc,
@@ -1099,7 +1107,7 @@ class plotter_after_tpc():
         fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_hit_charge.html"), include_plotlyjs="directory")
 
     def plot_residual_TPC_vs_pos_g(self):
-        x_range = [-5, 10]
+        x_range = [-5, 15]
         y_range = [-2, 2]
 
         fig = make_subplots(rows=4, cols=2,
@@ -1123,20 +1131,20 @@ class plotter_after_tpc():
                 go.Histogram2d(x=hit_pd_c.pos_g,
                                y=hit_pd_c.residual_tpc,
                                ybins={"start": y_range[0], "end": y_range[1],
-                                      "size": (y_range[1] - y_range[0]) / 50},
+                                      "size": (y_range[1] - y_range[0]) / 80},
                                xbins={"start": x_range[0], "end": x_range[1],
-                                      "size": (x_range[1] - x_range[0]) / 50},
+                                      "size": (x_range[1] - x_range[0]) / 80},
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False, ),
                 col=pl // 2 + 1, row=pl % 2 + 1)
 
         for pl in range(0, 4):
-            hit_pd_c = self.hit_pd_x.query(f"planar == {pl} and residual_tpc<10 and pos_g<15 and pos_g <10")
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
             hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
 
             fig.add_trace(
-                go.Box(x=hit_pd_c.pos_g//1,
+                go.Box(x=hit_pd_c.pos_g // 1,
                        y=hit_pd_c.residual_tpc,
                        name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
@@ -1155,4 +1163,3 @@ class plotter_after_tpc():
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
         fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_pos_g.html"), include_plotlyjs="directory")
-
