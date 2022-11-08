@@ -1428,7 +1428,7 @@ class plotter_after_tpc():
             hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
 
             fig.add_trace(
-                go.Box(x=((hit_pd_c[f"{field}"]/hit_pd_c.charge_SH )// 5) *5,
+                go.Box(x=((hit_pd_c[f"{field}"]/hit_pd_c.charge_SH )// 0.1) *0.1,
                        y=hit_pd_c.residual_tpc,
                        name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
