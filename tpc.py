@@ -1004,7 +1004,7 @@ class plotter_after_tpc():
                             )
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram2d(x=self.res_measure.F1,
+                go.Histogram2d(x=self.res_measure.cl_pds[f"{pl}x"].F1,
                                y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                                ybins={"start": y_range[0], "end": y_range[1],
                                       "size": (y_range[1] - y_range[0]) / 100},
