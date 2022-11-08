@@ -765,6 +765,7 @@ class plotter_after_tpc():
         self.plot_residual_TPC_vs_near_strip_ratio("previous_strip_charge")
 
         self.plot_enemy_angle_track()
+        self.plot_enemy_angle_fit()
 
     ## Plot about residuals
 
