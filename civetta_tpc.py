@@ -126,7 +126,7 @@ def main(run, **kwargs):
     main_runner.tpc_prep.no_time_walk_corr = config["TPC"].getboolean("no_time_walk_corr")
     main_runner.tpc_prep.no_border_correction = config["TPC"].getboolean("no_border_correction")
     main_runner.tpc_prep.no_prev_strip_charge_correction = config["TPC"].getboolean("no_prev_strip_charge_correction")
-    main_runner.tpc_prep.fixed_angle = config["TPC"].getboolean("fixed_angle")
+    main_runner.tpc_prep.fixed_angle = config["TPC"].getfloat("fixed_angle")
 
     # Changes from options
     if args.no_errors:
