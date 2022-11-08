@@ -1055,7 +1055,7 @@ class plotter_after_tpc():
         fig.update_layout(height=2000)
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_fit_angle.html"), include_plotlyjs="directory")
     def plot_residual_vs_angle_track(self):
-        x_range = [self.angle-2, self.angle+2]
+        x_range = [0-2, 0+2]
         y_range = [-0.5, 0.5]
 
         fig = make_subplots(rows=4, cols=2,
@@ -1106,7 +1106,7 @@ class plotter_after_tpc():
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_track_angle.html"), include_plotlyjs="directory")
 
     def plot_angle_fit_vs_angle_track(self):
-        x_range = [self.angle-2, self.angle+2]
+        x_range = [0-2, 0+2]
         y_range = [-10, 90]
 
         fig = make_subplots(rows=4, cols=2,
