@@ -602,9 +602,9 @@ class plotter_after_tpc():
                                        tracks_pd=self.track_pd_list)
 
         self.cl_pd_x_enemy = pd.read_feather(
-            os.path.join(data_folder, "raw_root", f"{self.run}","/match_cl_enemy_x_TPC-zstd.feather"))
+            os.path.join(data_folder, "perf_out", f"{self.run}","/match_cl_enemy_x_TPC-zstd.feather"))
         self.cl_pd_y_enemy = pd.read_feather(
-            os.path.join(data_folder, "raw_root", f"{self.run}","/match_cl_enemy_y_TPC-zstd.feather"))
+            os.path.join(data_folder, "perf_out", f"{self.run}","/match_cl_enemy_y_TPC-zstd.feather"))
 
     def apply_correction_x(self, cl_pos_x_cm, epos_y, planar):
         """
