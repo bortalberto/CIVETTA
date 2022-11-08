@@ -1562,7 +1562,7 @@ class plotter_after_tpc():
 
 
     def plot_enemy_charge(self):
-        x_range = [-10, 90]
+        x_range = [0, 120]
         y_range = [-0.6, 0]
 
         fig = make_subplots(rows=4, cols=2,
