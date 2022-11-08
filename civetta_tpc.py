@@ -182,7 +182,7 @@ if __name__=="__main__":
     parser.add_argument('-no_prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
     parser.add_argument('-plot_evts', help="Plot some good and bad events after complete analysis", action = "store_true")
     parser.add_argument('-post_plot', help="Produce post analysis plots", action = "store_true")
-    parser.add_argument('-fixed angle', help="Fixes the TPC angle (free = -1)", type=float)
+    parser.add_argument('-fixed_angle', help="Fixes the TPC angle (free = -1)", type=float)
 
     parser.add_argument('-angle', help="Angle of acquisition", type=float)
 
