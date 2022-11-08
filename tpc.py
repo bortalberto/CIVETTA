@@ -1118,6 +1118,7 @@ class plotter_after_tpc():
                             )
         for pl in range(0, 4):
             hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
             fig.add_trace(
                 go.Histogram2d(x=hit_pd_c.pos_g,
                                y=hit_pd_c.residual_tpc,
@@ -1132,6 +1133,8 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             hit_pd_c = self.hit_pd_x.query(f"planar == {pl} and residual_tpc<10 and pos_g<15 and pos_g <10")
+            hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
+
             fig.add_trace(
                 go.Box(x=hit_pd_c.pos_g//1,
                        y=hit_pd_c.residual_tpc,
@@ -1140,6 +1143,7 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            hit_pd_c = hit_pd_c[hit_pd_c["count"].isin(np.random.choice(hit_pd_c["count"].unique(), 10000))]
             fig.add_trace(
                 go.Histogram(x=hit_pd_c.pos_g,
                              y=hit_pd_c.residual_tpc,
@@ -1150,5 +1154,5 @@ class plotter_after_tpc():
         fig.update_yaxes(range=y_range, title="Res fit TPC [mm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
-        fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_pos_g.html"), include_plotlyjs="directory", full_html=False)
+        fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_pos_g.html"), include_plotlyjs="directory")
 
