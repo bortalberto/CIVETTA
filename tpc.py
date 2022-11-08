@@ -837,7 +837,7 @@ class plotter_after_tpc():
                              name=f"Hist det {pl}", opacity=0.2),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y= True)
 
-        fig.update_xaxes(range=[-1, 9], dtick=1, title="Pos x [cm]")
+        fig.update_xaxes(range=[-1, 9], title="Pos x [cm]")
         fig.update_yaxes(range=[-0.5, 0.5], title="Res x [cm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(width=1400, height=2000)
@@ -1081,7 +1081,7 @@ class plotter_after_tpc():
             fig.add_trace(
                 go.Box(x=(hit_pd_c.charge_SH//5) * 5,
                        y=hit_pd_c.residual_tpc,
-                       name=f"Box det {pl}"),
+                       name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
@@ -1135,7 +1135,7 @@ class plotter_after_tpc():
             fig.add_trace(
                 go.Box(x=hit_pd_c.pos_g//1,
                        y=hit_pd_c.residual_tpc,
-                       name=f"Box det {pl}"),
+                       name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
@@ -1150,5 +1150,5 @@ class plotter_after_tpc():
         fig.update_yaxes(range=y_range, title="Res fit TPC [mm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
-        fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_hit_charge.html"), include_plotlyjs="directory")
+        fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_pos_g.html"), include_plotlyjs="directory")
 
