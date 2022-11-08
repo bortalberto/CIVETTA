@@ -745,8 +745,9 @@ class plotter_after_tpc():
         self.plot_residual_vs_charge()
         self.plot_residual_vs_size()
         self.plot_residual_vs_diff_with_cc()
+        self.plot_residual_vs_fit_angle()
         self.plot_residual_TPC_vs_charge()
-
+        self.plot_residual_TPC_vs_pos_g()
 
 
     ## Plot about residuals
@@ -1045,7 +1046,7 @@ class plotter_after_tpc():
 
     def plot_residual_TPC_vs_charge(self):
         x_range = [-1, 50]
-        y_range = [-0.5, 0.5]
+        y_range = [-1, 1]
 
         fig = make_subplots(rows=4, cols=2,
                             # row_heights=[800,800,800,800],
@@ -1067,9 +1068,9 @@ class plotter_after_tpc():
                 go.Histogram2d(x=hit_pd_c.charge_SH,
                                y=hit_pd_c.residual_tpc,
                                ybins={"start": y_range[0], "end": y_range[1],
-                                      "size": (y_range[1] - y_range[0]) / 100},
+                                      "size": (y_range[1] - y_range[0]) / 60},
                                xbins={"start": x_range[0], "end": x_range[1],
-                                      "size": (x_range[1] - x_range[0]) / 100},
+                                      "size": (x_range[1] - x_range[0]) / 51},
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False, ),
@@ -1091,7 +1092,61 @@ class plotter_after_tpc():
                              name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
-        fig.update_xaxes(range=x_range, dtick=1, title="Hit charge [fC]")
+        fig.update_xaxes(range=x_range, title="Hit charge [fC]")
+        fig.update_yaxes(range=y_range, title="Res fit TPC [mm]", secondary_y=False)
+        fig.update_yaxes(title="%", secondary_y=True)
+        fig.update_layout(height=2000)
+        fig.write_html(os.path.join(self.plt_path, "residuals_tpc_vs_hit_charge.html"), include_plotlyjs="directory")
+
+    def plot_residual_TPC_vs_pos_g(self):
+        x_range = [-5, 10]
+        y_range = [-1, 1]
+
+        fig = make_subplots(rows=4, cols=2,
+                            # row_heights=[800,800,800,800],
+                            subplot_titles=(
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3",
+                                "Detector 0", "Detector 1", "Detector 2", "Detector 3"
+                            ),
+                            specs=[
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": False}, {"secondary_y": False}],
+                                [{"secondary_y": True}, {"secondary_y": True}],
+                                [{"secondary_y": True}, {"secondary_y": True}]
+                            ],
+                            horizontal_spacing=0.10
+                            )
+        for pl in range(0, 4):
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            fig.add_trace(
+                go.Histogram2d(x=hit_pd_c.pos_g,
+                               y=hit_pd_c.residual_tpc,
+                               ybins={"start": y_range[0], "end": y_range[1],
+                                      "size": (y_range[1] - y_range[0]) / 50},
+                               xbins={"start": x_range[0], "end": x_range[1],
+                                      "size": (x_range[1] - x_range[0]) / 50},
+                               colorscale="viridis",
+                               showlegend=False,
+                               showscale=False, ),
+                col=pl // 2 + 1, row=pl % 2 + 1)
+
+        for pl in range(0, 4):
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            fig.add_trace(
+                go.Box(x=hit_pd_c.pos_g//1,
+                       y=hit_pd_c.residual_tpc,
+                       name=f"Box det {pl}"),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2)
+
+        for pl in range(0, 4):
+            hit_pd_c = self.hit_pd_x.query(f"planar == {pl}")
+            fig.add_trace(
+                go.Histogram(x=hit_pd_c.pos_g,
+                             y=hit_pd_c.residual_tpc,
+                             name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
+                col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
+
+        fig.update_xaxes(range=x_range, dtick=1, title="Pos in gap [mm]")
         fig.update_yaxes(range=y_range, title="Res fit TPC [mm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
