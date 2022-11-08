@@ -1227,7 +1227,7 @@ class plotter_after_tpc():
         fig.update_layout(height=2000)
         fig.write_html(os.path.join(self.plt_path, f"residuals_tpc_vs_{field}.html"), include_plotlyjs="directory")
     def plot_residual_TPC_vs_near_strip_index(self):
-        x_range = [-1, 60]
+        x_range = [-1, 15]
         y_range = [-2, 2]
 
         fig = make_subplots(rows=4, cols=2,
@@ -1253,7 +1253,7 @@ class plotter_after_tpc():
                                ybins={"start": y_range[0], "end": y_range[1],
                                       "size": (y_range[1] - y_range[0]) / 80},
                                xbins={"start": x_range[0], "end": x_range[1],
-                                      "size": (x_range[1] - x_range[0]) / 80},
+                                      "size": (x_range[1] - x_range[0]) / 15},
                                colorscale="viridis",
                                showlegend=False,
                                showscale=False, ),
