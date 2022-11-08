@@ -1340,4 +1340,4 @@ class plotter_after_tpc():
         fig.update_yaxes(range=y_range, title="Res fit TPC [mm]", secondary_y=False)
         fig.update_yaxes(title="%", secondary_y=True)
         fig.update_layout(height=2000)
-        fig.write_html(os.path.join(self.plt_path, f"residuals_tpc_vs_{field}.html"), include_plotlyjs="directory")
+        fig.write_html(os.path.join(self.plt_path, f"residuals_tpc_vs_{field}_ratio.html"), include_plotlyjs="directory")
