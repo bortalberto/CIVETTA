@@ -144,7 +144,7 @@ def main(run, **kwargs):
     if args.no_prev_strip_charge_correction:
         main_runner.tpc_prep.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
     if args.fixed_angle:
-        main_runner.tpc_prep.fixed_angle = args.fixed_angle
+        main_runner.tpc_prep.fixed_angle = float(args.fixed_angle)
 
     if "thr_eff" in (op_list):
         main_runner.calc_and_save_thr_eff()
