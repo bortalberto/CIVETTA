@@ -406,7 +406,7 @@ class tpc_prep:
                                     sx=error_x,
                                     sy=error_y)
 
-
+                    print (self.ifixb)
                     odr = ODR(data, fit_model, beta0=self.beta0, ifixb=self.ifixb)
                     out = odr.run()
                     fit = out.beta
