@@ -406,11 +406,11 @@ class tpc_prep:
                                     sx=error_x,
                                     sy=error_y)
 
-                    print (self.ifixb)
+                    # print (self.ifixb)
                     odr = ODR(data, fit_model, beta0=self.beta0, ifixb=self.ifixb)
                     out = odr.run()
                     fit = out.beta
-                    print (fit)
+                    # print (fit)
 
                     hit_pd.loc[cluster_hits.index, "error_x"] = error_x
                     hit_pd.loc[cluster_hits.index, "error_y"] = error_y
