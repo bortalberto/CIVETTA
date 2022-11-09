@@ -750,7 +750,6 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
                                      f"{sol[-1]}")
                 else:
                     logger.write_log("Can't find solution:\n"
-                                     f"{sol[-1]}")
 
 
 def plot_residuals(cl_pd_res, view, popt_list, R_list, pl, chi_list, deg_list):
