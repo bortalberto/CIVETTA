@@ -196,12 +196,6 @@ class tpc_prep:
         """
 
         """
-        print ("....")
-        print (self.fixed_angle)
-        if self.fixed_angle>-1:
-            print ("Using fixed angle")
-            self.beta0 = [np.tan(self.fixed_angle*(np.pi/180)), -20]  # initial guess
-            self.ifixb = [0, 1]  # free parameter
 
         hit_pd = pd.read_feather(
             os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"hit_data-zstd.feather"))
@@ -440,6 +434,11 @@ class tpc_prep:
         return hit_pd, cluster_pd
 
     def calc_tpc_pos(self, cpus=30):
+        if self.fixed_angle>-1:
+            print ("Using fixed angle")
+            self.beta0 = [np.tan(self.fixed_angle*(np.pi/180)), -20]  # initial guess
+            self.ifixb = [0, 1]  # free parameter
+
         hit_pd = pd.read_feather(os.path.join(self.tpc_dir, f"hit_data_wt-zstd.feather"))
         hit_pd = hit_pd.sort_values(["subRunNo", "count", "planar", "strip_x"]).reset_index(
             drop=True)  ## Sorting the values for later use
