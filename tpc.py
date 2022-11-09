@@ -197,6 +197,7 @@ class tpc_prep:
 
         """
         if self.fixed_angle>-1:
+            print ("Using fixed angle")
             self.beta0 = [np.tan(self.fixed_angle*(np.pi/180)), -20]  # initial guess
             self.ifixb = [0, 1]  # free parameter
 
