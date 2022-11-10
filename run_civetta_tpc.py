@@ -35,5 +35,5 @@ for n in range(0, 8):
     # os.system(f"./civetta_tpc.py {run} -angle 45 -post_plot;")
 
     os.system(f"{options} >> /media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated/options.txt")
-    shutil.move(f"/media/disk2T/data/elaborated_output/{run}",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
-    shutil.move(f"/media/disk2T/data/perf_out/{run}",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
+    shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
+    shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
