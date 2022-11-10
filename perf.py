@@ -493,7 +493,7 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
 
             for pl in trackers_list:
                 # print (pl)
-                mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
+                # mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 mean_res = ((popt_list[pl][1] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][4] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 res_sigma = ((popt_list[pl][2] * popt_list[pl][0] * popt_list[pl][2]) + (popt_list[pl][5] * popt_list[pl][3] * popt_list[pl][5])) / (popt_list[pl][0] * popt_list[pl][2] + popt_list[pl][3] * popt_list[pl][5])
                 mean_res_dict[pl,view] = mean_res
