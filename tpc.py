@@ -350,7 +350,7 @@ class tpc_prep:
         sx_coeff = (pitch / math.sqrt(12)) ** 2
         subrun = hit_pd.subRunNo.values[0]
         hit_pd_evts = hit_pd.groupby("count")
-
+        print (self.no_capacitive)
         for count in tqdm(cluster_pd_evts.groups, desc=f"Events subrun = {subrun}", leave=False,
                           position=(subrun % self.cpu_to_use + 1)):
             # for count in cluster_pd_evts.groups:
