@@ -35,5 +35,5 @@ for n in range(0, 8):
 
     shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/")
     os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated_output")
-    shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
+    shutil.copy(f"/media/disk2T/VM_work_zone/data/perf_out/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
     # os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf_out")
