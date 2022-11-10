@@ -5,10 +5,10 @@ import shutil
 run = sys.argv[1]
 
 for n in range(0, 8):
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
+    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}", exist_ok=True)
+    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}", exist_ok=True)
+    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated", exist_ok=True)
+    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf", exist_ok=True)
 
     options = ""
     if n < 1:
