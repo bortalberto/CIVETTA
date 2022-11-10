@@ -15,8 +15,6 @@ for n in range(0, 8):
     if n < 3:
         options += " -no_capacitive"
     if n < 4:
-        options += " -drift_velocity"
-    if n < 4:
         options += " -no_time_walk_corr"
     if n < 5:
         options += " -no_border_correction"
