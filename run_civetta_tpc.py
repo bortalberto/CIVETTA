@@ -6,8 +6,6 @@ run = sys.argv[1]
 os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
 for n in range(0, 8):
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
 
     options = ""
     if n < 1:
@@ -25,7 +23,7 @@ for n in range(0, 8):
     if n < 6:
         options += " -no_prev_strip_charge_correction"
     print (options)
-    with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated/options.txt", "w+") as option_file:
+    with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
 
     #
@@ -37,5 +35,7 @@ for n in range(0, 8):
     # os.system(f"./civetta_tpc.py {run} -angle 45 -plot_evts;")
     # os.system(f"./civetta_tpc.py {run} -angle 45 -post_plot;")
 
-    shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/*",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
+    shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/")
+    os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated_output")
     shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}/*",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
+    os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf_out")
