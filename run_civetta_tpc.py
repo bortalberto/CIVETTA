@@ -3,9 +3,8 @@ import sys
 import shutil
 
 run = sys.argv[1]
-
+os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
 for n in range(0, 8):
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
@@ -25,6 +24,10 @@ for n in range(0, 8):
         options += " -no_border_correction"
     if n < 6:
         options += " -no_prev_strip_charge_correction"
+    print (options)
+    with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated/options.txt", "w+") as option_file:
+        option_file.write(options)
+
     #
     # os.system(f"./civetta_tpc.py {run} -tpc_pos {options};")
     # os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 20 -tpc;")
@@ -34,6 +37,5 @@ for n in range(0, 8):
     # os.system(f"./civetta_tpc.py {run} -angle 45 -plot_evts;")
     # os.system(f"./civetta_tpc.py {run} -angle 45 -post_plot;")
 
-    os.system(f"{options} >> /media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated/options.txt")
-    shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
-    shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
+    shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/*",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated")
+    shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}/*",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
