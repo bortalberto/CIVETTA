@@ -26,16 +26,16 @@ for n in range(0, 8):
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
 
-    #
-    # os.system(f"./civetta_tpc.py {run} -tpc_pos {options};")
-    # os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 20 -tpc;")
-    #
-    # os.system(f"./civetta_perf.py {run} -tpc -Ser;")
-    #
-    # os.system(f"./civetta_tpc.py {run} -angle 45 -plot_evts;")
-    # os.system(f"./civetta_tpc.py {run} -angle 45 -post_plot;")
+
+    os.system(f"./civetta_tpc.py {run} -tpc_pos {options};")
+    os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 20 -tpc;")
+
+    os.system(f"./civetta_perf.py {run} -tpc -Ser;")
+
+    os.system(f"./civetta_tpc.py {run} -angle 45 -plot_evts;")
+    os.system(f"./civetta_tpc.py {run} -angle 45 -post_plot;")
 
     shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/")
     os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated_output")
-    shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}/*",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
+    shutil.move(f"/media/disk2T/VM_work_zone/data/perf_out/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf")
     os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/perf_out")
