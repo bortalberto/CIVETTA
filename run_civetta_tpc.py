@@ -3,6 +3,7 @@ import sys
 import shutil
 
 run = sys.argv[1]
+angle = sys.argv[2]
 os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
 for n in range(0, 8):
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
@@ -30,8 +31,8 @@ for n in range(0, 8):
 
     os.system(f"./civetta_perf.py {run} -tpc -Ser;")
 
-    os.system(f"./civetta_tpc.py {run} -angle 45 -plot_evts;")
-    os.system(f"./civetta_tpc.py {run} -angle 45 -post_plot;")
+    os.system(f"./civetta_tpc.py {run} -angle {angle} -plot_evts;")
+    os.system(f"./civetta_tpc.py {run} -angle {angle} -post_plot;")
 
     shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/")
     os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated_output")
