@@ -570,7 +570,8 @@ class plotter_after_tpc():
     def __init__(self, data_folder, run_number, angle):
         self.data_folder = data_folder
         self.run = run_number
-
+        if not os.path.isdir(os.path.join(f"{self.data_folder}", "elaborated_output", f"{self.run}")):
+            os.mkdir(os.path.join(f"{self.data_folder}", "elaborated_output", f"{self.run}"))
         self.out_path = os.path.join(f"{self.data_folder}", "elaborated_output", f"{self.run}", "output_plot_TPC")
         if not os.path.isdir(self.out_path):
             os.mkdir(self.out_path)
