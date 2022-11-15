@@ -127,6 +127,10 @@ class tpc_prep:
 
         self.beta0 = [0.5, -20]  # initial guess
         self.ifixb = [1, 1]  # free parameter
+        self.no_pos_g_cut= False
+        self.no_big_clusters_splitting= False
+        self.no_diffusion_error= False
+        self.capacitive_cut_value= 0.2
 
     def thr_tmw(self, row):
         """
@@ -369,6 +373,8 @@ class tpc_prep:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time + cluster_hits.hit_time_corr - ref_time) * vel
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
+                if not self.no_pos_g_cut:
+                    cluster_hits = cluster_hits[cluster_hits.pos_g < 6 and cluster_hits.pos_g > -1 ]
                 hit_pd.loc[cluster_hits.index, "pos_g_pre_cor"] = cluster_hits.pos_g
                 hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
 
@@ -473,6 +479,7 @@ class tpc_prep:
             vel, fit2 = self.calc_drift_vel(hit_pd_c, ref_time)
             self.plot_extraction(hit_pd_c, fit, fit2, ref_time, vel, pl)
             self.vel_list.append(vel)
+            print (f"Calculate velocity pl {pl}: {vel}")
             self.ref_time_list.append(ref_time)
         cluster_pd = pd.read_feather(
             os.path.join(self.data_folder, "raw_root", f"{self.run_number}", "cluster_pd_1D-zstd.feather"))

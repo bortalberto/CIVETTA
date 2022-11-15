@@ -30,7 +30,6 @@ class runner:
         self.tpc_prep.fixed_angle = -1
         self.angle = angle
 
-
     def calc_and_save_thr_eff(self):
         self.tpc_prep.exctract_thr_eff()
 
@@ -66,7 +65,6 @@ def main(run, **kwargs):
     config_file="config.ini"
     config_file_tpc="TPC_config.ini"
     config.read([os.path.join(sys.path[0], config_file), os.path.join(sys.path[0], config_file_tpc)])
-    print({section: dict(config[section]) for section in config.sections()})
     try:
         data_folder=config["GLOBAL"].get("data_folder")
         if data_folder=="TER":
@@ -128,6 +126,11 @@ def main(run, **kwargs):
     main_runner.tpc_prep.no_prev_strip_charge_correction = config["TPC"].getboolean("no_prev_strip_charge_correction")
     main_runner.tpc_prep.fixed_angle = float(config["TPC"].getfloat("fixed_angle"))
 
+    main_runner.tpc_prep.no_pos_g_cut = bool(config["TPC"].getfloat("no_pos_g_cut"))
+    main_runner.tpc_prep.no_big_clusters_splitting = bool(config["TPC"].getfloat("no_big_clusters_splitting"))
+    main_runner.tpc_prep.no_diffusion_error = bool(config["TPC"].getfloat("no_diffusion_error"))
+    main_runner.tpc_prep.capacitive_cut_value = float(config["TPC"].getfloat("capacitive_cut_value"))
+
     # Changes from options
     if args.no_errors:
         main_runner.tpc_prep.no_errors = args.no_errors
@@ -145,7 +148,16 @@ def main(run, **kwargs):
         main_runner.tpc_prep.no_prev_strip_charge_correction = args.no_prev_strip_charge_correction
     if args.fixed_angle:
         main_runner.tpc_prep.fixed_angle = float(args.fixed_angle)
+    if args.no_pos_g_cut:
+        main_runner.tpc_prep.no_pos_g_cut = bool(args.no_pos_g_cut)
+    if args.no_big_clusters_splitting:
+        main_runner.tpc_prep.no_big_clusters_splitting = bool(args.no_big_clusters_splitting)
+    if args.no_diffusion_error:
+        main_runner.tpc_prep.no_diffusion_error = bool(args.no_diffusion_error)
+    if args.capacitive_cut_value:
+        main_runner.tpc_prep.capacitive_cut_value = float(args.capacitive_cut_value)
 
+    main_runner.tpc_prep.tpc_angle = float(args.tpc_angle)
     if "thr_eff" in (op_list):
         main_runner.calc_and_save_thr_eff()
     if "time_walk" in (op_list):
@@ -178,8 +190,16 @@ if __name__=="__main__":
     parser.add_argument('-no_capacitive', help="Use capacitive corrections", action = "store_true")
     parser.add_argument('-drift_velocity', help="Value to be used for drift velocity", type=float)
     parser.add_argument('-no_time_walk_corr', help="Use time walk correction", action = "store_true")
-    parser.add_argument('-no_border_correction', help="Use border_correction correction", action = "store_true")
+    parser.add_argument('-no_border_correction', help="Use border_correction correction", action = "store_true") # TODO delete if does nothing
     parser.add_argument('-no_prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
+
+    parser.add_argument('-no_pos_g_cut', help="Cuts hits outside the drift area", action = "store_true") #TODO implement
+    parser.add_argument('-no_big_clusters_splitting', help="If the cluster is too big, try to split it ", action = "store_true") #TODO implement
+    parser.add_argument('-no_diffusion_error', help="Add diffusion related error on X", action = "store_true") #TODO implement
+    parser.add_argument('-capacitive_cut_value', help="Sets the value for the capacitive cut ", type=float) #TODO implement
+    parser.add_argument('-tpc_angle', help="Value of the TPC angle, in order to use the correct corrections", type=float, required=True) #TODO implement
+
+
     parser.add_argument('-plot_evts', help="Plot some good and bad events after complete analysis", action = "store_true")
     parser.add_argument('-post_plot', help="Produce post analysis plots", action = "store_true")
     parser.add_argument('-fixed_angle', help="Fixes the TPC angle (free = -1)", type=float)
