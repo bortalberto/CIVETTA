@@ -21,6 +21,8 @@ for n in range(0, 8):
         options += " -no_border_correction"
     if n < 6:
         options += " -no_prev_strip_charge_correction"
+    if n <7:
+        options += " -no_pos_g_cut"
     print (options)
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
