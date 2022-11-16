@@ -31,7 +31,7 @@ for n in range(0, 8):
         option_file.write(options)
 
 
-    os.system(f"./civetta_tpc.py {run} -tpc_pos {options} -tpc_angle {angle};")
+    os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} ;")
     os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 20 -tpc;")
 
     os.system(f"./civetta_perf.py {run} -tpc -Ser;")

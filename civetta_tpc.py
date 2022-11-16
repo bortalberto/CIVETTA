@@ -126,9 +126,9 @@ def main(run, **kwargs):
     main_runner.tpc_prep.no_prev_strip_charge_correction = config["TPC"].getboolean("no_prev_strip_charge_correction")
     main_runner.tpc_prep.fixed_angle = float(config["TPC"].getfloat("fixed_angle"))
 
-    main_runner.tpc_prep.no_pos_g_cut = bool(config["TPC"].getfloat("no_pos_g_cut"))
-    main_runner.tpc_prep.no_big_clusters_splitting = bool(config["TPC"].getfloat("no_big_clusters_splitting"))
-    main_runner.tpc_prep.no_diffusion_error = bool(config["TPC"].getfloat("no_diffusion_error"))
+    main_runner.tpc_prep.no_pos_g_cut = bool(config["TPC"].getboolean("no_pos_g_cut"))
+    main_runner.tpc_prep.no_big_clusters_splitting = bool(config["TPC"].getboolean("no_big_clusters_splitting"))
+    main_runner.tpc_prep.no_diffusion_error = bool(config["TPC"].getboolean("no_diffusion_error"))
     main_runner.tpc_prep.capacitive_cut_value = float(config["TPC"].getfloat("capacitive_cut_value"))
 
     # Changes from options
