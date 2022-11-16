@@ -1738,7 +1738,7 @@ def manual_kmean(hit_pos, centers):
             return (centers, labels)
     print("WARNING kmeans not converged")
     raise Exception("Note convergence error")
-def charge_centroid(self, hit_pos, hit_charge):
+def charge_centroid( hit_pos, hit_charge):
     """
     Charge centroid calcolation
     :param hit_pos:
