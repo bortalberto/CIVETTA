@@ -193,7 +193,7 @@ if __name__=="__main__":
     parser.add_argument('-no_border_correction', help="Use border_correction correction", action = "store_true") # TODO delete if does nothing
     parser.add_argument('-no_prev_strip_charge_correction', help="Use correction from previous strip charge", action = "store_true")
 
-    parser.add_argument('-no_pos_g_cut', help="Cuts hits outside the drift area", action = "store_true") #TODO implement
+    parser.add_argument('-no_pos_g_cut', help="Cuts hits outside the drift area", action = "store_true")
     parser.add_argument('-no_big_clusters_splitting', help="If the cluster is too big, try to split it ", action = "store_true") #TODO implement
     parser.add_argument('-no_diffusion_error', help="Add diffusion related error on X", action = "store_true") #TODO implement
     parser.add_argument('-capacitive_cut_value', help="Sets the value for the capacitive cut ", type=float) #TODO implement

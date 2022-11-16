@@ -867,17 +867,7 @@ class clusterize:
         """
         return (self.data_pd.subRunNo.unique())
 
-    def charge_centroid(self, hit_pos, hit_charge):
-        """
-        Charge centroid calcolation
-        :param hit_pos:
-        :param hit_charge:
-        :return:
-        """
-        # hit_charge=np.abs(hit_charge)
-        hit_charge[hit_charge < 0.1] = 0.1
-        ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
-        return ret_centers
+
 
     def clusterize_view_old(self, data_pd, view):
         """
@@ -905,7 +895,7 @@ class clusterize:
                 else:
                     hit_charge_this_c = hit_charge[KM.labels_ == n]
                     hit_id_this_c = hit_id[KM.labels_ == n]
-                    ret_clusters.append((self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
+                    ret_clusters.append((charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
 
             if len(ret_clusters) == len(KM.cluster_centers_):
                 return ret_clusters
@@ -979,7 +969,7 @@ class clusterize:
                     cluster_centers.append(np.mean(hit_pos_this_c))
                     hit_charge_this_c = hit_charge[labels == label]
                     hit_id_this_c = hit_id[labels == label]
-                    ret_clusters.append((self.charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
+                    ret_clusters.append((charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
                 return ret_clusters
 
     def build_view_clusters(self, data_pd):
@@ -1748,3 +1738,14 @@ def manual_kmean(hit_pos, centers):
             return (centers, labels)
     print("WARNING kmeans not converged")
     raise Exception("Note convergence error")
+def charge_centroid(self, hit_pos, hit_charge):
+    """
+    Charge centroid calcolation
+    :param hit_pos:
+    :param hit_charge:
+    :return:
+    """
+    # hit_charge=np.abs(hit_charge)
+    hit_charge[hit_charge < 0.1] = 0.1
+    ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
+    return ret_centers

@@ -337,13 +337,15 @@ class tpc_prep:
 
         return (event_hits)
 
-    def calc_tpc_pos_subrun(self, input):
+    def split_clusters_too_big(self, cluster_pd, hit_pd):
+        pass
+    def calc_tpc_pos_subrun(self, input_data):
         """
         Perform the tpc calculation on 1 subrun
         :return:
         """
-        cluster_pd = input[0]
-        hit_pd = input[1]
+        cluster_pd = input_data[0]
+        hit_pd = input_data[1]
         cluster_pd_evts = cluster_pd.groupby("count")
         # hit_pd = self.hit_pd.query(f"subRunNo == {cluster_pd.subrun.mode().values[0]} and strip_x>-1")
         hit_pd["pos_g"] = np.nan
