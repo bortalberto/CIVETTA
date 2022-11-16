@@ -4,9 +4,12 @@ import shutil
 
 run = sys.argv[1]
 angle = sys.argv[2]
-os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
+if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
+    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
 for n in range(0, 8):
-    os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
+    if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
+
+        os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
     options = ""
     if n < 1:
