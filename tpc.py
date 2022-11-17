@@ -376,8 +376,7 @@ class tpc_prep:
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
                 if not self.no_pos_g_cut:
-                    print ("Pos_g cut")
-                    cluster_hits = cluster_hits[cluster_hits.pos_g < 6 and cluster_hits.pos_g > -1 ]
+                    cluster_hits = cluster_hits[(cluster_hits.pos_g < 6) & (cluster_hits.pos_g > -1) ]
                 hit_pd.loc[cluster_hits.index, "pos_g_pre_cor"] = cluster_hits.pos_g
                 hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
 
