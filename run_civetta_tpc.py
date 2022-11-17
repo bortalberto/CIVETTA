@@ -31,7 +31,7 @@ for n in range(0, 8):
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
 
-    os.system(f"./civetta_tpc.py {run} -tw; -tpc_angle {angle}")
+    os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} ;")
     os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 20 -tpc;")
 
