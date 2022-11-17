@@ -377,8 +377,8 @@ class tpc_prep:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
                 if not self.no_pos_g_cut:
                     cluster_hits = cluster_hits[(cluster_hits.pos_g < 5) & (cluster_hits.pos_g > 0) ]
-                hit_pd.loc[cluster_hits.index, "pos_g_pre_cor"] = cluster_hits.pos_g
-                hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
+                # hit_pd.loc[cluster_hits.index, "pos_g_pre_cor"] = cluster_hits.pos_g
+                # hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
 
                 # cluster_hits = cluster_hits.query("charge_SH>0")  ## Taglia a carica >0
                 cluster_hits["error_from_t"] = vel * 15 / (abs(cluster_hits.charge_SH) + 0.5)
