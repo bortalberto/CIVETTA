@@ -376,10 +376,12 @@ class tpc_prep:
                 else:
                     cluster_hits["pos_g"] = (cluster_hits.hit_time - ref_time) * vel
                 if not self.no_pos_g_cut:
-                    hit_pd.loc[cluster_hits[(cluster_hits.pos_g > 12) | (cluster_hits.pos_g < -12) ].index, "pos_g_pre_cor"] = cluster_hits[(cluster_hits.pos_g > 5) | (cluster_hits.pos_g < 0) ].pos_g
-                    hit_pd.loc[cluster_hits[(cluster_hits.pos_g > 12) | (cluster_hits.pos_g < -12) ].index, "pos_g"] = np.nan
+                    upper_cut=6
+                    lower_cut=-1
+                    hit_pd.loc[cluster_hits[(cluster_hits.pos_g > upper_cut) | (cluster_hits.pos_g < lower_cut) ].index, "pos_g_pre_cor"] = cluster_hits[(cluster_hits.pos_g > upper_cut) | (cluster_hits.pos_g < lower_cut) ].pos_g
+                    hit_pd.loc[cluster_hits[(cluster_hits.pos_g > upper_cut) | (cluster_hits.pos_g < lower_cut) ].index, "pos_g"] = np.nan
 
-                    cluster_hits = cluster_hits[(cluster_hits.pos_g < 12) & (cluster_hits.pos_g > -12) ]
+                    cluster_hits = cluster_hits[(cluster_hits.pos_g < upper_cut) & (cluster_hits.pos_g > lower_cut) ]
 
                 hit_pd.loc[cluster_hits.index, "pos_g_pre_cor"] = cluster_hits.pos_g
                 hit_pd.loc[cluster_hits.index, "pos_g"] = cluster_hits.pos_g
