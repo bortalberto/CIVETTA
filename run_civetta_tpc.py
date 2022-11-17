@@ -36,8 +36,8 @@ for n in range(0, 8):
 
     os.system(f"./civetta_perf.py {run} -tpc -Ser;")
 
-    os.system(f"./civetta_tpc.py {run} -angle {angle} -plot_evts -tpc_angle {angle};;")
-    os.system(f"./civetta_tpc.py {run} -angle {angle} -post_plot -tpc_angle {angle};;")
+    os.system(f"./civetta_tpc.py {run} -angle {angle} -plot_evts -tpc_angle {angle};")
+    os.system(f"./civetta_tpc.py {run} -angle {angle} -post_plot -tpc_angle {angle};")
 
     shutil.move(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/",f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/")
     os.rename(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/{run}", f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/elaborated_output")
