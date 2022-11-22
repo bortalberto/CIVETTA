@@ -740,7 +740,7 @@ class plotter_after_tpc():
             bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][(abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std) & (
                     abs(self.res_measure.cl_pds[f"{pl}x"].res_x) < std * 3)]
             very_bad_evts_res = self.res_measure.cl_pds[f"{pl}x"][
-                abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 5]
+                abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 4]
 
             good_evts = np.random.choice(good_evts_res["count"], n)
             bad_evts = np.random.choice(bad_evts_res["count"], n)  # Select good and bad evts
