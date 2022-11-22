@@ -654,11 +654,13 @@ class plotter_after_tpc():
         fit_x = self.track_pd_list[dut].query(f"count == {count}").fit_x.values[0]
         fit_y = self.track_pd_list[dut].query(f"count == {count}").fit_y.values[0]
         prev_pos = fit_x[1] + fit_x[0] * dut * 10
+        res = self.res_measure.cl_pds[f'{dut}x'].query(f"count == {count}").res_x.min()
 
         figplot, ax = plt.subplots(2, 2, figsize=(20, 20))
         figplot.suptitle(f"Event {int(count)}, planar {dut}, "
-                         f"residual : {self.res_measure.cl_pds[f'{dut}x'].res_x.values[0]*10:.2f} mm"
+                         f"residual : {res*10:.2f} mm"
                          , fontsize=26)
+
         figplot.set_facecolor("white")
         pos_utpc = event_cluster.pos_tpc
         ax[0][0].errorbar(
