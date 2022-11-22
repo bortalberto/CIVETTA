@@ -656,7 +656,8 @@ class plotter_after_tpc():
         prev_pos = fit_x[1] + fit_x[0] * dut * 10
 
         figplot, ax = plt.subplots(2, 2, figsize=(20, 20))
-        figplot.suptitle(f"Event {int(count)}, planar {2}", fontsize=26)
+        figplot.suptitle(f"Event {int(count)}, planar {dut}, residual : {self.res_measure.cl_pds[f'{dut}x'].res_x.values[0]}"
+                         , fontsize=26)
         figplot.set_facecolor("white")
         pos_utpc = event_cluster.pos_tpc
         ax[0][0].errorbar(
