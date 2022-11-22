@@ -611,12 +611,12 @@ class plotter_after_tpc():
         eff_pd_l = []
         for p in range(0, 4):
             cl_pd_list.append(
-                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/match_cl_{p}_TPC-zstd.feather"))
+                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/{self.run}/match_cl_{p}_TPC-zstd.feather"))
             self.track_pd_list.append(
-                pd.read_pickle(f"/media/disk2T/VM_work_zone/data/perf_out/403/tracks_pd_{p}_TPC.gzip",
+                pd.read_pickle(f"/media/disk2T/VM_work_zone/data/perf_out/{self.run}/tracks_pd_{p}_TPC.gzip",
                                compression="gzip"))
             eff_pd_l.append(
-                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/eff_pd_{p}_TPC-zstd.feather"))
+                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/{self.run}/eff_pd_{p}_TPC-zstd.feather"))
         self.res_measure = res_measure(cl_pd=cl_pd_list, eff_pd=pd.concat(eff_pd_l), planar_list=[0, 1, 2, 3],
                                        tracks_pd=self.track_pd_list)
 
