@@ -743,8 +743,10 @@ class plotter_after_tpc():
                 abs(self.res_measure.cl_pds[f"{pl}x"].res_x) > std * 4]
 
             good_evts = np.random.choice(good_evts_res["count"], n)
-            bad_evts = np.random.choice(bad_evts_res["count"], n)  # Select good and bad evts
-            very_bad_evts = np.random.choice(very_bad_evts_res["count"], n)  # Select good and bad evts
+            if bad_evts_res.shape[0]>n:
+                bad_evts = np.random.choice(bad_evts_res["count"], n)  # Select good and bad evts
+            if very_bad_evts_res.shape[0]>n:
+                very_bad_evts = np.random.choice(very_bad_evts_res["count"], n)  # Select good and bad evts
 
             ## Folders creation
             good_folder = os.path.join(self.out_path, "good_evt")
