@@ -7,7 +7,7 @@ angle = sys.argv[2]
 if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(7, 8):
+for n in range(9, 10):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
 
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
@@ -27,6 +27,8 @@ for n in range(7, 8):
         options += " -no_prev_strip_charge_correction"
     if n <7:
         options += " -no_pos_g_cut"
+    options += " -no_pos_g_cut"
+
     print (options)
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
