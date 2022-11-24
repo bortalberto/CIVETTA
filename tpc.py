@@ -123,6 +123,7 @@ class tpc_prep:
         self.no_time_walk_corr = False
         self.no_border_correction = False
         self.no_prev_strip_charge_correction = False
+        self.tpc_angle = 0
 
     def thr_tmw(self, row):
         """
@@ -328,6 +329,43 @@ class tpc_prep:
 
         return (event_hits)
 
+    def split_big_clusters_in_x(self, input_data):
+        """
+        Perform the tpc calculation on 1 subrun
+        :return:
+        """
+        angle = self.tpc_angle
+        mean_size = ((np.tan(angle * np.pi / 180) * 5 + 0.35) // 0.65) + 1
+        cluster_pd = input_data[0]
+        hit_pd = input_data[1]
+        big_clusters = cluster_pd[cluster_pd.cl_size > mean_size]
+        hit_pd_x_big = hit_pd[hit_pd["count"].isin(big_clusters["count"])]
+        for cl_index, cluster in big_clusters.iterrows():
+            cluster_hits = hit_pd_x_big[hit_pd_x_big.hit_id.isin(cluster.hit_ids)]
+            skipped_values = list(
+                set(range(cluster_hits.strip_x.min(), cluster_hits.strip_x.max())) - set(cluster_hits.strip_x))
+            skipped_values.sort()
+            hits_list = []
+            cluster_hits_remaining = cluster_hits
+            for missing in skipped_values:
+                hits_list.append(cluster_hits_remaining[cluster_hits_remaining.strip_x < missing])
+                cluster_hits_remaining = cluster_hits_remaining[cluster_hits_remaining.strip_x > missing]
+            hits_list.append(cluster_hits_remaining)
+            model = cluster_pd[cluster_pd.index == cl_index].iloc[0]
+            max_cl_id = cluster_pd[cluster_pd["count"] == model["count"]].cl_id.max()
+            cluster_pd.drop(index=[cl_index], inplace=True)
+            row = model
+            for n, cl_hits in enumerate(hits_list):
+                if cl_hits.shape[0] > 0:
+                    row.loc["cl_pos_x"] = charge_centroid(cl_hits.strip_x, cl_hits.charge_SH)
+                    row.loc["cl_charge"] = cl_hits.charge_SH.sum()
+                    row.loc["cl_size"] = cl_hits.charge_SH.count()
+                    row.loc["cl_id"] = max_cl_id + 1 + n
+                    row.loc["hit_ids"] = cl_hits.hit_id.values
+                    row.loc["planar"] = cl_hits.planar.values[0]
+                    cluster_pd = cluster_pd.append(row)
+        return cluster_pd
+
     def calc_tpc_pos_subrun(self, input):
         """
         Perform the tpc calculation on 1 subrun
@@ -471,9 +509,26 @@ class tpc_prep:
         sub_list = []
         return_list_cl = []
         return_list_hits = []
-
         for key in sub_data.groups:
             sub_list.append([sub_data.get_group(key), hit_pd_sub.get_group(key)])
+
+        if not self.no_big_clusters_splitting:
+            return_list_cl_pre=[]
+            if len(sub_list) > 0:
+                with Pool(processes=cpus) as pool:
+                    with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
+                        for i, x in enumerate(pool.imap_unordered(self.split_big_clusters_in_x, sub_list)):
+                            return_list_cl_pre.append(x)
+                            pbar.update()
+                cluster_pd = pd.concat(return_list_cl_pre)
+                sub_data = cluster_pd.groupby(["subrun"])
+                sub_list = []
+                return_list_cl = []
+                return_list_hits = []
+                for key in sub_data.groups:
+                    sub_list.append([sub_data.get_group(key), hit_pd_sub.get_group(key)])
+
+
         if len(sub_list) > 0:
             with Pool(processes=cpus) as pool:
                 with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
@@ -590,12 +645,12 @@ class plotter_after_tpc():
         eff_pd_l = []
         for p in range(0, 4):
             cl_pd_list.append(
-                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/match_cl_{p}_TPC-zstd.feather"))
+                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/{self.run}/match_cl_{p}_TPC-zstd.feather"))
             self.track_pd_list.append(
-                pd.read_pickle(f"/media/disk2T/VM_work_zone/data/perf_out/403/tracks_pd_{p}_TPC.gzip",
+                pd.read_pickle(f"/media/disk2T/VM_work_zone/data/perf_out/{self.run}/tracks_pd_{p}_TPC.gzip",
                                compression="gzip"))
             eff_pd_l.append(
-                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/403/eff_pd_{p}_TPC-zstd.feather"))
+                pd.read_feather(f"/media/disk2T/VM_work_zone/data/perf_out/{self.run}/eff_pd_{p}_TPC-zstd.feather"))
         self.res_measure = res_measure(cl_pd=cl_pd_list, eff_pd=pd.concat(eff_pd_l), planar_list=[0, 1, 2, 3],
                                        tracks_pd=self.track_pd_list)
 
@@ -1036,3 +1091,14 @@ class plotter_after_tpc():
         fig.update_layout(height=2000)
 
         fig.write_html(os.path.join(self.plt_path, "residuals_vs_fit_angle.html"), include_plotlyjs="directory")
+def charge_centroid( hit_pos, hit_charge):
+    """
+    Charge centroid calcolation
+    :param hit_pos:
+    :param hit_charge:
+    :return:
+    """
+    # hit_charge=np.abs(hit_charge)
+    hit_charge[hit_charge < 0.1] = 0.1
+    ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
+    return ret_centers
