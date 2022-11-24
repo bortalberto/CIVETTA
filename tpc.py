@@ -18,7 +18,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import root_fit_lib
 import plotly.io as pio
-
+from planar_analysis_lib import charge_centroid
 pio.templates.default = "plotly_white"
 
 warnings.filterwarnings('ignore')
@@ -127,10 +127,12 @@ class tpc_prep:
 
         self.beta0 = [0.5, -20]  # initial guess
         self.ifixb = [1, 1]  # free parameter
-        self.no_pos_g_cut= False
-        self.no_big_clusters_splitting= False
-        self.no_diffusion_error= False
-        self.capacitive_cut_value= 0.2
+        self.no_pos_g_cut = False
+        self.no_big_clusters_splitting = False
+        self.no_diffusion_error = False
+        self.capacitive_cut_value = 0.2
+        self.tpc_angle = 0
+
 
     def thr_tmw(self, row):
         """
@@ -337,8 +339,43 @@ class tpc_prep:
 
         return (event_hits)
 
-    def split_clusters_too_big(self, cluster_pd, hit_pd):
-        pass
+    def split_big_clusters_in_x(self, input_data):
+        """
+        Split biggest cluster into smaller ones.
+        :return:
+        """
+        angle = self.tpc_angle
+        mean_size = ((np.tan(angle * np.pi / 180) * 5 + 0.35) // 0.65) + 1
+        cluster_pd = input_data[0]
+        hit_pd = input_data[1]
+        big_clusters = cluster_pd[cluster_pd.cl_size > mean_size]
+        hit_pd_x_big = hit_pd[hit_pd["count"].isin(big_clusters["count"])]
+        for cl_index, cluster in big_clusters.iterrows():
+            cluster_hits = hit_pd_x_big[hit_pd_x_big.hit_id.isin(cluster.hit_ids)]
+            skipped_values = list(
+                set(range(cluster_hits.strip_x.min(), cluster_hits.strip_x.max())) - set(cluster_hits.strip_x))
+            skipped_values.sort()
+            hits_list = []
+            cluster_hits_remaining = cluster_hits
+            for missing in skipped_values:
+                hits_list.append(cluster_hits_remaining[cluster_hits_remaining.strip_x < missing])
+                cluster_hits_remaining = cluster_hits_remaining[cluster_hits_remaining.strip_x > missing]
+            hits_list.append(cluster_hits_remaining)
+            model = cluster_pd[cluster_pd.index == cl_index].iloc[0]
+            max_cl_id = cluster_pd[cluster_pd["count"] == model["count"]].cl_id.max()
+            cluster_pd.drop(index=[cl_index], inplace=True)
+            row = model
+            for n, cl_hits in enumerate(hits_list):
+                if cl_hits.shape[0] > 0:
+                    row.loc["cl_pos_x"] = charge_centroid(cl_hits.strip_x, cl_hits.charge_SH)
+                    row.loc["cl_charge"] = cl_hits.charge_SH.sum()
+                    row.loc["cl_size"] = cl_hits.charge_SH.count()
+                    row.loc["cl_id"] = max_cl_id + 1 + n
+                    row.loc["hit_ids"] = cl_hits.hit_id.values
+                    row.loc["planar"] = cl_hits.planar.values[0]
+                    cluster_pd = cluster_pd.append(row)
+        return cluster_pd
+
     def calc_tpc_pos_subrun(self, input_data):
         """
         Perform the tpc calculation on 1 subrun
