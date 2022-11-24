@@ -7,29 +7,28 @@ angle = sys.argv[2]
 if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(10, 15):
+for n in range(0, 15):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
-    #
-    # options = ""
-    # if n < 1:
-    #     options += " -no_errors"
-    # if n < 2:
-    #     options += " -no_first_last_shift"
-    # if n < 3:
-    #     options += " -no_capacitive"
-    # if n < 4:
-    #     options += " -no_time_walk_corr"
-    # if n < 5:
-    #     options += " -no_border_correction"
-    # if n < 6:
-    #     options += " -no_prev_strip_charge_correction"
-    # if n <7:
-    #     options += " -no_pos_g_cut"
-    dict_cut={10:10, 11:15,12:20,13:30,14:40}
-    options = f"-capacitive_cut_value {dict_cut[n]}"
 
-    options += " -no_pos_g_cut"
+    options = ""
+    if n < 1:
+        options += " -no_errors"
+    if n < 2:
+        options += " -no_first_last_shift"
+    if n < 3:
+        options += " -no_capacitive"
+    if n < 4:
+        options += " -no_time_walk_corr"
+    if n < 5:
+        options += " -no_border_correction"
+    if n < 6:
+        options += " -no_prev_strip_charge_correction"
+    if n <7:
+        options += " -no_pos_g_cut"
+    if n >=7:
+        dict_cut={8:10, 9:15,10:20,11:30,12:40}
+        options = f"-capacitive_cut_value {dict_cut[n]}"
 
     print (options)
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
