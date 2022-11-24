@@ -196,7 +196,7 @@ if __name__=="__main__":
     parser.add_argument('-no_pos_g_cut', help="Cuts hits outside the drift area", action = "store_true")
     parser.add_argument('-no_big_clusters_splitting', help="If the cluster is too big, try to split it ", action = "store_true") #TODO implement
     parser.add_argument('-no_diffusion_error', help="Add diffusion related error on X", action = "store_true") #TODO implement
-    parser.add_argument('-capacitive_cut_value', help="Sets the value for the capacitive cut ", type=float) #TODO implement
+    parser.add_argument('-capacitive_cut_value', help="Sets the value for the capacitive cut ", type=float)
     parser.add_argument('-tpc_angle', help="Value of the TPC angle, in order to use the correct corrections", type=float, required=True) #TODO implement
 
 
