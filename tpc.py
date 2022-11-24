@@ -114,7 +114,6 @@ class tpc_prep:
         self.tpc_dir = os.path.join(self.data_folder, "raw_root", f"{self.run_number}", f"tpc")
         if not os.path.isdir(self.tpc_dir):
             os.mkdir(self.tpc_dir)
-        self.cut = 0.15
         self.silent = silent
         self.no_errors = False
         self.no_first_last_shift = False
@@ -300,12 +299,12 @@ class tpc_prep:
         """
         Check if there is a capacitivly induced hit on the borders of the clusters
         """
-        if event_hits.charge_SH.values[0] / event_hits.charge_SH.values[1] < self.cut:
+        if event_hits.charge_SH.values[0] / event_hits.charge_SH.values[1] < self.capacitive_cut_value:
             #         print ("capacitive coupling init")
             event_hits = event_hits[1:]
             hit_pd_x.loc[event_hits.index[0], "dropped"] = "Init"
 
-        if event_hits.charge_SH.values[-1] / event_hits.charge_SH.values[-2] < self.cut:
+        if event_hits.charge_SH.values[-1] / event_hits.charge_SH.values[-2] < self.capacitive_cut_value:
             #         print ("capacitive coupling final")
             event_hits = event_hits[:-1]
             hit_pd_x.loc[event_hits.index[-1], "dropped"] = "Final"
@@ -316,24 +315,24 @@ class tpc_prep:
         """
         Checks for capacitive effects on the last and first 2 strips.
         """
-        if event_hits.charge_SH[0:2].sum() / event_hits.charge_SH[3:4].sum() < self.cut:
+        if event_hits.charge_SH[0:2].sum() / event_hits.charge_SH[3:4].sum() < self.capacitive_cut_value:
             hit_pd_x.loc[event_hits.index[0:2], "dropped"] = "Init"
             event_hits = event_hits[2:]
 
 
         else:
-            if event_hits.charge_SH.values[0] / event_hits.charge_SH.values[1] < self.cut:
+            if event_hits.charge_SH.values[0] / event_hits.charge_SH.values[1] < self.capacitive_cut_value:
                 hit_pd_x.loc[event_hits.index[0], "dropped"] = "Init"
                 event_hits = event_hits[1:]
 
-        if event_hits.charge_SH[-2:].sum() / event_hits.charge_SH[-4:-2].sum() < self.cut:
+        if event_hits.charge_SH[-2:].sum() / event_hits.charge_SH[-4:-2].sum() < self.capacitive_cut_value:
             hit_pd_x.loc[event_hits.index[-2:], "dropped"] = "Final"
             event_hits = event_hits[:-2]
 
 
 
         else:
-            if event_hits.charge_SH.values[-1] / event_hits.charge_SH.values[-2] < self.cut:
+            if event_hits.charge_SH.values[-1] / event_hits.charge_SH.values[-2] < self.capacitive_cut_value:
                 hit_pd_x.loc[event_hits.index[-1], "dropped"] = "Final"
                 event_hits = event_hits[:-1]
 
