@@ -36,7 +36,7 @@ for n in range(0, 15):
 
     os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} -cpu 32;")
-    os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 32 -tpc;")
+    os.system(f" time ./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 32 -tpc;")
 
     os.system(f"./civetta_perf.py {run} -tpc -Ser -cpu 32;")
 
