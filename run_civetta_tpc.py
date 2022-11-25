@@ -35,10 +35,10 @@ for n in range(0, 15):
         option_file.write(options)
 
     os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
-    os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} ;")
-    os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 20 -tpc;")
+    os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} -cpu 32;")
+    os.system(f"./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 32 -tpc;")
 
-    os.system(f"./civetta_perf.py {run} -tpc -Ser;")
+    os.system(f"./civetta_perf.py {run} -tpc -Ser -cpu 32;")
 
     os.system(f"./civetta_tpc.py {run} -angle {angle} -plot_evts -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -angle {angle} -post_plot -tpc_angle {angle};")
