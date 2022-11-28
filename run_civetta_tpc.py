@@ -17,7 +17,7 @@ if angle == "clean":
 if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(7, 15):
+for n in range(0, 15):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
