@@ -4,6 +4,16 @@ import shutil
 
 run = sys.argv[1]
 angle = sys.argv[2]
+
+if angle == "clean":
+    os.rmdir(
+        os.path.join(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
+    )
+    os.rmdir(
+        os.path.join(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}")
+    )
+    exit()
+
 if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
