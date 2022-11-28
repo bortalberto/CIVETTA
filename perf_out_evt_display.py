@@ -531,44 +531,44 @@ class res_measure:
             pd.DataFrame(cl_pd[f"res_{view}"].apply(lambda x: [x, x, x, x], 1)), view=view)
         return popt_list[0], pcov_list[0], res_list[0], R_list[0], chi_list[0], deg_list[0]
 
-    def calc_enemy(self, view, planars, elab_folder):
-        pd_list = []
-        for key in self.cl_pds:
-            pd_list.append(self.cl_pds[key])
-        cluster_pd_1D_match = pd.concat(pd_list)
-        cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
-        enemy_res_list = []
-        chi_list = []
-        residual_fit_list = []
-        pos_res_list = []
-        error_list = []
-        count_list = []
-        couples = [(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)]
-        couples = [couple for couple in couples if np.all(np.isin(couple, planars))]
+def calc_enemy(cl_pds,view, planars, elab_folder):
+    pd_list = []
+    for key in cl_pds:
+        pd_list.append(cl_pds[key])
+    cluster_pd_1D_match = pd.concat(pd_list)
+    cluster_pd_1D_match = cluster_pd_1D_match[cluster_pd_1D_match[f"cl_pos_{view}"].notna()]
+    enemy_res_list = []
+    chi_list = []
+    residual_fit_list = []
+    pos_res_list = []
+    error_list = []
+    count_list = []
+    couples = [(0, 1), (1, 2), (2, 3), (0,2), (1,3), (0,3)]
+    couples = [couple for couple in couples if np.all(np.isin(couple, planars))]
 
-        for pls in tqdm(couples, desc="Couples", leave=False):
-            complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
-            residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
-            cluster_pd_1D_match[f"ene_{pls}"] = cluster_pd_1D_match["count"].apply(lambda x: assign_residual(x, residual_list))
+    for pls in tqdm(couples, desc="Couples", leave=False):
+        complete_evt = cluster_pd_1D_match.groupby("count").filter(lambda x: all([i in set(x.planar.values) for i in set(pls)]))
+        residual_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0] - x[x.planar == pls[1]][f"cl_pos_{view}_cm"].values[0])
+        cluster_pd_1D_match[f"ene_{pls}"] = cluster_pd_1D_match["count"].apply(lambda x: assign_residual(x, residual_list))
 
-            pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
-            count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
+        pos_list = complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]][f"cl_pos_{view}_cm"].values[0])
+        count_list.append(complete_evt.groupby("count", axis=0).apply(lambda x: x[x.planar == pls[0]]["count"].values[0]))
 
 
-            residual_list=residual_list[residual_list<20]
-            sigma_def = r_fit.estimate_sigma_def(residual_list)
-            popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
-            popt_list.extend([0,1,1])
-            residual_list_plot=pd.DataFrame(residual_list.rename(f"res_{view}"))
-            plot = plot_residuals(residual_list_plot, view, popt_list, R_list, pls, chi, deg_list)
-            plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
-            plt.close(plot[0])
-            enemy_res_list.append(popt_list[2])
-            error_list.append(error[2])
-            chi_list.append(chi/deg_list)
-            residual_fit_list.append(residual_list)
-            pos_res_list.append(pos_list)
-        return couples,enemy_res_list, chi_list, residual_fit_list, pos_res_list, error_list, count_list, cluster_pd_1D_match
+        residual_list=residual_list[residual_list<20]
+        sigma_def = r_fit.estimate_sigma_def(residual_list)
+        popt_list, pcov_list, res_list, R_list, chi, deg_list, error = r_fit.single_gaus_fit_root(residual_list, sigma_def=sigma_def)
+        popt_list.extend([0,1,1])
+        residual_list_plot=pd.DataFrame(residual_list.rename(f"res_{view}"))
+        plot = plot_residuals(residual_list_plot, view, popt_list, R_list, pls, chi, deg_list)
+        plot[0].savefig(os.path.join(elab_folder, f"Enemy_gaus_fit_{pls}{view}.png"))
+        plt.close(plot[0])
+        enemy_res_list.append(popt_list[2])
+        error_list.append(error[2])
+        chi_list.append(chi/deg_list)
+        residual_fit_list.append(residual_list)
+        pos_res_list.append(pos_list)
+    return couples,enemy_res_list, chi_list, residual_fit_list, pos_res_list, error_list, count_list, cluster_pd_1D_match
 
     def calc_enemy_align(self, view):
         # pd_list = []
@@ -718,7 +718,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     for view in ("x","y"):
         logger.write_log(f"\n--Enemy residual {view}--\n")
 
-        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list, enemy_pd = res_calc.calc_enemy(view, planar_list, elab_folder)
+        couples,enemy_res_list, chi_list, enemey_res_list, pos_res_list, error_list, count_list, enemy_pd = calc_enemy(res_measure.cl_pds,view, planar_list, elab_folder)
         enemy_pd.reset_index(drop=True, inplace=True)
         enemy_pd.drop(columns=["cov"], inplace=True)
         enemy_pd.to_feather(os.path.join(perf_path, f"match_cl_enemy_{view}"+tpc_string+"-zstd.feather"), compression="zstd")

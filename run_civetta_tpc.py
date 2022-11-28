@@ -16,6 +16,7 @@ if angle == "clean":
 
 if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
+    os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
 for n in range(0, 15):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
@@ -45,7 +46,6 @@ for n in range(0, 15):
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
 
-    os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} -cpu 32;")
     os.system(f" time ./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 32 -tpc;")
 
