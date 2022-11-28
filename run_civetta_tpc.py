@@ -22,6 +22,7 @@ for n in range(7, 15):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
     options = ""
+    options += " -no_pos_g_cut"
     if n < 1:
         options += " -no_errors"
     if n < 2:
@@ -34,11 +35,11 @@ for n in range(7, 15):
         options += " -no_border_correction"
     if n < 6:
         options += " -no_prev_strip_charge_correction"
-    if n <7:
-        options += " -no_pos_g_cut"
+    # if n <7:
+    #     options += " -no_pos_g_cut"
     if n >=7:
-        dict_cut={7:5, 8:10, 9:15,10:20,11:30,12:40, 13:50}
-        options = f"-capacitive_cut_value {dict_cut[n]}"
+        dict_cut={7:0.05, 8:0.10, 9:0.15,10:0.20,11:0.30,12:0.40, 13:0.50, 14:0.20}
+        options += f"-capacitive_cut_value {dict_cut[n]}"
 
     print (options)
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
