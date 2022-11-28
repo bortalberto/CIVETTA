@@ -6,10 +6,10 @@ run = sys.argv[1]
 angle = sys.argv[2]
 
 if angle == "clean":
-    os.rmdir(
+    shutil.rmtree(
         os.path.join(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
     )
-    os.rmdir(
+    shutil.rmtree(
         os.path.join(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}")
     )
     exit()
