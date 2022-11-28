@@ -7,10 +7,10 @@ angle = sys.argv[2]
 
 if angle == "clean":
     shutil.rmtree(
-        os.path.join(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
+        os.path.join(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/")
     )
     shutil.rmtree(
-        os.path.join(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}")
+        os.path.join(f"/media/disk2T/VM_work_zone/data/elaborated_output/{run}/")
     )
     exit()
 
