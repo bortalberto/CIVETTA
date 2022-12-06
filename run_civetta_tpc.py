@@ -36,7 +36,7 @@ for n in range(17, 21):
         options += " -no_border_correction"
     if n < 6:
         options += " -no_prev_strip_charge_correction"
-    if n >6:
+    if n >6 and n <15:
         dict_cut={7:0.05, 8:0.10, 9:0.15,10:0.20,11:0.30,12:0.40, 13:0.50, 14:2}
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
