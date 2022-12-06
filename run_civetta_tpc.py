@@ -18,7 +18,7 @@ if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(0, 17):
+for n in range(17, 21):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
@@ -26,7 +26,7 @@ for n in range(0, 17):
     options += " -no_pos_g_cut"
     if n < 1:
         options += " -no_errors"
-    if n < 2:
+    if n > 2:
         options += " -no_first_last_shift"
     if n < 3:
         options += " -no_capacitive"
@@ -36,10 +36,8 @@ for n in range(0, 17):
         options += " -no_border_correction"
     if n < 6:
         options += " -no_prev_strip_charge_correction"
-    # if n <7:
-    #     options += " -no_pos_g_cut"
     if n >=7:
-        dict_cut={7:0.05, 8:0.10, 9:0.15,10:0.20,11:0.30,12:0.40, 13:0.50, 14:0.20, 15:2, 16:4}
+        dict_cut={7:0.05, 17:0.10, 18:0.15,19:0.20,20:0.30,12:0.40, 13:0.50, 14:0.20, 15:2, 16:4}
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
     print (options)
