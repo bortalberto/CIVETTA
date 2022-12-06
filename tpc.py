@@ -131,6 +131,15 @@ class tpc_prep:
         self.no_diffusion_error = False
         self.capacitive_cut_value = 0.2
         self.tpc_angle = 0
+        self.angle_to_signal_width_map={
+            0:170,
+            5:160,
+            10:150,
+            15:140,
+            20:120,
+            30:100,
+            45:70
+        }
 
 
     def thr_tmw(self, row):
@@ -209,6 +218,7 @@ class tpc_prep:
         hit_pd_sub = hit_pd.groupby(["subRunNo"])
         for key in hit_pd_sub.groups:
             sub_list.append(hit_pd_sub.get_group(key))
+        self.signal_width=self.angle_to_signal_width_map[self.tpc_angle]
         if len(sub_list) > 0:
             with Pool(processes=self.cpu_to_use) as pool:
                 with tqdm(total=len(sub_list), desc="Calculating time and time walk", leave=False) as pbar:
