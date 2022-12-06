@@ -40,7 +40,7 @@ for n in range(23, 24):
         dict_cut={7:0.05, 8:0.10, 9:0.15,10:0.20,11:0.30,12:0.40, 13:0.50, 14:2}
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
-    if n >15:
+    if n >15 and n<23:
         dict_cut = {16: 0.05, 17: 0.10, 18: 0.15, 19: 0.20, 20: 0.25, 21: 0.30, 22: 2}
         options += " -no_first_last_shift"
         options += f" -capacitive_cut_value {dict_cut[n]}"
