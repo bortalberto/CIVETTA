@@ -1094,7 +1094,7 @@ class plotter_after_tpc():
                             )
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram2d(x=(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
+                go.Histogram2d(x=90-(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
                                y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                                ybins={"start": y_range[0], "end": y_range[1],
                                       "size": (y_range[1] - y_range[0]) / 100},
@@ -1107,14 +1107,14 @@ class plotter_after_tpc():
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Box(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1) // 5) * 5,
+                go.Box(x=90-((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1) // 5) * 5,
                        y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
-                go.Histogram(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1) // 5) * 5,
+                go.Histogram(x=90-((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1) // 5) * 5,
                              y=self.res_measure.cl_pds[f"{pl}x"].res_x,
                              name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
@@ -1196,7 +1196,7 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram2d(x=(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].angle_trk_x),
-                               y=(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
+                               y=90-(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
                                ybins={"start": y_range[0], "end": y_range[1],
                                       "size": (y_range[1] - y_range[0]) / 100},
                                xbins={"start": x_range[0], "end": x_range[1],
@@ -1209,14 +1209,14 @@ class plotter_after_tpc():
         for pl in range(0, 4):
             fig.add_trace(
                 go.Box(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].angle_trk_x) // 0.2) * 0.2,
-                       y=(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
+                       y=90-(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
                        name=f"Box det {pl}"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 4):
             fig.add_trace(
                 go.Histogram(x=((180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].angle_trk_x) ) ,
-                             y=(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
+                             y=90-(180 / np.pi) * np.arctan(self.res_measure.cl_pds[f"{pl}x"].F1),
                              name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
 
@@ -1590,7 +1590,7 @@ class plotter_after_tpc():
                             )
         for pl in range(0,3):
             fig.add_trace(
-                go.Histogram2d(x=(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.F1),
+                go.Histogram2d(x=90-(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.F1),
                                y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
                                ybins={"start": y_range[0], "end": y_range[1],
                                       "size": (y_range[1] - y_range[0]) / 80},
@@ -1603,14 +1603,14 @@ class plotter_after_tpc():
 
         for pl in range(0, 3):
             fig.add_trace(
-                go.Box(x=(((180 / np.pi) * np.arctan(self.cl_pd_x_enemy.F1))//5)*5,
+                go.Box(x=90-(((180 / np.pi) * np.arctan(self.cl_pd_x_enemy.F1))//5)*5,
                                y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
                        name=f"Box det {pl}", boxpoints=False),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2)
 
         for pl in range(0, 3):
             fig.add_trace(
-                go.Histogram(x=(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.F1),
+                go.Histogram(x=90-(180 / np.pi) * np.arctan(self.cl_pd_x_enemy.F1),
                                y=self.cl_pd_x_enemy[f"ene_({pl}, {pl+1})"].dropna(),
                              name=f"Hist det {pl}", opacity=0.15, histnorm="percent"),
                 col=pl // 2 + 1, row=pl % 2 + 1 + 2, secondary_y=True)
