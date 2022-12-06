@@ -26,7 +26,7 @@ for n in range(17, 21):
     options += " -no_pos_g_cut"
     if n < 1:
         options += " -no_errors"
-    if n > 2:
+    if n < 2:
         options += " -no_first_last_shift"
     if n < 3:
         options += " -no_capacitive"
@@ -36,8 +36,13 @@ for n in range(17, 21):
         options += " -no_border_correction"
     if n < 6:
         options += " -no_prev_strip_charge_correction"
-    if n >=7:
-        dict_cut={7:0.05, 17:0.10, 18:0.15,19:0.20,20:0.30,12:0.40, 13:0.50, 14:0.20, 15:2, 16:4}
+    if n >6:
+        dict_cut={7:0.05, 8:0.10, 9:0.15,10:0.20,11:0.30,12:0.40, 13:0.50, 14:2}
+        options += f" -capacitive_cut_value {dict_cut[n]}"
+
+    if n >15:
+        dict_cut = {16: 0.05, 17: 0.10, 18: 0.15, 19: 0.20, 20: 0.25, 21: 0.30, 22: 2}
+        options += " -no_first_last_shift"
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
     print (options)

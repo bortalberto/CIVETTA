@@ -70,9 +70,9 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             # print ("---")
             # print (sigma_def)
             data = data[abs(data - np.median(data)) < sigma_def]
-            nbins=200
-            if len(data)< 2000:
-                nbins=100
+            nbins = 100
+            if len(data)< 1000:
+                nbins = 50
             y, x = np.histogram(data, bins=nbins, range=[np.median(data)-sigma_def,np.median(data)+sigma_def])
 
             x = (x[1:] + x[:-1]) / 2
@@ -129,11 +129,11 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
 
 
 def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
-    nbins=200
+    nbins = 100
     mean = np.mean(data.values.astype(np.float32))
     data = {"res": data.values.astype(np.float32)}
-    if len(data) < 2000:
-        nbins = 100
+    if len(data) < 1000:
+        nbins = 50
     rdf = R.RDF.MakeNumpyDataFrame(data)
     amodel = R.RDF.TH1DModel("h1", "h1", nbins, mean - sigma_def, mean + sigma_def)
     h1 = rdf.Histo1D(amodel, "res")
@@ -156,9 +156,9 @@ def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list
         # sigma_def = estimate_sigma_def(data)
 
         data = data[abs(data - np.median(data)) < sigma_def]
-        nbins = 200
-        if len(data) < 2000:
-            nbins = 100
+        nbins = 100
+        if len(data) < 1000:
+            nbins = 50
         y, x = np.histogram(data, bins=nbins, range=[np.median(data) - sigma_def, np.median(data) + sigma_def])
         x = (x[1:] + x[:-1]) / 2
         # x = np.insert(x, 0, -0.2)
@@ -194,9 +194,9 @@ def plot_residuals_single_gauss(cl_pd_res, view, popt_list, R_list, pl, chi_list
 def single_gaus_fit_root(cl_pd_res, sigma_def=0.4):
     data = cl_pd_res
     # data = data[abs(data - np.median(data)) < sigma_def]
-    nbins = 200
-    if len(data) < 2000:
-        nbins = 100
+    nbins = 100
+    if len(data) < 1000:
+        nbins = 50
     y, x = np.histogram(data, bins=nbins, range=[np.median(data) - sigma_def, np.median(data) + sigma_def])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
@@ -245,9 +245,9 @@ def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_m
     data = data[abs(data) < 10]
     sigma_0 = estimate_sigma_def(data)
     # data = data[abs(data - np.median(data)) < sigma_def*2]
-    nbins = 200
-    if len(data) < 2000:
-        nbins = 100
+    nbins = 100
+    if len(data) < 1000:
+        nbins = 50
     # print ("a")
     y, x = np.histogram(data, bins=nbins, range=[np.median(data)-sigma_0, np.median(data)+sigma_0])
     x = (x[1:] + x[:-1]) / 2
