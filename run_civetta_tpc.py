@@ -45,6 +45,9 @@ for n in range(0, 17):
         options += " -no_first_last_shift"
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
+    if n == 23:
+        options = " -no_pos_g_cut"
+
     print (options)
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
         option_file.write(options)
