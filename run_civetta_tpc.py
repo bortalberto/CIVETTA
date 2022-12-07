@@ -18,7 +18,7 @@ if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(25, 26):
+for n in range(24, 26):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
