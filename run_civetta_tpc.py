@@ -18,7 +18,7 @@ if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(24, 25):
+for n in range(25, 26):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
@@ -42,13 +42,17 @@ for n in range(24, 25):
 
     if n >15 and n<23:
         dict_cut = {16: 0.05, 17: 0.10, 18: 0.15, 19: 0.20, 20: 0.25, 21: 0.30, 22: 2}
+
         options += " -no_first_last_shift"
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
     if n == 23:
         options = " -no_pos_g_cut"
 
-    if n == 24:
+    if n == 25:
+        os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
+        os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
+
         options = " -no_pos_g_cut"
 
     print (options)
@@ -56,7 +60,7 @@ for n in range(24, 25):
         option_file.write(options)
 
     os.system(f"./civetta_tpc.py {run} -tpc_angle {angle} -tpc_pos {options} -cpu 32;")
-    os.system(f" time ./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 32 -tpc;")
+    os.system(f" ./civetta_perf.py {run} -perf -sT 20 -sD 6 -chi -cpu 32 -tpc;")
 
     os.system(f"./civetta_perf.py {run} -tpc -Ser -cpu 32;")
 
