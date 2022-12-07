@@ -118,7 +118,7 @@ class tpc_prep:
         self.no_errors = False
         self.no_first_last_shift = False
         self.no_capacitive = False
-        self.drift_velocity = False
+        self.drift_velocity = False # in mm/ns?
         self.no_time_walk_corr = False
         self.no_border_correction = False
         self.no_prev_strip_charge_correction = False

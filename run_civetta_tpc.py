@@ -18,7 +18,7 @@ if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}"):
     os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
     os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
     os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}")
-for n in range(24, 26):
+for n in range(26, 27):
     if not os.path.isdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}"):
         os.mkdir(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}")
 
@@ -53,6 +53,9 @@ for n in range(24, 26):
         os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
         os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
         options = " -no_pos_g_cut"
+
+    if n == 26:
+        options = " -no_pos_g_cut -drift_velocity 38"
 
     print (options)
     with open(f"/media/disk2T/VM_work_zone/data/an_scan/{run}/{n}/options.txt", "w+") as option_file:
