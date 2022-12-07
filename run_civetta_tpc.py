@@ -46,13 +46,12 @@ for n in range(24, 26):
         options += " -no_first_last_shift"
         options += f" -capacitive_cut_value {dict_cut[n]}"
 
-    if n == 23:
+    if n == 24:
         options = " -no_pos_g_cut"
 
     if n == 25:
         os.system(f"./civetta_tpc.py {run} -thr -tpc_angle {angle};")
         os.system(f"./civetta_tpc.py {run} -tw -tpc_angle {angle};")
-
         options = " -no_pos_g_cut"
 
     print (options)
