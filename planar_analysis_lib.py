@@ -536,7 +536,7 @@ class calib:
             sys.exit(1)
 
     def convert_none(self, input_):
-        print (input_)
+        print (float (input_))
         try:
             float(input_)
         except ValueError:
