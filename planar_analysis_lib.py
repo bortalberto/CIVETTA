@@ -1751,4 +1751,4 @@ def convert_none(input_):
     except ValueError:
         return 0
 
-    return input_
+    return float(input_)
