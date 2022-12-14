@@ -105,7 +105,7 @@ class event_visualizer:
 
         hit_pd_evt = self.hit_pd[
             (self.hit_pd["count"] == event) & (self.hit_pd["planar"] == self.put) & (self.hit_pd["strip_x"] > 0) & (
-                    self.hit_pd["l1ts_min_tcoarse"] > 1370) & (self.hit_pd["l1ts_min_tcoarse"] < 1440)]
+                    self.hit_pd["l1ts_min_tcoarse"] > 1370) & (self.hit_pd["l1ts_min_tcoarse"] < 1480)]
         if evt_for_eff:
             hit_ids = this_evt_cluster.hit_ids.values[0]
         else:
