@@ -536,12 +536,12 @@ class calib:
             sys.exit(1)
 
     def convert_none(self, input_):
-        if str(input_) == 'None':
-            print(input_)
-
+        try:
+            float(input_)
+        except ValueError:
             return np.NaN
-        else:
-            return input_
+        return input_
+
 
     def get_channels_QDC_calib(self, HW_FEB, layer):
         """
