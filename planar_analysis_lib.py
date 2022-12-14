@@ -1748,6 +1748,6 @@ def charge_centroid( hit_pos, hit_charge):
 def convert_none(input_):
     try:
         return float(input_)
-    except:
+    except ValueError:
         print(input_)
-        return float(1)
+        return float(0)
