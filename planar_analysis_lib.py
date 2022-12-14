@@ -535,12 +535,7 @@ class calib:
             print(f"Can't load the mapping file, exception: {E}. Verify that the file ({self.mapping_file})exists and it's readable")
             sys.exit(1)
 
-    def convert_none(self, input_):
-        try:
-            float(input_)
-        except ValueError:
-            return 0
-        return input_
+
 
 
     def get_channels_QDC_calib(self, HW_FEB, layer):
@@ -559,8 +554,8 @@ class calib:
             print(f"Can't find {fname_2}")
             exit(0)
         return {
-            0: np.loadtxt(fname=fname_1, converters={0: self.convert_none, 1: self.convert_none}),
-            1: np.loadtxt(fname=fname_2, converters={0: self.convert_none, 1: self.convert_none}),
+            0: np.loadtxt(fname=fname_1, converters={0: self.convert_none, 1: convert_none}),
+            1: np.loadtxt(fname=fname_2, converters={0: self.convert_none, 1: convert_none}),
         }
 
     def get_channels_TAC_calib(self, HW_FEB, layer):
@@ -1749,3 +1744,11 @@ def charge_centroid( hit_pos, hit_charge):
     hit_charge[hit_charge < 0.1] = 0.1
     ret_centers = (np.sum([x * c for (x, c) in zip(hit_pos, hit_charge)])) / np.sum(hit_charge)
     return ret_centers
+
+def convert_none(input_):
+    try:
+        float(input_)
+    except ValueError:
+        return 0
+
+    return input_
