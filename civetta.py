@@ -17,7 +17,7 @@ class runner:
     """
     This class simply manage the launch of the libs functions
     """
-    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False, downsampling=1, cylinder=False, data_folder_root="Default" ):
+    def __init__(self, data_folder,run,calib_folder,mapping_file,cpu_to_use=cpu_count(), Silent=False , purge=True, alignment=False, root=False, downsampling=1, cylinder=False, data_folder_root="Default", cosmic=False):
         self.data_folder = data_folder
         if data_folder_root == "Default":
             self.data_folder_root=os.path.join(data_folder,"raw_root")
@@ -33,6 +33,7 @@ class runner:
         self.root = root
         self.cylinder = cylinder
         self.downsampling=downsampling
+        self.cosmic = cosmic
 
     ################# Decode part #################
     def decode_on_file(self,input_):
@@ -223,7 +224,7 @@ class runner:
 
         return (subrun_list,file_list)
     def calib_run(self):
-        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root, cylinder=self.cylinder)
+        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root, cylinder=self.cylinder, cosmic=self.cosmic)
         analizer.load_mapping()
         subrun_list, file_list = self.get_dec_list()
 
@@ -263,7 +264,7 @@ class runner:
         else:
             done_subruns = []
 
-        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root,cylinder=self.cylinder)
+        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root,cylinder=self.cylinder, cosmic=self.cosmic)
         analizer.load_mapping()
 
         subrun_list, file_list = self.get_dec_list()
@@ -294,7 +295,7 @@ class runner:
 
 
     def calib_subrun(self,subrun_tgt):
-        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root,cylinder=self.cylinder)
+        analizer = pl_lib.calib(run_number=self.run_number, calib_folder=self.calib_folder, mapping_file=self.mapping_file, data_folder=self.data_folder, root_dec=self.root,cylinder=self.cylinder, cosmic=self.cosmic)
         analizer.load_mapping()
 
         subrun_list, file_list = self.get_dec_list()
@@ -1050,6 +1051,8 @@ def main(run, **kwargs):
         options["downsampling"] = args.downsampling
     if args.data_folder_root:
         options["data_folder_root"] = args.data_folder_root
+    if args.cosmic:
+        options["cosmic"] = True
     if len (op_list)>0:
         main_runner = runner(data_folder,run,calib_folder,mapping_file,**options)
     else:
@@ -1163,6 +1166,7 @@ if __name__=="__main__":
     parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
     parser.add_argument('-comp','--compress', help='Optimize the disk usage ', action="store_true")
     parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int)
+    parser.add_argument('-cosmic','--cosmic', help='Cosmic setup', type=int)
 
     args = parser.parse_args()
     args.method(**vars(args))

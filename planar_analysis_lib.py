@@ -491,13 +491,14 @@ class calib:
     Class created to apply calibration and mapping
     """
 
-    def __init__(self, run_number, calib_folder, mapping_file, data_folder, root_dec, cylinder):
+    def __init__(self, run_number, calib_folder, mapping_file, data_folder, root_dec, cylinder, cosmic = False):
         self.run_number = run_number
         self.calib_folder = calib_folder
         self.mapping_file = mapping_file
         self.data_folder = data_folder
         self.root_dec = False
         self.cylinder = cylinder
+        self.cosmic = cosmic
 
     def load_mapping(self):
         """
@@ -771,6 +772,8 @@ class calib:
                 pd_list.append(pd.read_feather(filename))
             data_pd = pd.concat(pd_list, ignore_index=True)
             # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
+            if self.cosmic:
+                data_pd["count"] = data_pd.groupby(["subRunNo", "count"]).ngroup()
             data_pd.to_feather("{}/raw_root/{}/hit_data-zstd.feather".format(self.data_folder, self.run_number))
 
     def append_hits_pd_and_single_root(self):
