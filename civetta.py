@@ -1166,7 +1166,7 @@ if __name__=="__main__":
     parser.add_argument('-ca_al','--calibrate_alignment', help='Calibrate the alignemnt on the file ', action="store_true")
     parser.add_argument('-comp','--compress', help='Optimize the disk usage ', action="store_true")
     parser.add_argument('-perf','--performance', help='Performance evaluation ', type=int)
-    parser.add_argument('-cosmic','--cosmic', help='Cosmic setup', type=int)
+    parser.add_argument('-cosmic','--cosmic', help='Cosmic setup', action="store_true")
 
     args = parser.parse_args()
     args.method(**vars(args))
