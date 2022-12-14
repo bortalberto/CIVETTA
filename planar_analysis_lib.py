@@ -1750,4 +1750,4 @@ def convert_none(input_):
         return float(input_)
     except:
         print(input_)
-        return float(0)
+        return float(1)
