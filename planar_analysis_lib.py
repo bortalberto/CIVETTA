@@ -1749,5 +1749,4 @@ def convert_none(input_):
     try:
         return float(input_)
     except ValueError:
-        print(input_)
         return float(0)
