@@ -566,8 +566,8 @@ class calib:
          :return:
          """
         return {
-            0: np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c1_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)),
-            1: np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c2_Efine_calib.txt".format(layer, HW_FEB, self.calib_folder)),
+            0: np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c1_Efine_calib.txt".format(layer, HW_FEB, calib_folder)),
+            1: np.loadtxt(fname="{2}/L{0}_TDC/L{0}FEB{1}_c2_Efine_calib.txt".format(layer, HW_FEB, calib_folder)),
         }
 
     def build_mapping_group(self):
