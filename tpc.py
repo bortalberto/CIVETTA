@@ -546,7 +546,7 @@ class tpc_prep:
         return_list_hits = []
         if not self.no_big_clusters_splitting:
             for key in sub_data.groups:
-                sub_list.append(sub_data.get_group(key))
+                sub_list.append([sub_data.get_group(key), hit_pd_sub.get_group(key)])
             with Pool(processes=cpus) as pool:
                 with tqdm(total=len(sub_list), desc="TPC pos calculation ", leave=False) as pbar:
                     for i, x in enumerate(pool.imap_unordered(self.split_big_clusters_in_x, sub_list)):
