@@ -552,7 +552,7 @@ class tpc_prep:
                         return_list_cl.append(x)
                         pbar.update()
             cluster_pd_x =  pd.concat(return_list_cl)
-            cluster_pd = pd.concat(cluster_pd_y, cluster_pd_x)
+            cluster_pd = pd.concat([cluster_pd_y, cluster_pd_x])
             cluster_pd = cluster_pd.query("cl_pos_x>-1")
             sub_data = cluster_pd.groupby(["subrun"])
 
