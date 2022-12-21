@@ -404,7 +404,7 @@ class tpc_prep:
         hit_pd_evts = hit_pd.groupby("count")
         # print (self.no_capacitive)
         for count in tqdm(cluster_pd_evts.groups, desc=f"Events subrun = {subrun}", leave=False,
-                          position=(subrun % self.cpu_to_use + 1)):
+                          position=(subrun % self.cpu_to_use + 5)):
             # for count in cluster_pd_evts.groups:
             clusters = cluster_pd_evts.get_group(count)
             events_hits = hit_pd_evts.get_group(count)
