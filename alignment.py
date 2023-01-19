@@ -246,7 +246,7 @@ def calibrate_alignment_run(run, rounds, cpu, data_folder, downsampling):
     # tracks_pd = alignment_istance.filter_tracks(tracks_pd)
     pl_list = [3,2,1]
     for it in tqdm(range (0,rounds), desc="Cycles"):
-        correction={}
+        correction = {}
         for view in ("x","y"):
             for planar in range (0,4):
                  correction[f"{planar}_{view}"]=np.array([0,0])
@@ -257,7 +257,7 @@ def calibrate_alignment_run(run, rounds, cpu, data_folder, downsampling):
             # print(tracks_pd.shape)
             correction.update(alignment_istance.calc_correction(tracks_pd, planar=pl))
             cl_pd_2D = alignment_istance.apply_correction(cl_pd_2D, pl, correction)
-            pl_list = pl_list.reverse()
+            pl_list.reverse()
         alignment_istance.corrections.append(correction)
     alignment_istance.save_corrections(data_folder, run)
     # tracks_pd = alignment_istance.fit_tracks_manager(cl_pd_2D)
