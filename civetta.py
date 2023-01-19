@@ -34,6 +34,7 @@ class runner:
         self.cylinder = cylinder
         self.downsampling=downsampling
         self.cosmic = cosmic
+        self.rounds = 6
 
     ################# Decode part #################
     def decode_on_file(self,input_):
@@ -861,7 +862,7 @@ class runner:
         :return:
         """
         import alignment
-        alignment.calibrate_alignment_run(run = self.run_number, rounds = 3, cpu = self.cpu_to_use, data_folder=self.data_folder, downsampling=self.downsampling)
+        alignment.calibrate_alignment_run(run = self.run_number, rounds = self.rounds, cpu = self.cpu_to_use, data_folder=self.data_folder, downsampling=self.downsampling)
 
     def compress_hit_pd(self):
         """
