@@ -30,6 +30,8 @@ if data_folder == "TER":
     except KeyError as E:
         print(f"{E} is not defined in your system variables")
 
+def checkConsecutive(l):
+    return sorted(l) == list(range(min(l), max(l)+1))
 
 class decoder:
     """
@@ -967,7 +969,8 @@ class clusterize:
                     cluster_centers.append(np.mean(hit_pos_this_c))
                     hit_charge_this_c = hit_charge[labels == label]
                     hit_id_this_c = hit_id[labels == label]
-                    ret_clusters.append((charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c))  # pos,charge, size
+                    consecutive =  checkConsecutive(hit_pos_this_c)
+                    ret_clusters.append((charge_centroid(hit_pos_this_c, hit_charge_this_c), np.sum(hit_charge_this_c), len(hit_pos_this_c), hit_id_this_c, consecutive))  # pos,charge, size
                 return ret_clusters
 
     def build_view_clusters(self, data_pd):
@@ -1015,6 +1018,7 @@ class clusterize:
                             dict_4_pd["cl_charge"].append(cluster[1])
                             dict_4_pd["cl_size"].append(cluster[2])
                             dict_4_pd["hit_ids"].append(cluster[3])
+                            dict_4_pd["consecutive"].append(cluster[4])
                             dict_4_pd["cl_id"].append(int(n))
 
         return (pd.DataFrame(dict_4_pd))
