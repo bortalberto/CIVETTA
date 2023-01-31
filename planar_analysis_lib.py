@@ -1019,7 +1019,7 @@ class clusterize:
                             dict_4_pd["cl_charge"].append(cluster[1])
                             dict_4_pd["cl_size"].append(cluster[2])
                             dict_4_pd["hit_ids"].append(cluster[3])
-                            dict_4_pd["consecutive"].append(cluster[4])
+                            dict_4_pd["consecutive"].append(bool(cluster[4]))
                             dict_4_pd["cl_id"].append(int(n))
 
         return (pd.DataFrame(dict_4_pd))
