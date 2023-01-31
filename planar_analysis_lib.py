@@ -989,6 +989,7 @@ class clusterize:
             "cl_pos_y" : [],
             "cl_charge": [],
             "cl_size"  : [],
+            "consecutive" : [],
             "cl_id"    : [],
             "hit_ids"  : []
 
