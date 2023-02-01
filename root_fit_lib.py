@@ -50,6 +50,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
     R_list = []
     chi_list = []
     deg_list = []
+    nbins_list=[]
     for pl in pl_list:
         if pl==put:
             popt_list.append(0)
@@ -58,6 +59,7 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
             R_list.append(1)
             chi_list.append(1)
             deg_list.append(1)
+            nbins_list.append(1)
         else:
             data = tracks_pd[f"res_{view}"].apply(lambda x: x[pl])
             data = data[abs(data) < 10]
@@ -118,14 +120,14 @@ def double_gaus_fit_root(tracks_pd, view="x", put=-1, sigma_def=0.2, pl_list=ran
 #             chi_list.append(np.divide(np.square(y - yexp), yexp) * (np.sqrt(y))/np.sqrt(len(data))) #with weigth
             chi_list.append(chi_sqr)
 
-
+            nbins_list.append(nbins)
             deg_list.append(len(x)-6-1)
     #         yexp=doublegaus(x, *popt)
     #         y_exp_norm =1000*yexp/np.sum(yexp)
     #         print (np.sum(ynorm))
     #         print (np.sum(y_exp_norm))
     #         print (chisquare(ynorm,y_exp_norm, 6 ))
-    return popt_list, pcov_list, res_list, R_list, chi_list, deg_list
+    return popt_list, pcov_list, res_list, R_list, chi_list, deg_list, nbins_list
 
 
 def single_root_fit(data, p0, lower_bounds, upper_bounds, sigma_def=0.2):
@@ -240,15 +242,13 @@ def single_gaus_fit_root(cl_pd_res, sigma_def=0.4):
     return popt, pcov, res, r2, chi_sqr, deg, error
 
 
-def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list, chi_sq_trackers = False):
+def plot_residuals(tracks_pd_res, view,popt_list,R_list, path_out_eff, put,put_mean, put_sigma,nsigma_eff, pl, chi_list, deg_list, chi_sq_trackers = False, nbins_list=(100,100,100,100)):
     data = tracks_pd_res[f"res_{view}"].apply(lambda x: x[pl])
     data = data[abs(data) < 10]
     sigma_0 = estimate_sigma_def(data)
     # data = data[abs(data - np.median(data)) < sigma_def*2]
-    nbins = 100
-    if len(data) < 1000:
-        nbins = 50
     # print ("a")
+    nbins=nbins_list[pl]
     y, x = np.histogram(data, bins=nbins, range=[np.median(data)-sigma_0, np.median(data)+sigma_0])
     x = (x[1:] + x[:-1]) / 2
     # x = np.insert(x, 0, -0.2)
