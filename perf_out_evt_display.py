@@ -293,10 +293,10 @@ class eff_calculation:
             eff_pd_c = eff_pd
 
             k = eff_pd_c[
-                (eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
-                        eff_pd_c.pos_y_pl < 8)].count().eff_x
-            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
-                    eff_pd_c.pos_y_pl < 8)].count().eff_x
+                (eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 2.6) & (
+                        eff_pd_c.pos_y_pl < 7.8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 2.6) & (
+                    eff_pd_c.pos_y_pl < 7.8)].count().eff_x
             eff_x_good = k / n
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
@@ -326,10 +326,10 @@ class eff_calculation:
 
 
             k = eff_pd_c[
-                (eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
-                        eff_pd_c.pos_x_pl < 8)].count().eff_y
-            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
-                    eff_pd_c.pos_x_pl < 8)].count().eff_y
+                (eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 2.6) & (
+                        eff_pd_c.pos_x_pl < 7.8)].count().eff_y
+            n = eff_pd_c[(eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 2.6 ) & (
+                    eff_pd_c.pos_x_pl < 7.8)].count().eff_y
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
@@ -360,10 +360,10 @@ class eff_calculation:
             print(f"AND eff")
             logger.write_log(f"AND eff")
             k = eff_pd_c[
-                (eff_pd_c.eff_y) &  (eff_pd_c.eff_x) & (eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
-                        eff_pd_c.pos_x_pl < 8)].count().eff_y
-            n = eff_pd_c[(eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8) & (eff_pd_c.pos_x_pl > 3) & (
-                    eff_pd_c.pos_x_pl < 8)].count().eff_y
+                (eff_pd_c.eff_y) &  (eff_pd_c.eff_x) & (eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 2.6) & (
+                        eff_pd_c.pos_x_pl < 7.8)].count().eff_y
+            n = eff_pd_c[(eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 2.6) & (
+                    eff_pd_c.pos_x_pl < 7.8)].count().eff_y
             eff_y_good = k / n
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"AND: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
@@ -418,10 +418,10 @@ class eff_calculation:
 
             eff_pd_c = eff_pd
 
-            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (
-                    eff_pd_c.pos_y_pl > 3) & (eff_pd_c.pos_y_pl < 8)].count().eff_x
-            n = eff_pd_c[(eff_pd_c.pos_x_pl > 3) & (eff_pd_c.pos_x_pl < 8) & (eff_pd_c.pos_y_pl > 3) & (
-                    eff_pd_c.pos_y_pl < 8)].count().eff_x
+            k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (
+                    eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
+            n = eff_pd_c[(eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 2.6) & (
+                    eff_pd_c.pos_y_pl < 7.8)].count().eff_x
             eff_and_good = k / n
             eff_and_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (
                     1 / 2)
@@ -680,7 +680,7 @@ def extract_eff_and_res(run, data_folder, planar_list, tpc=False):
     eff_pd_l = []
     for planar in planar_list:
         eff_pd = pd.read_feather(os.path.join(perf_path, f"eff_pd_{planar}"+tpc_string+"-zstd.feather" ))
-        eff_pd = eff_pd[(eff_pd.pos_x > 4) & (eff_pd.pos_x < 7) & (eff_pd.pos_y > 4) & (eff_pd.pos_y < 7)]
+        eff_pd = eff_pd[(eff_pd.pos_x > 2.6) & (eff_pd.pos_x < 7.8) & (eff_pd.pos_y > 2.6) & (eff_pd.pos_y < 7.8)] ## THe
         eff_pd_l.append(eff_pd)
     eff_pd = pd.concat(eff_pd_l)
     hit_pd = pd.read_feather(os.path.join(data_folder, "raw_root", f"{run}", "hit_data-zstd.feather"))

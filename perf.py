@@ -634,23 +634,23 @@ def calculate_eff(run, data_folder, put, cpu_to_use, nsigma_put=5, nsigma_tracke
         eff_pd.to_feather(os.path.join(path_out_eff, f"eff_pd_{put}"+tpc_string+"-zstd.feather"), compression="zstd")
         eff_pd_c = eff_pd
         eff_pd["pos_x_pl"], eff_pd["pos_y_pl"] = zip(*eff_pd.apply(lambda x: de_correct_process(x, correction), axis=1))
-        k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
-        n = eff_pd_c[(eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
+        k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
+        n = eff_pd_c[(eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8)].count().eff_x
         eff_x_good = k / n
         eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
-        print("Efficiency in range [3.2,7.8]\n")
-        logger.write_log(f"Efficiency in range [3.2,7.8]\n")
+        print("Efficiency in range [2.6,7.8]\n")
+        logger.write_log(f"Efficiency in range [2.6,7.8]\n")
+        logger.write_log(f"{n} events in range[2.6,7.8]\n")
+
 
         print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}\n")
         logger.write_log(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}\n")
-        logger.write_log(f"{n} events in range[3.2,7.8]\n")
 
-        k = eff_pd_c[(eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8)].count().eff_y
-        n = eff_pd_c[(eff_pd_c.pos_y_pl > 3.2) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 3.2) & (eff_pd_c.pos_x_pl < 7.8)].count().eff_y
+        k = eff_pd_c[(eff_pd_c.eff_y) & (eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8)].count().eff_y
+        n = eff_pd_c[(eff_pd_c.pos_y_pl > 2.6) & (eff_pd_c.pos_y_pl < 7.8) & (eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8)].count().eff_y
         eff_y_good = k / n
         eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
         logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}\n")
-        logger.write_log(f"{n} events in range[3.2,7.8]\n")
         print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}\n")
         tracks_pd.to_pickle(os.path.join(path_out_eff, f"tracks_pd_{put}"+tpc_string+".gzip"), compression="gzip")
         del eff_pd
