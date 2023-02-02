@@ -301,6 +301,7 @@ class eff_calculation:
             eff_x_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
             logger.write_log(f"X: {eff_x_good:.4f} +/- {eff_x_good_error:.4f}")
+            logger.write_log(f"On {n} events")
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_x > -1)].channel.count()) / (
                                      self.hit_pd["count"].nunique() * (1569 - 1460) * 6.25 * 1e-9) / 123
