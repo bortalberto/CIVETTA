@@ -334,6 +334,7 @@ class eff_calculation:
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
             logger.write_log(f"Y: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            logger.write_log(f"On {n} events")
 
             rate_strip_avg = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_y > -1)].channel.count()) / (
@@ -367,6 +368,8 @@ class eff_calculation:
             eff_y_good_error = (((k + 1) * (k + 2)) / ((n + 2) * (n + 3)) - ((k + 1) ** 2) / ((n + 2) ** 2)) ** (1 / 2)
             print(f"AND: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
             logger.write_log(f"AND: {eff_y_good:.4f} +/- {eff_y_good_error:.4f}")
+            logger.write_log(f"On {n} events")
+
             ## Y
             rate_strip_avg_y = (self.hit_pd[(self.hit_pd.l1ts_min_tcoarse > 1460) & (self.hit_pd.planar == put) & (
                     self.hit_pd.strip_y > -1)].channel.count()) / (
