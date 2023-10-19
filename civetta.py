@@ -909,12 +909,180 @@ class runner:
         del data['planar']
         data['FEB_label'] = data['FEB_label'].astype(np.int32)
         data['charge_SH'] = data['charge_SH'].astype(np.float32)
+        del data["view"]
+        del data ["strip"]
+
         rdf = R.RDF.MakeNumpyDataFrame(data)
         folder= os.path.join(self.data_folder_root, str(self.run_number))
         if not os.path.isdir(folder):
             os.mkdir(folder)
         rdf.Snapshot('tree', os.path.join(self.data_folder_root,  str(self.run_number),"ana.root" ))
 
+    def convert_hit_pd_root_CGEM_boss(self):
+        """
+        Convert the hit file in root for the CGEM_BOSS software
+        :return:
+        """
+        clusterizer = pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
+        clusterizer.load_data_pd()
+
+        import ROOT as R
+        from array import array
+        data_pd = clusterizer.data_pd()
+        data_pd["sheet"] = -2
+        data_pd["side"] = -2
+        boss_root_path = self.data_folder + f"/raw_root/{self.run_number}/hit_data_CGEM_boss.root"
+        file = R.TFile.Open(boss_root_path, "RECREATE")
+        tree = R.TTree("t1", "t1")
+
+        Event = np.array([0], np.int32)
+        tree.Branch("Event", Event, 'Event/i')
+
+        nGemHit = np.array([0], np.int32)
+        tree.Branch("nGemHit", nGemHit, 'nGemHit/i')
+
+        data_pd.channel = data_pd.channel.astype(np.int16)
+        GemHit_channel = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_channel", GemHit_channel, "GemHit_channel[nGemHit]/S")
+
+        data_pd.gemroc = data_pd.gemroc.astype(np.int16)
+        GemHit_ROC = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_ROC", GemHit_ROC, "GemHit_ROC[nGemHit]/S")
+
+        data_pd["chip"] = data_pd.tiger % 2
+        data_pd.chip = data_pd.chip.astype(np.int16)
+        GemHit_chip = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_chip", GemHit_chip, "GemHit_chip[nGemHit]/S")
+
+        data_pd.FEB_label = data_pd.FEB_label.astype(np.int16)
+        GemHit_FEB = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_FEB", GemHit_FEB, "GemHit_FEB[nGemHit]/S")
+
+        ## Piano da 0 a 2 o da 1 a 3?
+        data_pd.planar = data_pd.planar - 1
+        data_pd.planar = data_pd.planar.astype(np.int16)
+        GemHit_plane = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_plane", GemHit_plane, "GemHit_plane[nGemHit]/S")
+
+        # TO fix
+        # Da dove lo prendo lo sheet?
+
+        # Strip non connesse?
+        data_pd.loc[~data_pd.strip.notna(), "strip"] = -1
+        data_pd.strip = data_pd.strip.astype(np.int16)
+        GemHit_strip = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_strip", GemHit_strip, "GemHit_strip[nGemHit]/S")
+
+        data_pd["saturated"] = data_pd.efine == 1008
+        data_pd.saturated = data_pd.saturated.astype(bool)
+        GemHit_saturated = array.array("b", [0] * 10000)
+        tree.Branch("GemHit_saturated", GemHit_saturated, "GemHit_saturated[nGemHit]/O")
+
+        data_pd.charge_SH = data_pd.charge_SH.astype(np.float32)
+        GemHit_q = array.array("f", [0] * 10000)
+        tree.Branch("GemHit_q", GemHit_q, "GemHit_q[nGemHit]/F")
+
+        data_pd["l1ts_min_tcoarse"] = data_pd["l1ts_min_tcoarse"].astype(float)
+        data_pd["time"] = data_pd["l1ts_min_tcoarse"] * -6.25
+        data_pd["time"] = data_pd.time.astype(np.float32)
+        GemHit_time = array.array("f", [0] * 10000)
+        tree.Branch("GemHit_time", GemHit_time, "GemHit_time[nGemHit]/F")
+
+        data_pd["view_int"] = 0
+        data_pd.loc[data_pd.view == "X", "view_int"] = 2
+        data_pd.loc[data_pd.view == "V", "view_int"] = 3
+        GemHit_view = array.array("h", [0] * 10000)
+        tree.Branch("GemHit_view", GemHit_view, "GemHit_view[nGemHit]/S")
+
+        side_map = {}
+        sheet_map = {}
+        for FEB in range(0, 8):
+            side_map[FEB] = 1
+            sheet_map[FEB] = 0
+        for FEB in range(8, 16):
+            side_map[FEB] = -1
+            sheet_map[FEB] = 0
+
+        for FEB in range(16, 30):
+            side_map[FEB] = 1
+        for FEB in range(30, 44):
+            side_map[FEB] = -1
+
+        for FEB in range(16, 23):
+            sheet_map[FEB] = 0
+        for FEB in range(23, 30):
+            sheet_map[FEB] = 1
+        for FEB in range(30, 37):
+            sheet_map[FEB] = 0
+        for FEB in range(37, 44):
+            sheet_map[FEB] = 1
+
+        for FEB in range(62, 80):
+            side_map[FEB] = -1  ## east
+        for FEB in range(44, 62):
+            side_map[FEB] = 1  ## west
+
+        for FEB in range(44, 53):
+            sheet_map[FEB] = 0
+        for FEB in range(53, 62):
+            sheet_map[FEB] = 1
+        for FEB in range(62, 71):
+            sheet_map[FEB] = 0
+        for FEB in range(71, 80):
+            sheet_map[FEB] = 1
+        data_pd.side = data_pd.FEB_label.map(side_map)
+        data_pd.sheet = data_pd.FEB_label.map(sheet_map)
+
+        data_pd.side = data_pd.side.astype(np.int16)
+        data_pd.sheet = data_pd.sheet.astype(np.int16)
+        GemHit_side = array("h", [0] * 10000)
+        tree.Branch("GemHit_side", GemHit_side, "GemHit_side[nGemHit]/S")
+
+        GemHit_sheet = array("h", [0] * 10000)
+        tree.Branch("GemHit_sheet", GemHit_sheet, "GemHit_sheet[nGemHit]/S")
+        fields_to_save = ['tcoarse', 'tfine', 'ecoarse', 'efine', 'delta_coarse', 'count', 'tac', 'subRunNo',
+                          'l1_framenum', 'timestamp']
+        array_dict = {}
+        for field in fields_to_save:
+            if field == "l1_framenum":
+                data_pd[field] = data_pd[field].astype(np.uint32)
+                array_dict[field] = array("I", [0] * 10000)
+                tree.Branch(f"Civetta_{field}", array_dict[field], f"Civetta_{field}[nGemHit]/i")
+            else:
+                data_pd[field] = data_pd[field].astype(np.uint16)
+                array_dict[field] = array("H", [0] * 10000)
+                tree.Branch(f"Civetta_{field}", array_dict[field], f"Civetta_{field}[nGemHit]/s")
+        # GemHit_sheet = array.array("h", [0]*10000)
+        # tree.Branch("GemHit_sheet",GemHit_sheet, "GemHit_sheet[nGemHit]/S")
+        data_pd_g = data_pd.groupby(["runNo", "subRunNo", "count"])
+
+        for event_number, event_id in tqdm.tqdm(enumerate(data_pd_g.groups), total=len(data_pd_g.groups)):
+            Event[0] = event_number
+            event_data = data_pd_g.get_group(event_id)
+            nGemHit[0] = event_data.shape[0]
+
+            GemHit_channel[0:nGemHit[0] + 1] = array("h", event_data.channel.values)
+            GemHit_ROC[0:nGemHit[0] + 1] = array("h", event_data.gemroc.values)
+            GemHit_chip[0:nGemHit[0] + 1] = array("h", event_data.chip.values)
+            GemHit_FEB[0:nGemHit[0] + 1] = array("h", event_data.FEB_label.values)
+            GemHit_plane[0:nGemHit[0] + 1] = array("h", event_data.planar.values)
+            GemHit_strip[0:nGemHit[0] + 1] = array("h", event_data.strip.values)
+            GemHit_saturated[0:nGemHit[0] + 1] = array("b", event_data.saturated.values)
+            GemHit_q[0:nGemHit[0] + 1] = array("f", event_data.charge_SH.values)
+            GemHit_time[0:nGemHit[0] + 1] = array("f", event_data.time.values)
+            GemHit_view[0:nGemHit[0] + 1] = array("h", event_data.view_int.values)
+
+            GemHit_sheet[0:nGemHit[0] + 1] = array("h", event_data.sheet.values)
+            GemHit_side[0:nGemHit[0] + 1] = array("h", event_data.side.values)
+            for field in fields_to_save:
+                if field == "l1_framenum":
+                    array_dict[field][0:nGemHit[0] + 1] = array("I", event_data[field].values)
+                else:
+                    array_dict[field][0:nGemHit[0] + 1] = array("H", event_data[field].values)
+            tree.Fill()
+
+        tree.Write()
+        file.Close()
     def eval_perf(self,put):
         perf.calculate_eff(self.run_number, self.data_folder, put, self.cpu_to_use)
 
@@ -994,6 +1162,8 @@ def main(run, **kwargs):
             print("         -Selection")
         if args.root_conv:
             print("         -Converting to root")
+        if args.boss_conv:
+            print("         -Generating CGEM-Boss file")
         if args.performance:
             print("         -Performance evaluation")
         # if not (args.decode | args.ana | args.clusterize | args.tracking | args.selection | args.calibrate_alignment | args.compress | args.root_conv |args.performance):
@@ -1026,6 +1196,8 @@ def main(run, **kwargs):
         op_list.append("compress")
     if args.root_conv:
         op_list.append("root_conv")
+    if args.boss_conv:
+        op_list.append("boss_conv")
     if args.performance:
         if args.performance in (0,1,2,3,-1):
             op_list.append("perf")
@@ -1089,7 +1261,8 @@ def main(run, **kwargs):
 
     if "root_conv" in (op_list):
         main_runner.convert_hit_pd_root()
-
+    if "boss_conv" in (op_list):
+        main_runner.convert_hit_pd_root_CGEM_boss()
     if "C" in (op_list):
         if not args.Silent:
             print ("Clusterizing")
@@ -1160,6 +1333,7 @@ if __name__=="__main__":
     parser.add_argument('-sf','--subrun_fill', help='Runs to fill up to the subrun', type=int, default=-1)
     parser.add_argument('-ali','--alignment', help='Use the alignment', action="store_true")
     parser.add_argument('-root','--root_conv', help='Convert hit_pd in root', action="store_true")
+    parser.add_argument('-broot','--boss_conv', help='Convert hit_pd in root compatible with the CGEM_Boss software', action="store_true")
     parser.add_argument('-rootf','--data_folder_root', help='Specify the folder for the root files (without run folder)', type=str, required=False)
 
     parser.add_argument('-down','--downsampling', help='Downsample the decoded data to speed up analysis ',type=int)

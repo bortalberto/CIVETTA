@@ -5,7 +5,6 @@ import ROOT as R
 import glob2
 import pandas as pd
 from tqdm import tqdm
-
 from sklearn.cluster import KMeans
 import sys
 import configparser
@@ -743,11 +742,22 @@ class calib:
             compress_pd = compress_hit_pd(ana_pd)
             verifiy_compression_validity(ana_pd, compress_pd)
             ana_pd = compress_pd
+            if self.cylinder:
+                ana_pd = self.create_cyl_names(ana_pd)
             # import root_pandas
             # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
             # ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
             ana_pd.to_feather("{}/raw_root/{}/Sub_RUN_pl_ana{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
             return ana_pd
+
+    def create_cyl_names(self, run_data):
+        run_data["view"] = ""
+        run_data["strip"] = np.nan
+        run_data.loc[run_data.strip_x > -1, "view"] = "X"
+        run_data.loc[run_data.strip_y > -1, "view"] = "V"
+        run_data.loc[run_data.view == "X", "strip"] = run_data.loc[run_data.view == "X", "strip_x"]
+        run_data.loc[run_data.view == "V", "strip"] = run_data.loc[run_data.view == "V", "strip_y"]
+        return run_data
 
     def create_hits_pd_and_single_root(self):
         """
