@@ -928,7 +928,7 @@ class runner:
 
         import ROOT as R
         from array import array
-        data_pd = clusterizer.data_pd()
+        data_pd = clusterizer.data_pd
         data_pd["sheet"] = -2
         data_pd["side"] = -2
         boss_root_path = self.data_folder + f"/raw_root/{self.run_number}/hit_data_CGEM_boss.root"
@@ -942,26 +942,26 @@ class runner:
         tree.Branch("nGemHit", nGemHit, 'nGemHit/i')
 
         data_pd.channel = data_pd.channel.astype(np.int16)
-        GemHit_channel = array.array("h", [0] * 10000)
+        GemHit_channel = array("h", [0] * 10000)
         tree.Branch("GemHit_channel", GemHit_channel, "GemHit_channel[nGemHit]/S")
 
         data_pd.gemroc = data_pd.gemroc.astype(np.int16)
-        GemHit_ROC = array.array("h", [0] * 10000)
+        GemHit_ROC = array("h", [0] * 10000)
         tree.Branch("GemHit_ROC", GemHit_ROC, "GemHit_ROC[nGemHit]/S")
 
         data_pd["chip"] = data_pd.tiger % 2
         data_pd.chip = data_pd.chip.astype(np.int16)
-        GemHit_chip = array.array("h", [0] * 10000)
+        GemHit_chip = array("h", [0] * 10000)
         tree.Branch("GemHit_chip", GemHit_chip, "GemHit_chip[nGemHit]/S")
 
         data_pd.FEB_label = data_pd.FEB_label.astype(np.int16)
-        GemHit_FEB = array.array("h", [0] * 10000)
+        GemHit_FEB = array("h", [0] * 10000)
         tree.Branch("GemHit_FEB", GemHit_FEB, "GemHit_FEB[nGemHit]/S")
 
         ## Piano da 0 a 2 o da 1 a 3?
         data_pd.planar = data_pd.planar - 1
         data_pd.planar = data_pd.planar.astype(np.int16)
-        GemHit_plane = array.array("h", [0] * 10000)
+        GemHit_plane = array("h", [0] * 10000)
         tree.Branch("GemHit_plane", GemHit_plane, "GemHit_plane[nGemHit]/S")
 
         # TO fix
@@ -970,28 +970,28 @@ class runner:
         # Strip non connesse?
         data_pd.loc[~data_pd.strip.notna(), "strip"] = -1
         data_pd.strip = data_pd.strip.astype(np.int16)
-        GemHit_strip = array.array("h", [0] * 10000)
+        GemHit_strip = array("h", [0] * 10000)
         tree.Branch("GemHit_strip", GemHit_strip, "GemHit_strip[nGemHit]/S")
 
         data_pd["saturated"] = data_pd.efine == 1008
         data_pd.saturated = data_pd.saturated.astype(bool)
-        GemHit_saturated = array.array("b", [0] * 10000)
+        GemHit_saturated = array("b", [0] * 10000)
         tree.Branch("GemHit_saturated", GemHit_saturated, "GemHit_saturated[nGemHit]/O")
 
         data_pd.charge_SH = data_pd.charge_SH.astype(np.float32)
-        GemHit_q = array.array("f", [0] * 10000)
+        GemHit_q = array("f", [0] * 10000)
         tree.Branch("GemHit_q", GemHit_q, "GemHit_q[nGemHit]/F")
 
         data_pd["l1ts_min_tcoarse"] = data_pd["l1ts_min_tcoarse"].astype(float)
         data_pd["time"] = data_pd["l1ts_min_tcoarse"] * -6.25
         data_pd["time"] = data_pd.time.astype(np.float32)
-        GemHit_time = array.array("f", [0] * 10000)
+        GemHit_time = array("f", [0] * 10000)
         tree.Branch("GemHit_time", GemHit_time, "GemHit_time[nGemHit]/F")
 
         data_pd["view_int"] = 0
         data_pd.loc[data_pd.view == "X", "view_int"] = 2
         data_pd.loc[data_pd.view == "V", "view_int"] = 3
-        GemHit_view = array.array("h", [0] * 10000)
+        GemHit_view = array("h", [0] * 10000)
         tree.Branch("GemHit_view", GemHit_view, "GemHit_view[nGemHit]/S")
 
         side_map = {}
@@ -1052,11 +1052,11 @@ class runner:
                 data_pd[field] = data_pd[field].astype(np.uint16)
                 array_dict[field] = array("H", [0] * 10000)
                 tree.Branch(f"Civetta_{field}", array_dict[field], f"Civetta_{field}[nGemHit]/s")
-        # GemHit_sheet = array.array("h", [0]*10000)
+        # GemHit_sheet = array("h", [0]*10000)
         # tree.Branch("GemHit_sheet",GemHit_sheet, "GemHit_sheet[nGemHit]/S")
         data_pd_g = data_pd.groupby(["runNo", "subRunNo", "count"])
 
-        for event_number, event_id in tqdm.tqdm(enumerate(data_pd_g.groups), total=len(data_pd_g.groups)):
+        for event_number, event_id in tqdm(enumerate(data_pd_g.groups), total=len(data_pd_g.groups)):
             Event[0] = event_number
             event_data = data_pd_g.get_group(event_id)
             nGemHit[0] = event_data.shape[0]
