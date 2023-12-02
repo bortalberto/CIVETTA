@@ -785,7 +785,6 @@ class calib:
             data_pd = pd.concat(pd_list, ignore_index=True)
             # data_pd.to_pickle("{}/raw_root/{}/hit_data.pickle.gzip".format(self.data_folder, self.run_number), compression="gzip")
             if self.cosmic:
-                data_pd["count_ori"] = data_pd["count"]
                 data_pd["count"] = data_pd.groupby(["subRunNo", "count"]).ngroup()
             data_pd.to_feather("{}/raw_root/{}/hit_data-zstd.feather".format(self.data_folder, self.run_number))
 
