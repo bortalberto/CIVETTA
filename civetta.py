@@ -912,11 +912,19 @@ class runner:
         del data["view"]
         del data ["strip"]
 
-        rdf = R.RDF.MakeNumpyDataFrame(data)
+        rdf = R.RDF.FromNumpy(data)
         folder= os.path.join(self.data_folder_root, str(self.run_number))
         if not os.path.isdir(folder):
             os.mkdir(folder)
         rdf.Snapshot('tree', os.path.join(self.data_folder_root,  str(self.run_number),"ana.root" ))
+
+    def apply_sheet_strip_cut(self, row):
+        """
+        Function used by convert_hit_pd_root_CGEM_boss
+        :param row:
+        :return:
+        """
+        return row.strip - ((self.max_[row.planar, row["view"]]) / 2) * row.sheet
 
     def convert_hit_pd_root_CGEM_boss(self):
         """
@@ -925,7 +933,12 @@ class runner:
         """
         clusterizer = pl_lib.clusterize.default_time_winw(self.run_number, self.data_folder)
         clusterizer.load_data_pd()
-
+        mapping_pd = pd.read_pickle(self.mapping_file)
+        self.max_={}
+        self.max_[2, "X"] = mapping_pd.query("layer == 2").strip_x.max() + 1
+        self.max_[2, "V"] = mapping_pd.query("layer == 2").strip_y.max() + 1
+        self.max_[3, "X"] = mapping_pd.query("layer == 3").strip_x.max() + 1
+        self.max_[3, "V"] = mapping_pd.query("layer == 3").strip_y.max() + 1
         import ROOT as R
         from array import array
         data_pd = clusterizer.data_pd
@@ -941,58 +954,54 @@ class runner:
         nGemHit = np.array([0], np.int32)
         tree.Branch("nGemHit", nGemHit, 'nGemHit/i')
 
-        data_pd.channel = data_pd.channel.astype(np.int16)
-        GemHit_channel = array("h", [0] * 10000)
-        tree.Branch("GemHit_channel", GemHit_channel, "GemHit_channel[nGemHit]/S")
+        data_pd.channel = data_pd.channel.astype(np.int32)
+        GemHit_channel = array("i", [0] * 10000)
+        tree.Branch("GemHit_channel", GemHit_channel, "GemHit_channel[nGemHit]/i")
 
-        data_pd.gemroc = data_pd.gemroc.astype(np.int16)
-        GemHit_ROC = array("h", [0] * 10000)
-        tree.Branch("GemHit_ROC", GemHit_ROC, "GemHit_ROC[nGemHit]/S")
+        data_pd.gemroc = data_pd.gemroc.astype(np.int32)
+        GemHit_ROC = array("i", [0] * 10000)
+        tree.Branch("GemHit_ROC", GemHit_ROC, "GemHit_ROC[nGemHit]/i")
 
         data_pd["chip"] = data_pd.tiger % 2
-        data_pd.chip = data_pd.chip.astype(np.int16)
-        GemHit_chip = array("h", [0] * 10000)
-        tree.Branch("GemHit_chip", GemHit_chip, "GemHit_chip[nGemHit]/S")
+        data_pd.chip = data_pd.chip.astype(np.int32)
+        GemHit_chip = array("i", [0] * 10000)
+        tree.Branch("GemHit_chip", GemHit_chip, "GemHit_chip[nGemHit]/i")
 
-        data_pd.FEB_label = data_pd.FEB_label.astype(np.int16)
-        GemHit_FEB = array("h", [0] * 10000)
-        tree.Branch("GemHit_FEB", GemHit_FEB, "GemHit_FEB[nGemHit]/S")
+        data_pd.FEB_label = data_pd.FEB_label.astype(np.int32)
+        GemHit_FEB = array("i", [0] * 10000)
+        tree.Branch("GemHit_FEB", GemHit_FEB, "GemHit_FEB[nGemHit]/i")
 
         ## Piano da 0 a 2 o da 1 a 3?
         data_pd.planar = data_pd.planar - 1
-        data_pd.planar = data_pd.planar.astype(np.int16)
-        GemHit_plane = array("h", [0] * 10000)
-        tree.Branch("GemHit_plane", GemHit_plane, "GemHit_plane[nGemHit]/S")
+        data_pd.planar = data_pd.planar.astype(np.int32)
+        GemHit_plane = array("i", [0] * 10000)
+        tree.Branch("GemHit_plane", GemHit_plane, "GemHit_plane[nGemHit]/i")
 
         # TO fix
         # Da dove lo prendo lo sheet?
 
-        # Strip non connesse?
-        data_pd.loc[~data_pd.strip.notna(), "strip"] = -1
-        data_pd.strip = data_pd.strip.astype(np.int16)
-        GemHit_strip = array("h", [0] * 10000)
-        tree.Branch("GemHit_strip", GemHit_strip, "GemHit_strip[nGemHit]/S")
+
 
         data_pd["saturated"] = data_pd.efine == 1008
-        data_pd.saturated = data_pd.saturated.astype(bool)
-        GemHit_saturated = array("b", [0] * 10000)
-        tree.Branch("GemHit_saturated", GemHit_saturated, "GemHit_saturated[nGemHit]/O")
+        data_pd.saturated = data_pd.saturated.astype(np.int32)
+        GemHit_saturated = array("i", [0] * 10000)
+        tree.Branch("GemHit_saturated", GemHit_saturated, "GemHit_saturated[nGemHit]/i")
 
-        data_pd.charge_SH = data_pd.charge_SH.astype(np.float32)
-        GemHit_q = array("f", [0] * 10000)
+        data_pd.charge_SH = data_pd.charge_SH.astype(np.double)
+        GemHit_q = array("d", [0] * 10000)
         tree.Branch("GemHit_q", GemHit_q, "GemHit_q[nGemHit]/F")
 
         data_pd["l1ts_min_tcoarse"] = data_pd["l1ts_min_tcoarse"].astype(float)
         data_pd["time"] = data_pd["l1ts_min_tcoarse"] * -6.25
-        data_pd["time"] = data_pd.time.astype(np.float32)
-        GemHit_time = array("f", [0] * 10000)
+        data_pd["time"] = data_pd.time.astype(np.double)
+        GemHit_time = array("d", [0] * 10000)
         tree.Branch("GemHit_time", GemHit_time, "GemHit_time[nGemHit]/F")
 
         data_pd["view_int"] = 0
         data_pd.loc[data_pd.view == "X", "view_int"] = 2
         data_pd.loc[data_pd.view == "V", "view_int"] = 3
-        GemHit_view = array("h", [0] * 10000)
-        tree.Branch("GemHit_view", GemHit_view, "GemHit_view[nGemHit]/S")
+        GemHit_view = array("i", [0] * 10000)
+        tree.Branch("GemHit_view", GemHit_view, "GemHit_view[nGemHit]/i")
 
         side_map = {}
         sheet_map = {}
@@ -1033,13 +1042,25 @@ class runner:
         data_pd.side = data_pd.FEB_label.map(side_map)
         data_pd.sheet = data_pd.FEB_label.map(sheet_map)
 
-        data_pd.side = data_pd.side.astype(np.int16)
-        data_pd.sheet = data_pd.sheet.astype(np.int16)
-        GemHit_side = array("h", [0] * 10000)
-        tree.Branch("GemHit_side", GemHit_side, "GemHit_side[nGemHit]/S")
+        data_pd.side = data_pd.side.astype(np.int32)
+        data_pd.sheet = data_pd.sheet.astype(np.int32)
+        GemHit_side = array("i", [0] * 10000)
+        tree.Branch("GemHit_side", GemHit_side, "GemHit_side[nGemHit]/i")
 
-        GemHit_sheet = array("h", [0] * 10000)
-        tree.Branch("GemHit_sheet", GemHit_sheet, "GemHit_sheet[nGemHit]/S")
+        GemHit_sheet = array("i", [0] * 10000)
+        tree.Branch("GemHit_sheet", GemHit_sheet, "GemHit_sheet[nGemHit]/i")
+
+
+        # Strip non connesse?
+        data_pd["strip"] = data_pd.loc[(data_pd.planar > 1) & ((data_pd.view == "X") | (data_pd.view == "V"))].apply(
+            self.apply_sheet_strip_cut, axis=1)
+        data_pd.loc[~data_pd.strip.notna(), "strip"] = -1
+        data_pd.strip = data_pd.strip.astype(np.int32)
+        GemHit_strip = array("i", [0] * 10000)
+        tree.Branch("GemHit_strip", GemHit_strip, "GemHit_strip[nGemHit]/i")
+
+
+
         fields_to_save = ['tcoarse', 'tfine', 'ecoarse', 'efine', 'delta_coarse', 'count', 'tac', 'subRunNo',
                           'l1_framenum', 'timestamp']
         array_dict = {}
@@ -1061,19 +1082,19 @@ class runner:
             event_data = data_pd_g.get_group(event_id)
             nGemHit[0] = event_data.shape[0]
 
-            GemHit_channel[0:nGemHit[0] + 1] = array("h", event_data.channel.values)
-            GemHit_ROC[0:nGemHit[0] + 1] = array("h", event_data.gemroc.values)
-            GemHit_chip[0:nGemHit[0] + 1] = array("h", event_data.chip.values)
-            GemHit_FEB[0:nGemHit[0] + 1] = array("h", event_data.FEB_label.values)
-            GemHit_plane[0:nGemHit[0] + 1] = array("h", event_data.planar.values)
-            GemHit_strip[0:nGemHit[0] + 1] = array("h", event_data.strip.values)
-            GemHit_saturated[0:nGemHit[0] + 1] = array("b", event_data.saturated.values)
-            GemHit_q[0:nGemHit[0] + 1] = array("f", event_data.charge_SH.values)
-            GemHit_time[0:nGemHit[0] + 1] = array("f", event_data.time.values)
-            GemHit_view[0:nGemHit[0] + 1] = array("h", event_data.view_int.values)
+            GemHit_channel[0:nGemHit[0] + 1] = array("i", event_data.channel.values)
+            GemHit_ROC[0:nGemHit[0] + 1] = array("i", event_data.gemroc.values)
+            GemHit_chip[0:nGemHit[0] + 1] = array("i", event_data.chip.values)
+            GemHit_FEB[0:nGemHit[0] + 1] = array("i", event_data.FEB_label.values)
+            GemHit_plane[0:nGemHit[0] + 1] = array("i", event_data.planar.values)
+            GemHit_strip[0:nGemHit[0] + 1] = array("i", event_data.strip.values)
+            GemHit_saturated[0:nGemHit[0] + 1] = array("i", event_data.saturated.values)
+            GemHit_q[0:nGemHit[0] + 1] = array("d", event_data.charge_SH.values)
+            GemHit_time[0:nGemHit[0] + 1] = array("d", event_data.time.values)
+            GemHit_view[0:nGemHit[0] + 1] = array("i", event_data.view_int.values)
 
-            GemHit_sheet[0:nGemHit[0] + 1] = array("h", event_data.sheet.values)
-            GemHit_side[0:nGemHit[0] + 1] = array("h", event_data.side.values)
+            GemHit_sheet[0:nGemHit[0] + 1] = array("i", event_data.sheet.values)
+            GemHit_side[0:nGemHit[0] + 1] = array("i", event_data.side.values)
             for field in fields_to_save:
                 if field == "l1_framenum":
                     array_dict[field][0:nGemHit[0] + 1] = array("I", event_data[field].values)

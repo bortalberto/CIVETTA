@@ -5,7 +5,7 @@ import os
 import glob2
 import pandas as pd
 from tqdm import tqdm
-
+import warnings
 from sklearn.cluster import KMeans
 import sys
 import configparser
@@ -608,14 +608,19 @@ class calib:
         else:
             constant = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][1]
             slope = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][2]
+
         if slope==0:
             return np.nan
-
         if (efine >= 1008):
             charge_SH = (((-1 * constant) - (1024 - efine)) / slope)
         else:
             charge_SH = ((-1 * constant + efine) / slope)
+
+        if charge_SH < -200 or charge_SH > 200 or charge_SH==np.inf or charge_SH==-np.inf:
+            print (f"Warning, strange charge value, check calibration layer {planar}, HW_feb_id{HW_feb_id}, channel {channel}")
+            charge_SH = 0
         return charge_SH
+
 
     # def calibrate_subrun(self,subrun):
     # """
@@ -631,128 +636,35 @@ class calib:
         :param subrun:
         :return:
         """
-        if self.root_dec:
-            calib_dict = {}
-            in_f = R.TFile("{}/raw_root/{}/Sub_RUN_dec_{}.root".format(self.data_folder, self.run_number, subrun))
-            runNo = []
-            subRunNo = []
-            gemroc = []
-            channel = []
-            tac = []
-            tcoarse = []
-            tcoarse_10b = []
-            ecoarse = []
-            tfine = []
-            efine = []
-            count = []
-            count_ori = []
-            timestamp = []
-            l1ts_min_tcoarse = []
-            lasttigerframenum = []
-            delta_coarse = []
-            l1_framenum = []
-            tiger = []
-            strip_x = []
-            strip_y = []
-            planar = []
-            FEB_label = []
-            charge_SH = []
-            out_pd = pd.DataFrame()
-            hit_id = []
-            for entryNum in range(0, in_f.tree.GetEntries()):
-                hit_id.append(entryNum)
-                in_f.tree.GetEntry(entryNum)
-                runNo.append(int(getattr(in_f.tree, "runNo")))
-                subRunNo.append(int(subrun))
-                gemroc.append(int(getattr(in_f.tree, "gemroc")))
-                channel.append(int(getattr(in_f.tree, "channel")))
-                tac.append(int(getattr(in_f.tree, "tac")))
-                tcoarse.append(int(getattr(in_f.tree, "tcoarse")))
-                tcoarse_10b.append(int(getattr(in_f.tree, "tcoarse_10b")))
-                ecoarse.append(int(getattr(in_f.tree, "ecoarse")))
-                tfine.append(int(getattr(in_f.tree, "tfine")))
-                efine.append(int(getattr(in_f.tree, "efine")))
-                count.append(int(getattr(in_f.tree, "count")))
-                count_ori.append(int(getattr(in_f.tree, "count_ori")))
-                timestamp.append(int(getattr(in_f.tree, "timestamp")))
-                l1ts_min_tcoarse.append(int(getattr(in_f.tree, "l1ts_min_tcoarse")))
-                lasttigerframenum.append(int(getattr(in_f.tree, "lasttigerframenum")))
-                delta_coarse.append(int(getattr(in_f.tree, "delta_coarse")))
-                l1_framenum.append(int(getattr(in_f.tree, "l1_framenum")))
-                tiger.append(int(getattr(in_f.tree, "tiger")))
-                mapping = self.mapping_pd[(self.mapping_pd.gemroc_id == gemroc[-1]) & (self.mapping_pd.tiger == tiger[-1]) & (self.mapping_pd.channel_id == channel[-1])]
+        decode_pd = pd.read_feather("{}/raw_root/{}/Sub_RUN_dec_{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
+        ana_pd = decode_pd
+        self.build_mapping_group()
 
-                strip_x.append(int(mapping.strip_x))
-                strip_y.append(int(mapping.strip_y))
-                planar.append(int(mapping.planar))
-                FEB_label.append(int(mapping.FEB_label))
-                if (int(mapping.HW_feb_id), int(mapping.planar)) not in calib_dict.keys():
-                    calib_dict[(int(mapping.HW_feb_id), int(mapping.planar))] = self.get_channels_QDC_calib(int(mapping.HW_feb_id), int(mapping.planar))
-                constant = calib_dict[int(mapping.HW_feb_id), 3][tiger[-1] % 2][channel[-1]][1]
-                slope = calib_dict[int(mapping.HW_feb_id), 3][tiger[-1] % 2][channel[-1]][2]
-                if (efine[-1] >= 1008):
-                    charge_SH.append(((-1 * constant) - (1024 - efine[-1])) / slope)
-                else:
-                    charge_SH.append((-1 * constant + efine[-1]) / slope)
-
-            out_pd["runNo"] = runNo
-            out_pd["subRunNo"] = subRunNo
-            out_pd["hit_id"] = hit_id
-            out_pd["gemroc"] = gemroc
-            out_pd["channel"] = channel
-            out_pd["tac"] = tac
-            out_pd["tcoarse"] = tcoarse
-            out_pd["tcoarse_10b"] = tcoarse_10b
-            out_pd["ecoarse"] = ecoarse
-            out_pd["tfine"] = tfine
-            out_pd["efine"] = efine
-            out_pd["count"] = count
-            out_pd["count_ori"] = count_ori
-            out_pd["timestamp"] = timestamp
-            out_pd["l1ts_min_tcoarse"] = l1ts_min_tcoarse
-            out_pd["lasttigerframenum"] = lasttigerframenum
-            out_pd["delta_coarse"] = delta_coarse
-            out_pd["l1_framenum"] = l1_framenum
-            out_pd["tiger"] = tiger
-            out_pd["strip_x"] = strip_x
-            out_pd["strip_y"] = strip_y
-            out_pd["planar"] = planar
-            out_pd["FEB_label"] = FEB_label
-            out_pd["charge_SH"] = charge_SH
-            out_pd["subRunNo"].astype(int)
-            import root_pandas
-            root_pandas.to_root(out_pd, "{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder, self.run_number, subrun), "tree")
-            return out_pd
+        ana_pd["data"] = [self.get_mapping_value(("strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"), *a) for a in tuple(zip(ana_pd["channel"], ana_pd["tiger"], ana_pd["gemroc"]))]
+        ana_pd["subrun"] = subrun
+        ana_pd["hit_id"] = ana_pd.index
+        ana_pd[["strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"]] = pd.DataFrame(ana_pd.data.tolist())
+        ana_pd = ana_pd.drop(columns=["data"])
+        ana_pd = ana_pd.astype(int)
+        calib_dict = {}
+        if self.cylinder:
+            for HW_feb_id, planar in ana_pd.groupby(["HW_feb_id", "planar"]).groups.keys():
+                calib_dict[(int(HW_feb_id), int(planar))] = self.get_channels_QDC_calib(int(HW_feb_id), int(planar))
         else:
-            decode_pd = pd.read_feather("{}/raw_root/{}/Sub_RUN_dec_{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
-            ana_pd = decode_pd
-            self.build_mapping_group()
+            for HW_feb_id in ana_pd["HW_feb_id"].unique():
+                calib_dict[(int(HW_feb_id), 3)] = self.get_channels_QDC_calib(int(HW_feb_id), 3)
 
-            ana_pd["data"] = [self.get_mapping_value(("strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"), *a) for a in tuple(zip(ana_pd["channel"], ana_pd["tiger"], ana_pd["gemroc"]))]
-            ana_pd["subrun"] = subrun
-            ana_pd["hit_id"] = ana_pd.index
-            ana_pd[["strip_x", "strip_y", "planar", "FEB_label", "HW_feb_id"]] = pd.DataFrame(ana_pd.data.tolist())
-            ana_pd = ana_pd.drop(columns=["data"])
-            ana_pd = ana_pd.astype(int)
-            calib_dict = {}
-            if self.cylinder:
-                for HW_feb_id, planar in ana_pd.groupby(["HW_feb_id", "planar"]).groups.keys():
-                    calib_dict[(int(HW_feb_id), int(planar))] = self.get_channels_QDC_calib(int(HW_feb_id), int(planar))
-            else:
-                for HW_feb_id in ana_pd["HW_feb_id"].unique():
-                    calib_dict[(int(HW_feb_id), 3)] = self.get_channels_QDC_calib(int(HW_feb_id), 3)
-
-            ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["planar"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
-            compress_pd = compress_hit_pd(ana_pd)
-            verifiy_compression_validity(ana_pd, compress_pd)
-            ana_pd = compress_pd
-            if self.cylinder:
-                ana_pd = self.create_cyl_names(ana_pd)
-            # import root_pandas
-            # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
-            # ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
-            ana_pd.to_feather("{}/raw_root/{}/Sub_RUN_pl_ana{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
-            return ana_pd
+        ana_pd["charge_SH"] = [self.calibrate_charge(calib_dict, *a) for a in tuple(zip(ana_pd["HW_feb_id"], ana_pd["planar"], ana_pd["tiger"], ana_pd["channel"], ana_pd["efine"]))]
+        compress_pd = compress_hit_pd(ana_pd)
+        verifiy_compression_validity(ana_pd, compress_pd)
+        ana_pd = compress_pd
+        if self.cylinder:
+            ana_pd = self.create_cyl_names(ana_pd)
+        # import root_pandas
+        # root_pandas.to_root(ana_pd,"{}/raw_root/{}/Sub_RUN_pl_ana_{}.root".format(self.data_folder,self.run_number,subrun),"tree")
+        # ana_pd.to_pickle("{}/raw_root/{}/Sub_RUN_pl_ana{}.pickle.gzip".format(self.data_folder, self.run_number, subrun), compression="gzip")
+        ana_pd.to_feather("{}/raw_root/{}/Sub_RUN_pl_ana{}-zstd.feather".format(self.data_folder, self.run_number, subrun))
+        return ana_pd
 
     def create_cyl_names(self, run_data):
         run_data["view"] = ""
