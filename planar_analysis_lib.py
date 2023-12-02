@@ -607,6 +607,9 @@ class calib:
         else:
             constant = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][1]
             slope = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][2]
+
+        if slope ==0:
+            slope = np.nan
         if (efine >= 1008):
             charge_SH = (((-1 * constant) - (1024 - efine)) / slope)
         else:
