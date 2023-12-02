@@ -1,10 +1,11 @@
 import binascii
 import numpy as np
 import os
-import ROOT as R
+#import ROOT as R
 import glob2
 import pandas as pd
 from tqdm import tqdm
+
 from sklearn.cluster import KMeans
 import sys
 import configparser
@@ -588,7 +589,7 @@ class calib:
         # mapping_pd=self.mapping_pd[(self.mapping_pd.channel_id == channel_id) & (self.mapping_pd.tiger == tiger) & (self.mapping_pd.gemroc_id == gemroc)]
         mapping_pd = self.mapping_group.get_group((channel_id, tiger, gemroc))
         for field_name in field_names:
-            return_list.append(int(mapping_pd[field_name]))
+            return_list.append(int(mapping_pd.iloc[0][field_name]))
         return return_list
 
     def calibrate_charge(self, calib_dict, HW_feb_id, planar, tiger, channel, efine):
@@ -607,9 +608,9 @@ class calib:
         else:
             constant = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][1]
             slope = calib_dict[HW_feb_id, 3][int(tiger % 2)][channel][2]
+        if slope==0:
+            return np.nan
 
-        if slope ==0:
-            slope = np.nan
         if (efine >= 1008):
             charge_SH = (((-1 * constant) - (1024 - efine)) / slope)
         else:
