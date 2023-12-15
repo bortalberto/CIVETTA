@@ -8,7 +8,7 @@ import sys
 
 run_number = sys.argv[1]
 config = configparser.ConfigParser()
-config.read(os.path.join(sys.path[0], "config.ini"))
+config.read(os.path.join(sys.path[0], "config_cyl.ini"))
 signal_window_lower_limit_conf = config["GLOBAL"].getint("signal_window_lower_limit")
 signal_window_upper_limit_conf = config["GLOBAL"].getint("signal_window_upper_limit")
 signal_win = [signal_window_lower_limit_conf, signal_window_upper_limit_conf ]
