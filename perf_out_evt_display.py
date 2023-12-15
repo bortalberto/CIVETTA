@@ -416,6 +416,7 @@ class eff_calculation:
             eff_pd.loc[:, "pos_x_pl"], eff_pd.loc[:, "pos_y_pl"] = zip(
                 *eff_pd.apply(lambda x: de_correct_process_pd(x, self.correction), axis=1))
 
+
             eff_pd_c = eff_pd
 
             k = eff_pd_c[(eff_pd_c.eff_x) & (eff_pd_c.eff_y) & (eff_pd_c.pos_x_pl > 2.6) & (eff_pd_c.pos_x_pl < 7.8) & (
