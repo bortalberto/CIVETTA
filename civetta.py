@@ -924,7 +924,7 @@ class runner:
         :param row:
         :return:
         """
-        return row.strip - ((self.max_[row.planar, row["view"]]) / 2) * row.sheet
+        return row.strip - ((self.max_[row.planar+1, row["view"]]) / 2) * row.sheet
 
     def convert_hit_pd_root_CGEM_boss(self):
         """
@@ -944,64 +944,63 @@ class runner:
         data_pd = clusterizer.data_pd
         data_pd["sheet"] = -2
         data_pd["side"] = -2
+
         boss_root_path = self.data_folder + f"/raw_root/{self.run_number}/hit_data_CGEM_boss.root"
         file = R.TFile.Open(boss_root_path, "RECREATE")
         tree = R.TTree("t1", "t1")
 
         Event = np.array([0], np.int32)
-        tree.Branch("Event", Event, 'Event/i')
+        tree.Branch("Event", Event, 'Event/I')
 
         nGemHit = np.array([0], np.int32)
-        tree.Branch("nGemHit", nGemHit, 'nGemHit/i')
+        tree.Branch("nGemHit", nGemHit, 'nGemHit/I')
 
         data_pd.channel = data_pd.channel.astype(np.int32)
         GemHit_channel = array("i", [0] * 10000)
-        tree.Branch("GemHit_channel", GemHit_channel, "GemHit_channel[nGemHit]/i")
+        tree.Branch("GemHit_channel", GemHit_channel, "GemHit_channel[nGemHit]/I")
 
         data_pd.gemroc = data_pd.gemroc.astype(np.int32)
         GemHit_ROC = array("i", [0] * 10000)
-        tree.Branch("GemHit_ROC", GemHit_ROC, "GemHit_ROC[nGemHit]/i")
+        tree.Branch("GemHit_ROC", GemHit_ROC, "GemHit_ROC[nGemHit]/I")
 
         data_pd["chip"] = data_pd.tiger % 2
         data_pd.chip = data_pd.chip.astype(np.int32)
         GemHit_chip = array("i", [0] * 10000)
-        tree.Branch("GemHit_chip", GemHit_chip, "GemHit_chip[nGemHit]/i")
+        tree.Branch("GemHit_chip", GemHit_chip, "GemHit_chip[nGemHit]/I")
 
         data_pd.FEB_label = data_pd.FEB_label.astype(np.int32)
         GemHit_FEB = array("i", [0] * 10000)
-        tree.Branch("GemHit_FEB", GemHit_FEB, "GemHit_FEB[nGemHit]/i")
+        tree.Branch("GemHit_FEB", GemHit_FEB, "GemHit_FEB[nGemHit]/I")
 
         ## Piano da 0 a 2 o da 1 a 3?
         data_pd.planar = data_pd.planar - 1
         data_pd.planar = data_pd.planar.astype(np.int32)
         GemHit_plane = array("i", [0] * 10000)
-        tree.Branch("GemHit_plane", GemHit_plane, "GemHit_plane[nGemHit]/i")
+        tree.Branch("GemHit_plane", GemHit_plane, "GemHit_plane[nGemHit]/I")
 
         # TO fix
         # Da dove lo prendo lo sheet?
 
-
-
         data_pd["saturated"] = data_pd.efine == 1008
         data_pd.saturated = data_pd.saturated.astype(np.int32)
         GemHit_saturated = array("i", [0] * 10000)
-        tree.Branch("GemHit_saturated", GemHit_saturated, "GemHit_saturated[nGemHit]/i")
+        tree.Branch("GemHit_saturated", GemHit_saturated, "GemHit_saturated[nGemHit]/I")
 
         data_pd.charge_SH = data_pd.charge_SH.astype(np.double)
         GemHit_q = array("d", [0] * 10000)
-        tree.Branch("GemHit_q", GemHit_q, "GemHit_q[nGemHit]/F")
+        tree.Branch("GemHit_q", GemHit_q, "GemHit_q[nGemHit]/D")
 
         data_pd["l1ts_min_tcoarse"] = data_pd["l1ts_min_tcoarse"].astype(float)
         data_pd["time"] = data_pd["l1ts_min_tcoarse"] * -6.25
         data_pd["time"] = data_pd.time.astype(np.double)
         GemHit_time = array("d", [0] * 10000)
-        tree.Branch("GemHit_time", GemHit_time, "GemHit_time[nGemHit]/F")
+        tree.Branch("GemHit_time", GemHit_time, "GemHit_time[nGemHit]/D")
 
         data_pd["view_int"] = 0
         data_pd.loc[data_pd.view == "X", "view_int"] = 2
         data_pd.loc[data_pd.view == "V", "view_int"] = 3
         GemHit_view = array("i", [0] * 10000)
-        tree.Branch("GemHit_view", GemHit_view, "GemHit_view[nGemHit]/i")
+        tree.Branch("GemHit_view", GemHit_view, "GemHit_view[nGemHit]/I")
 
         side_map = {}
         sheet_map = {}
@@ -1045,19 +1044,18 @@ class runner:
         data_pd.side = data_pd.side.astype(np.int32)
         data_pd.sheet = data_pd.sheet.astype(np.int32)
         GemHit_side = array("i", [0] * 10000)
-        tree.Branch("GemHit_side", GemHit_side, "GemHit_side[nGemHit]/i")
+        tree.Branch("GemHit_side", GemHit_side, "GemHit_side[nGemHit]/I")
 
         GemHit_sheet = array("i", [0] * 10000)
-        tree.Branch("GemHit_sheet", GemHit_sheet, "GemHit_sheet[nGemHit]/i")
-
+        tree.Branch("GemHit_sheet", GemHit_sheet, "GemHit_sheet[nGemHit]/I")
 
         # Strip non connesse?
-        data_pd["strip"] = data_pd.loc[(data_pd.planar > 1) & ((data_pd.view == "X") | (data_pd.view == "V"))].apply(
-            self.apply_sheet_strip_cut, axis=1)
+        data_pd.loc[(data_pd.planar > 0) & ((data_pd.view == "X") | (data_pd.view == "V")), "strip"] = data_pd.loc[
+            (data_pd.planar > 0) & ((data_pd.view == "X") | (data_pd.view == "V"))].apply(self.apply_sheet_strip_cut, axis=1)
         data_pd.loc[~data_pd.strip.notna(), "strip"] = -1
         data_pd.strip = data_pd.strip.astype(np.int32)
         GemHit_strip = array("i", [0] * 10000)
-        tree.Branch("GemHit_strip", GemHit_strip, "GemHit_strip[nGemHit]/i")
+        tree.Branch("GemHit_strip", GemHit_strip, "GemHit_strip[nGemHit]/I")
 
 
 
@@ -1280,10 +1278,13 @@ def main(run, **kwargs):
         else:
             main_runner.calib_run_fill(subrun_fill)
 
-    if "root_conv" in (op_list):
-        main_runner.convert_hit_pd_root()
+
     if "boss_conv" in (op_list):
         main_runner.convert_hit_pd_root_CGEM_boss()
+
+    if "root_conv" in (op_list):
+        main_runner.convert_hit_pd_root()
+
     if "C" in (op_list):
         if not args.Silent:
             print ("Clusterizing")
