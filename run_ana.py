@@ -110,7 +110,7 @@ for layer in (1, 2, 3):
         #             rangex=[0,strip_max[f"{layer}{view}"]],
         #             rangey=[-5,run_data_view.charge_SH.quantile(0.99)] )[1]
         fig.update_layout(template=standard_template,
-                          title=f"Charge on strip {layer}{view} - noise time cut {noise_win} ")
+                          title=f"Charge on strip {layer}{view} - noise time cut outside {noise_win} ")
         fig.update_layout(xaxis={"title": f"Strip {view}"})
         fig.update_layout(yaxis={"title": "Count"})
         fig.write_html(f"{out_path}/noise_strip_occupancy{layer}{view}.html", include_plotlyjs="../plotly.min.js")
